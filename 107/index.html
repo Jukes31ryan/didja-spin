@@ -348,7 +348,7 @@ details.box summary {
       </div>
     </div>
     <div id="nextRow" class="next-row" hidden>
-      <button id="nextBtn" class="act primary" type="button">Spin again</button>
+      <button id="nextBtn" class="act primary" type="button">Got it</button>
     </div>
   </section>
 </div>
@@ -417,7 +417,7 @@ details.box summary {
     </div>
     <button id="resetBtn" class="danger" type="button">Reset my progress</button>
     <p class="fine">Content checked against FAA sources: Nov 2026. Study aid, not an official FAA test.</p>
-    <p class="fine">Version 3 · build 4eac43e44b</p>
+    <p class="fine">Version 3 · build 0e799c9df9</p>
   </div>
 </section>
 
@@ -629,7 +629,7 @@ const DECK = {
 <script>
 (() => {
   'use strict';
-  const BUILD = '4eac43e44b';
+  const BUILD = '0e799c9df9';
   const CATS = [
     { key: 'rules', label: 'Rules', full: 'Regulations', color: 0 },
     { key: 'airspace', label: 'Airspace', full: 'Airspace and charts', color: 1 },
@@ -1301,7 +1301,7 @@ const DECK = {
     if (top < target) target = Math.max(0, top - 8);
     if (target !== trayScroll.scrollTop) trayScroll.scrollTo({ top: target, behavior: reducedMotion.matches ? 'auto' : 'smooth' });
   }
-  $('nextBtn').addEventListener('click', () => { if (S.sound) Sound.ctx(); spinDefault(); });
+  $('nextBtn').addEventListener('click', () => { clearLanding(); $('hub').focus({ preventScroll: true }); });   /* back to the full-size prop; you spin it yourself */
 
   function knownCount(key) { return (key ? CAT[key].cards : Object.values(DECK).flat()).filter((r) => isKnown(r[0])).length; }
   function paintStats() {

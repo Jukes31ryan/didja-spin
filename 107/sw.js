@@ -1,6 +1,6 @@
 /* Didja Spin 107 service worker. The build stamps the cache name from a hash of the files. */
 const PREFIX = 'didja107-';
-const CACHE = PREFIX + 'v3-4eac43e44b';
+const CACHE = PREFIX + 'v3-0e799c9df9';
 const SHELL = ['./', 'manifest.webmanifest', 'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png'];
 
 self.addEventListener('install', (e) => {
