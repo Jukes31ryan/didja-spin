@@ -417,7 +417,7 @@ details.box summary {
     </div>
     <button id="resetBtn" class="danger" type="button">Reset my progress</button>
     <p class="fine">Content checked against FAA sources: Nov 2026. Study aid, not an official FAA test.</p>
-    <p class="fine">Version 3 · build 9c62b4e570</p>
+    <p class="fine">Version 3 · build 4eac43e44b</p>
   </div>
 </section>
 
@@ -629,7 +629,7 @@ const DECK = {
 <script>
 (() => {
   'use strict';
-  const BUILD = '9c62b4e570';
+  const BUILD = '4eac43e44b';
   const CATS = [
     { key: 'rules', label: 'Rules', full: 'Regulations', color: 0 },
     { key: 'airspace', label: 'Airspace', full: 'Airspace and charts', color: 1 },
@@ -853,9 +853,11 @@ const DECK = {
      A DJI-style quad, synthesized live. Tune it here. Shaft frequency (Hz) at full flick speed;
      it idles at minFrac of that. Pitch and level follow rpm = |angular velocity| / VMAX. */
   const SOUND_PROFILE = {
+    /* Same model as the "Mavic-class spin" sound Ryan picked (#2): 4 detuned rotors, 2-blade props,
+       motor whine at 7x and 42x shaft, prop wash. Pitch runs from 0 up to ~1.15x as spin speed rises. */
     shaftHz: 95, blades: 2, rotors: 4, detunePct: [-1.6, -0.5, 0.6, 1.7], polePairs: 7,
-    toneGain: 0.34, elecGain: 0.012, noiseGain: 0.07, noiseHz: 1500,
-    minFrac: 0.45, harmonics: 32, oddLevel: 0.1, lfoHz: [0.6, 1.6], lfoDepth: 0.22, chimeGain: 0
+    toneGain: 0.14, elecGain: 0.012, noiseGain: 0.09, refSpeed: 1700, maxFrac: 1.15,
+    harmonics: 20, lfoHz: [0.6, 1.6], lfoDepth: 0.15, chimeGain: 0
   };
   const Sound = {
     ac: null, comp: null, noiseBuf: null, motor: null, sleepT: 0, lastSet: 0,
@@ -867,7 +869,7 @@ const DECK = {
         if (!this.ac) {
           this.ac = new Ctx();
           this.comp = this.ac.createDynamicsCompressor();
-          this.comp.threshold.value = -18; this.comp.knee.value = 12; this.comp.ratio.value = 4;
+          this.comp.threshold.value = -16; this.comp.ratio.value = 5;
           this.comp.attack.value = 0.005; this.comp.release.value = 0.15;
           const out = this.ac.createGain(); out.gain.value = 0.9;
           this.comp.connect(out); out.connect(this.ac.destination);
@@ -879,7 +881,7 @@ const DECK = {
     },
     wave() {
       const P = SOUND_PROFILE, n = P.harmonics + 1, re = new Float32Array(n), im = new Float32Array(n);
-      for (let h = 1; h < n; h++) im[h] = (h % P.blades === 0 ? 1 : P.oddLevel) / Math.pow(h, 1.2);
+      for (let k = 1; k < n; k++) { if (k % 2 === 0) { im[k] = 1 / Math.pow(k / 2, 1.2); re[k] = 0.12 / (k / 2); } else im[k] = 0.04 / k; }
       return this.ac.createPeriodicWave(re, im);
     },
     noise() {
@@ -897,9 +899,9 @@ const DECK = {
         const wave = this.wave();
         const rotors = [];
         for (let i = 0; i < P.rotors; i++) {
-          const o = ac.createOscillator(); o.setPeriodicWave(wave); o.frequency.value = P.shaftHz * P.minFrac;
-          const g = ac.createGain(); g.gain.value = 1 - P.lfoDepth;
-          const lfo = ac.createOscillator(); lfo.frequency.value = P.lfoHz[0] + Math.random() * (P.lfoHz[1] - P.lfoHz[0]);
+          const o = ac.createOscillator(); o.setPeriodicWave(wave); o.frequency.value = 2;
+          const g = ac.createGain(); g.gain.value = 1;
+          const lfo = ac.createOscillator(); lfo.frequency.value = 0.6 + i * 0.31;
           const lg = ac.createGain(); lg.gain.value = P.lfoDepth;
           lfo.connect(lg); lg.connect(g.gain); o.connect(g); g.connect(tone);
           o.start(t); lfo.start(t);
@@ -908,11 +910,11 @@ const DECK = {
         }
         const elec = ac.createGain(); elec.gain.value = 0; elec.connect(this.comp);
         const e1 = ac.createOscillator(), e2 = ac.createOscillator(), e2g = ac.createGain();
-        e1.type = e2.type = 'sine'; e2g.gain.value = 0.4;
+        e1.type = e2.type = 'sine'; e2g.gain.value = 0.35;
         e1.connect(elec); e2.connect(e2g); e2g.connect(elec); e1.start(t); e2.start(t);
         nodes.push(e1, e2);
         const src = ac.createBufferSource(); src.buffer = this.noise(); src.loop = true;
-        const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.7; bp.frequency.value = P.noiseHz * 0.4;
+        const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.6; bp.frequency.value = 400;
         const wash = ac.createGain(); wash.gain.value = 0;
         src.connect(bp); bp.connect(wash); wash.connect(this.comp); src.start(t);
         nodes.push(src);
@@ -925,15 +927,15 @@ const DECK = {
       const now = performance.now();
       if (now - this.lastSet < 30) return;          /* ~33 updates a second is plenty */
       this.lastSet = now;
-      const P = SOUND_PROFILE, t = this.ac.currentTime, r = clamp(rpm, 0, 1);
-      const shaft = P.shaftHz * (P.minFrac + (1 - P.minFrac) * r);
+      const P = SOUND_PROFILE, t = this.ac.currentTime, r = clamp(rpm, 0, P.maxFrac);
+      const shaft = Math.max(2, P.shaftHz * r), env = Math.min(1, Math.pow(r, 1.8));
       m.rotors.forEach((x) => x.o.frequency.setTargetAtTime(shaft * x.k, t, 0.04));
       m.e1.frequency.setTargetAtTime(P.polePairs * shaft, t, 0.04);
       m.e2.frequency.setTargetAtTime(6 * P.polePairs * shaft, t, 0.04);
-      m.bp.frequency.setTargetAtTime(P.noiseHz * (0.4 + 0.8 * r), t, 0.05);
-      m.tone.gain.setTargetAtTime(P.toneGain * Math.pow(r, 1.8), t, 0.05);
-      m.elec.gain.setTargetAtTime(P.elecGain * Math.pow(r, 1.5), t, 0.05);
-      m.wash.gain.setTargetAtTime(P.noiseGain * Math.pow(r, 1.5), t, 0.05);
+      m.bp.frequency.setTargetAtTime(Math.max(400, 900 + 2200 * r), t, 0.05);
+      m.tone.gain.setTargetAtTime(P.toneGain * env, t, 0.05);
+      m.elec.gain.setTargetAtTime(P.elecGain * Math.sqrt(env), t, 0.05);
+      m.wash.gain.setTargetAtTime(P.noiseGain * env, t, 0.05);
     },
     stop() {
       const m = this.motor;
@@ -1011,7 +1013,7 @@ const DECK = {
     const step = stepDeg();
     const slot = Math.floor((angle + step / 2) / step);
     if (slot !== tickSlot) { tickSlot = slot; tick(speed); }
-    if (Sound.motor) Sound.set(speed / VMAX);
+    if (Sound.motor) Sound.set(speed / SOUND_PROFILE.refSpeed);
   }
   function nearBoundary(a) {
     const step = stepDeg(), m = ((a % step) + step) % step;
@@ -1157,7 +1159,7 @@ const DECK = {
       if (Math.hypot(lastEv.clientX - drag.x, lastEv.clientY - drag.y) < 8) return;
       drag.live = true;
       clearTimeout(drag.lp);
-      if (questionOpen()) { sr('Skipped.'); toast('Skipped', null, 900); }   /* a real flick skips; the card isn't counted */
+      if (questionOpen()) sr('Skipped.');           /* a flick skips; the card isn't counted */
       clearLanding();
       drag.last = angleAt(lastEv.clientX, lastEv.clientY);
       drag.samples = [{ t: lastEv.timeStamp, a: angle }];
@@ -1194,7 +1196,8 @@ const DECK = {
       drag = null;
       mode = 'idle';
       if (d.caught) { settle(true); return; }          /* caught mid-spin: it stops and clicks in */
-      if (cancelled || questionOpen()) { render(); return; }   /* taps are ignored while a question is open */
+      if (cancelled) { render(); return; }
+      if (questionOpen()) sr('Skipped.');             /* tap the prop any time to skip and spin again */
       spinDefault();
       return;
     }
@@ -1208,7 +1211,7 @@ const DECK = {
   box.addEventListener('pointercancel', (e) => endDrag(e, true));
   box.addEventListener('contextmenu', (e) => e.preventDefault());
   $('hub').addEventListener('click', (e) => {           /* keyboard only; pointer taps are handled above */
-    if (e.detail !== 0 || questionOpen()) return;
+    if (e.detail !== 0) return;
     Sound.ctx(); spinDefault();
   });
   ringG.addEventListener('keydown', (e) => {
@@ -1263,7 +1266,6 @@ const DECK = {
     qBox.hidden = false;
     qBox.classList.remove('arrive'); void qBox.offsetWidth; qBox.classList.add('arrive');
     trayScroll.scrollTop = 0;
-    $('hub').setAttribute('aria-disabled', 'true');
     sr(CAT[card.cat].label + '. Question: ' + card.q);
   }
   function answerSpin(btn, text) {
