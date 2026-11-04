@@ -417,7 +417,7 @@ details.box summary {
     </div>
     <button id="resetBtn" class="danger" type="button">Reset my progress</button>
     <p class="fine">Content checked against FAA sources: Nov 2026. Study aid, not an official FAA test.</p>
-    <p class="fine">Version 3 · build 635c247f15</p>
+    <p class="fine">Version 3 · build 9c62b4e570</p>
   </div>
 </section>
 
@@ -629,7 +629,7 @@ const DECK = {
 <script>
 (() => {
   'use strict';
-  const BUILD = '635c247f15';
+  const BUILD = '9c62b4e570';
   const CATS = [
     { key: 'rules', label: 'Rules', full: 'Regulations', color: 0 },
     { key: 'airspace', label: 'Airspace', full: 'Airspace and charts', color: 1 },
@@ -855,7 +855,7 @@ const DECK = {
   const SOUND_PROFILE = {
     shaftHz: 95, blades: 2, rotors: 4, detunePct: [-1.6, -0.5, 0.6, 1.7], polePairs: 7,
     toneGain: 0.34, elecGain: 0.012, noiseGain: 0.07, noiseHz: 1500,
-    minFrac: 0.06, harmonics: 32, oddLevel: 0.1, lfoHz: [0.6, 1.6], lfoDepth: 0.22, chimeGain: 0, selectGain: 0.16, spoolSec: 0.04
+    minFrac: 0.45, harmonics: 32, oddLevel: 0.1, lfoHz: [0.6, 1.6], lfoDepth: 0.22, chimeGain: 0
   };
   const Sound = {
     ac: null, comp: null, noiseBuf: null, motor: null, sleepT: 0, lastSet: 0,
@@ -888,20 +888,16 @@ const DECK = {
       for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
       return (this.noiseBuf = buf);
     },
-    start(r0) {                                   /* spool-up mirrors the wind-down: low and quiet up to the flick's speed */
+    start() {
       if (this.motor || !this.ctx()) return;
       const ac = this.ac, P = SOUND_PROFILE, t = ac.currentTime;
-      r0 = clamp(r0 || 1, 0, 1);
-      const shaft0 = P.shaftHz * (P.minFrac + (1 - P.minFrac) * r0), lo = P.shaftHz * P.minFrac, T = t + P.spoolSec;
-      this.spoolUntil = performance.now() + P.spoolSec * 1000;
-      const ramp = (param, from, to) => { param.setValueAtTime(from, t); param.exponentialRampToValueAtTime(Math.max(to, 0.0001), T); };
       try {
         const nodes = [];
-        const tone = ac.createGain(); ramp(tone.gain, 0.0001, P.toneGain * Math.pow(r0, 0.9)); tone.connect(this.comp);
+        const tone = ac.createGain(); tone.gain.value = 0; tone.connect(this.comp);
         const wave = this.wave();
         const rotors = [];
         for (let i = 0; i < P.rotors; i++) {
-          const o = ac.createOscillator(); o.setPeriodicWave(wave); { const k = 1 + (P.detunePct[i % P.detunePct.length] || 0) / 100; ramp(o.frequency, lo * k, shaft0 * k); }
+          const o = ac.createOscillator(); o.setPeriodicWave(wave); o.frequency.value = P.shaftHz * P.minFrac;
           const g = ac.createGain(); g.gain.value = 1 - P.lfoDepth;
           const lfo = ac.createOscillator(); lfo.frequency.value = P.lfoHz[0] + Math.random() * (P.lfoHz[1] - P.lfoHz[0]);
           const lg = ac.createGain(); lg.gain.value = P.lfoDepth;
@@ -910,15 +906,14 @@ const DECK = {
           nodes.push(o, lfo);
           rotors.push({ o, k: 1 + (P.detunePct[i % P.detunePct.length] || 0) / 100 });
         }
-        const elec = ac.createGain(); ramp(elec.gain, 0.0001, P.elecGain * Math.pow(r0, 1.1)); elec.connect(this.comp);
+        const elec = ac.createGain(); elec.gain.value = 0; elec.connect(this.comp);
         const e1 = ac.createOscillator(), e2 = ac.createOscillator(), e2g = ac.createGain();
         e1.type = e2.type = 'sine'; e2g.gain.value = 0.4;
-        ramp(e1.frequency, P.polePairs * lo, P.polePairs * shaft0); ramp(e2.frequency, 6 * P.polePairs * lo, 6 * P.polePairs * shaft0);
         e1.connect(elec); e2.connect(e2g); e2g.connect(elec); e1.start(t); e2.start(t);
         nodes.push(e1, e2);
         const src = ac.createBufferSource(); src.buffer = this.noise(); src.loop = true;
-        const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.7; ramp(bp.frequency, P.noiseHz * 0.4, P.noiseHz * (0.4 + 0.8 * r0));
-        const wash = ac.createGain(); ramp(wash.gain, 0.0001, P.noiseGain * Math.pow(r0, 1.2));
+        const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.7; bp.frequency.value = P.noiseHz * 0.4;
+        const wash = ac.createGain(); wash.gain.value = 0;
         src.connect(bp); bp.connect(wash); wash.connect(this.comp); src.start(t);
         nodes.push(src);
         this.motor = { nodes, rotors, tone, elec, e1, e2, bp, wash, buses: [tone, elec, wash] };
@@ -928,7 +923,6 @@ const DECK = {
       const m = this.motor;
       if (!m) return;
       const now = performance.now();
-      if (now < (this.spoolUntil || 0)) return;      /* let the spool-up finish */
       if (now - this.lastSet < 30) return;          /* ~33 updates a second is plenty */
       this.lastSet = now;
       const P = SOUND_PROFILE, t = this.ac.currentTime, r = clamp(rpm, 0, 1);
@@ -937,16 +931,16 @@ const DECK = {
       m.e1.frequency.setTargetAtTime(P.polePairs * shaft, t, 0.04);
       m.e2.frequency.setTargetAtTime(6 * P.polePairs * shaft, t, 0.04);
       m.bp.frequency.setTargetAtTime(P.noiseHz * (0.4 + 0.8 * r), t, 0.05);
-      m.tone.gain.setTargetAtTime(P.toneGain * Math.pow(r, 0.9), t, 0.04);
-      m.elec.gain.setTargetAtTime(P.elecGain * Math.pow(r, 1.1), t, 0.04);
-      m.wash.gain.setTargetAtTime(P.noiseGain * Math.pow(r, 1.2), t, 0.04);
+      m.tone.gain.setTargetAtTime(P.toneGain * Math.pow(r, 1.8), t, 0.05);
+      m.elec.gain.setTargetAtTime(P.elecGain * Math.pow(r, 1.5), t, 0.05);
+      m.wash.gain.setTargetAtTime(P.noiseGain * Math.pow(r, 1.5), t, 0.05);
     },
     stop() {
       const m = this.motor;
       if (!m) { this.sleepSoon(); return; }
       this.motor = null;
       const t = this.ac.currentTime;
-      m.buses.forEach((g) => { g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0, t, 0.06); });      /* fades out the way the spool-up faded in */
+      m.buses.forEach((g) => { g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0, t, 0.07); });
       setTimeout(() => { m.nodes.forEach((n) => { try { n.stop(); } catch (e) { /* already stopped */ } }); m.buses.forEach((g) => g.disconnect()); }, 450);
       this.sleepSoon();
     },
@@ -980,23 +974,6 @@ const DECK = {
       setTimeout(() => g.disconnect(), (freqs.length * step + len * 2) * 1000 + 300);
       this.sleepSoon();
     },
-    select() {                                    /* quick "locked in" tone when it lands on a topic */
-      if (!this.ctx()) return;
-      const ac = this.ac, t = ac.currentTime + 0.03, out = ac.createGain();
-      out.gain.value = SOUND_PROFILE.selectGain; out.connect(this.comp);
-      [[1568, 1, 0.13], [2349, 0.45, 0.09], [3136, 0.2, 0.06]].forEach(([f, a, d]) => {
-        const o = ac.createOscillator(), e = ac.createGain();
-        o.type = 'sine'; o.frequency.value = f;
-        e.gain.setValueAtTime(0.0001, t); e.gain.exponentialRampToValueAtTime(a, t + 0.004); e.gain.exponentialRampToValueAtTime(0.0001, t + d);
-        o.connect(e); e.connect(out); o.start(t); o.stop(t + d + 0.02);
-      });
-      const c = ac.createBufferSource(), cg = ac.createGain(), hp = ac.createBiquadFilter();
-      c.buffer = this.noise(); hp.type = 'highpass'; hp.frequency.value = 3000;
-      cg.gain.setValueAtTime(0.5, t); cg.gain.exponentialRampToValueAtTime(0.0001, t + 0.012);
-      c.connect(hp); hp.connect(cg); cg.connect(out); c.start(t); c.stop(t + 0.02);
-      setTimeout(() => out.disconnect(), 400);
-      this.sleepSoon();
-    },
     chime() { this.notes([1175, 1397, 1760], 0.085, 0.07); },
     correct() { this.notes([1397, 1760], 0.07, 0.06); }
   };
@@ -1014,8 +991,7 @@ const DECK = {
 
   /* ---------- Spinning ---------- */
   const VMAX = 2800, DRAG = 1.25, NOTCH_SPEED = 140, SPRING = 220, DAMP = 16.3, MAGNET = 1.6, MAGNET_DEG = 4;
-  let RUB = 95, spool = null;
-  const SPOOL_MS = 750;   /* how long the prop keeps speeding up after a flick */          /* friction gets the randomness, not the release speed */
+  let RUB = 95;          /* friction gets the randomness, not the release speed */
   let angle = 0, vel = 0, mode = 'idle', notchAt = 0, glide = null, deal = false, tickSlot = 0, raf = 0, lastFrame = 0, drag = null, dragSpeed = 0;
   const last = { rot: '', p: -1, d: -1, r: -1, sh: -1 };
 
@@ -1051,12 +1027,7 @@ const DECK = {
     } else {
       const parts = Math.max(1, Math.ceil(dt / 0.006)), h = dt / parts;
       for (let i = 0; i < parts && mode !== 'idle'; i++) {
-        if (mode === 'spool') {
-          const p = Math.min(1, (now - spool.t0) / spool.ms);
-          vel = spool.v0 + (spool.v1 - spool.v0) * (1 - Math.pow(1 - p, 2));
-          angle += vel * h;
-          if (p >= 1) mode = 'free';
-        } else if (mode === 'free') {
+        if (mode === 'free') {
           const s = vel < 0 ? -1 : 1;
           const rub = RUB * (nearBoundary(angle) ? MAGNET : 1);   /* a little magnetic catch at each wedge edge */
           vel -= (DRAG * vel + rub * s) * h;
@@ -1114,20 +1085,14 @@ const DECK = {
       glide = { from: angle, to: (Math.round(angle / st) + dir * hops) * st, t0: performance.now(), ms: 450 };
       vel = 0; mode = 'glide';
     } else {
-      /* The prop leaves your finger at the flick's speed, then the "motors" keep pushing:
-         it speeds up for SPOOL_MS, then coasts down. Sound pitch follows the real speed. */
-      const v0 = clamp(v, -VMAX, VMAX), a = Math.abs(v0);
+      vel = clamp(v, -VMAX, VMAX);                  /* 1:1 with the flick */
       RUB = 80 + Math.random() * 35;
-      if (a < 300) { vel = v0; mode = 'free'; }
-      else {
-        const v1 = dir * Math.min(VMAX, Math.max(a * 1.6, a + 500));
-        vel = v0; spool = { v0, v1, t0: performance.now(), ms: SPOOL_MS }; mode = 'spool';
-      }
-      if (S.sound) Sound.start(Math.abs(vel) / VMAX);
+      mode = 'free';
+      if (S.sound) Sound.start();
     }
     run();
   }
-  function spinDefault() { launch(1000 + Math.random() * 500); }   /* hub tap: spools up from there */
+  function spinDefault() { launch(1500 + Math.random() * 700); }
 
   function land() {
     const n = WHEEL.length;
@@ -1146,7 +1111,7 @@ const DECK = {
     while (keys.length > 400) delete S.days[keys.shift()];
     save();
     buzz(20);
-    if (S.sound) Sound.select();
+    if (S.sound) Sound.chime();
     clearTimeout(dealT);
     dealT = setTimeout(() => showCard(card), reducedMotion.matches ? 0 : 120);   /* eye goes to the wedge first */
   }
@@ -1636,7 +1601,7 @@ const DECK = {
     S.sound = !S.sound;
     save();
     paintSound();
-    if (S.sound) { if (Sound.ctx()) Sound.select(); } else Sound.kill();
+    if (S.sound) { if (Sound.ctx()) Sound.chime(); } else Sound.kill();
   });
 
   /* ---------- Going to the background: no sound, no stray spin ---------- */
