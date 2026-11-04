@@ -417,7 +417,7 @@ details.box summary {
     </div>
     <button id="resetBtn" class="danger" type="button">Reset my progress</button>
     <p class="fine">Content checked against FAA sources: Nov 2026. Study aid, not an official FAA test.</p>
-    <p class="fine">Version 3 · build 9c8b23f18f</p>
+    <p class="fine">Version 3 · build 46db0965d0</p>
   </div>
 </section>
 
@@ -629,7 +629,7 @@ const DECK = {
 <script>
 (() => {
   'use strict';
-  const BUILD = '9c8b23f18f';
+  const BUILD = '46db0965d0';
   const CATS = [
     { key: 'rules', label: 'Rules', full: 'Regulations', color: 0 },
     { key: 'airspace', label: 'Airspace', full: 'Airspace and charts', color: 1 },
@@ -855,7 +855,7 @@ const DECK = {
   const SOUND_PROFILE = {
     shaftHz: 95, blades: 2, rotors: 4, detunePct: [-1.6, -0.5, 0.6, 1.7], polePairs: 7,
     toneGain: 0.34, elecGain: 0.012, noiseGain: 0.07, noiseHz: 1500,
-    minFrac: 0.06, harmonics: 32, oddLevel: 0.1, lfoHz: [0.6, 1.6], lfoDepth: 0.22, chimeGain: 0, selectGain: 0.16
+    minFrac: 0.06, harmonics: 32, oddLevel: 0.1, lfoHz: [0.6, 1.6], lfoDepth: 0.22, chimeGain: 0, selectGain: 0.16, spoolSec: 0.55
   };
   const Sound = {
     ac: null, comp: null, noiseBuf: null, motor: null, sleepT: 0, lastSet: 0,
@@ -888,18 +888,20 @@ const DECK = {
       for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
       return (this.noiseBuf = buf);
     },
-    start(r0) {                                   /* starts AT the flick's speed: no spool-up, only the wind-down */
+    start(r0) {                                   /* spool-up mirrors the wind-down: low and quiet up to the flick's speed */
       if (this.motor || !this.ctx()) return;
       const ac = this.ac, P = SOUND_PROFILE, t = ac.currentTime;
       r0 = clamp(r0 || 1, 0, 1);
-      const shaft0 = P.shaftHz * (P.minFrac + (1 - P.minFrac) * r0);
+      const shaft0 = P.shaftHz * (P.minFrac + (1 - P.minFrac) * r0), lo = P.shaftHz * P.minFrac, T = t + P.spoolSec;
+      this.spoolUntil = performance.now() + P.spoolSec * 1000;
+      const ramp = (param, from, to) => { param.setValueAtTime(from, t); param.exponentialRampToValueAtTime(Math.max(to, 0.0001), T); };
       try {
         const nodes = [];
-        const tone = ac.createGain(); tone.gain.value = P.toneGain * r0; tone.connect(this.comp);
+        const tone = ac.createGain(); ramp(tone.gain, 0.0001, P.toneGain * Math.pow(r0, 0.9)); tone.connect(this.comp);
         const wave = this.wave();
         const rotors = [];
         for (let i = 0; i < P.rotors; i++) {
-          const o = ac.createOscillator(); o.setPeriodicWave(wave); o.frequency.value = shaft0 * (1 + (P.detunePct[i % P.detunePct.length] || 0) / 100);
+          const o = ac.createOscillator(); o.setPeriodicWave(wave); { const k = 1 + (P.detunePct[i % P.detunePct.length] || 0) / 100; ramp(o.frequency, lo * k, shaft0 * k); }
           const g = ac.createGain(); g.gain.value = 1 - P.lfoDepth;
           const lfo = ac.createOscillator(); lfo.frequency.value = P.lfoHz[0] + Math.random() * (P.lfoHz[1] - P.lfoHz[0]);
           const lg = ac.createGain(); lg.gain.value = P.lfoDepth;
@@ -908,15 +910,15 @@ const DECK = {
           nodes.push(o, lfo);
           rotors.push({ o, k: 1 + (P.detunePct[i % P.detunePct.length] || 0) / 100 });
         }
-        const elec = ac.createGain(); elec.gain.value = P.elecGain * r0; elec.connect(this.comp);
+        const elec = ac.createGain(); ramp(elec.gain, 0.0001, P.elecGain * Math.pow(r0, 1.1)); elec.connect(this.comp);
         const e1 = ac.createOscillator(), e2 = ac.createOscillator(), e2g = ac.createGain();
         e1.type = e2.type = 'sine'; e2g.gain.value = 0.4;
-        e1.frequency.value = P.polePairs * shaft0; e2.frequency.value = 6 * P.polePairs * shaft0;
+        ramp(e1.frequency, P.polePairs * lo, P.polePairs * shaft0); ramp(e2.frequency, 6 * P.polePairs * lo, 6 * P.polePairs * shaft0);
         e1.connect(elec); e2.connect(e2g); e2g.connect(elec); e1.start(t); e2.start(t);
         nodes.push(e1, e2);
         const src = ac.createBufferSource(); src.buffer = this.noise(); src.loop = true;
-        const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.7; bp.frequency.value = P.noiseHz * (0.4 + 0.8 * r0);
-        const wash = ac.createGain(); wash.gain.value = P.noiseGain * r0;
+        const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.7; ramp(bp.frequency, P.noiseHz * 0.4, P.noiseHz * (0.4 + 0.8 * r0));
+        const wash = ac.createGain(); ramp(wash.gain, 0.0001, P.noiseGain * Math.pow(r0, 1.2));
         src.connect(bp); bp.connect(wash); wash.connect(this.comp); src.start(t);
         nodes.push(src);
         this.motor = { nodes, rotors, tone, elec, e1, e2, bp, wash, buses: [tone, elec, wash] };
@@ -926,6 +928,7 @@ const DECK = {
       const m = this.motor;
       if (!m) return;
       const now = performance.now();
+      if (now < (this.spoolUntil || 0)) return;      /* let the spool-up finish */
       if (now - this.lastSet < 30) return;          /* ~33 updates a second is plenty */
       this.lastSet = now;
       const P = SOUND_PROFILE, t = this.ac.currentTime, r = clamp(rpm, 0, 1);
@@ -943,8 +946,8 @@ const DECK = {
       if (!m) { this.sleepSoon(); return; }
       this.motor = null;
       const t = this.ac.currentTime;
-      m.buses.forEach((g) => { g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0, t, 0.02); });      /* sharp cutoff, like a reversed spool-up's first instant */
-      setTimeout(() => { m.nodes.forEach((n) => { try { n.stop(); } catch (e) { /* already stopped */ } }); m.buses.forEach((g) => g.disconnect()); }, 250);
+      m.buses.forEach((g) => { g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0, t, 0.06); });      /* fades out the way the spool-up faded in */
+      setTimeout(() => { m.nodes.forEach((n) => { try { n.stop(); } catch (e) { /* already stopped */ } }); m.buses.forEach((g) => g.disconnect()); }, 450);
       this.sleepSoon();
     },
     kill() {                                         /* app hidden: stop everything right now */
