@@ -1,0 +1,1670 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Didja Spin 107</title>
+<meta name="description" content="Flick the prop, learn one Part 107 fact.">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#E7EBDF">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0F1722">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Didja 107">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<style>
+/* Didja Spin 107 v3. One screen: a 3-blade propeller seen from above is the spinner,
+   a ring of Part 107 topics surrounds it, and the tray underneath deals the question.
+   Palette borrows from a VFR sectional chart. */
+:root {
+  --mat: #E7EBDF;
+  --ink: #12213A;
+  --ink-soft: #4F5B6D;
+  --card: #FAFBF6;
+  --drone: #2C3747;
+  --drone-edge: #18212E;
+  --drone-top: #55657C;
+  --prop: #8F9BAC;
+  --line: #C3CAB8;
+  --shadow: #12213A;
+  --shadow-strength: 0.18;
+  --warn: #B3362B;
+  --led: #E8524A;
+  --good: #2A7A3B;
+  --p0: #5B8DEF; --p1: #D65BB0; --p2: #4FB6D6; --p3: #E9A23B; --p4: #7DBE55; --p5: #A47BE6; --p6: #EC7A63;
+  --on-color: #101A2A;
+  --font-display: ui-rounded, "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --t-small: 0.8125rem;
+  --t-note: 0.9375rem;
+  --t-body: 1.0625rem;
+  --t-name: 1.5rem;
+  --t-head: 1.4rem;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --mat: #0F1722; --ink: #E8EDF3; --ink-soft: #A2AEBE; --card: #1A2533;
+    --drone: #3A4759; --drone-edge: #59687D; --drone-top: #7A8AA0; --prop: #8C99AB;
+    --line: #2F3C4E; --shadow: #000000; --shadow-strength: 0.45;
+    --warn: #FF9A8F; --led: #FF6B61; --good: #6FD08A;
+    color-scheme: dark;
+  }
+}
+html { height: 100%; -webkit-text-size-adjust: 100%; }
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none;
+  background: var(--mat); color: var(--ink);
+  font-family: var(--font-body); font-size: var(--t-body); line-height: 1.4;
+  -webkit-tap-highlight-color: transparent;
+}
+[hidden] { display: none !important; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.hit { position: relative; }
+.hit::after { content: ""; position: absolute; inset: -6px; }
+
+.app {
+  height: 100%; max-width: 35rem; margin-inline: auto;
+  padding: calc(env(safe-area-inset-top, 0px) + 8px) 16px calc(env(safe-area-inset-bottom, 0px) + 12px);
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 8px;
+}
+.app.dealt { grid-template-rows: auto minmax(0, 0.62fr) minmax(0, 1fr); }
+@media (max-height: 700px) { .app.dealt { grid-template-rows: auto minmax(0, 0.5fr) minmax(0, 1fr); } }
+
+.top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.name {
+  margin: 0; font-family: var(--font-display); font-size: var(--t-name); font-weight: 800;
+  font-stretch: 78%; letter-spacing: -0.01em; line-height: 1.1; white-space: nowrap;
+}
+.name small {
+  font-size: 0.6em; font-weight: 700; margin-left: 4px; padding: 1px 7px; border-radius: 6px;
+  background: var(--ink); color: var(--mat); vertical-align: 0.25em;
+}
+.top-actions { display: flex; align-items: center; gap: 6px; }
+.icon-btn, .pill-btn {
+  height: 48px; border: 2px solid var(--line); border-radius: 24px; background: transparent;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.icon-btn { min-width: 48px; padding: 0 10px; }
+.icon-btn svg { width: 22px; height: 22px; flex: none; }
+.icon-btn .off { display: none; }
+.icon-btn[aria-pressed="false"] .on { display: none; }
+.icon-btn[aria-pressed="false"] .off { display: block; }
+.test-btn { font-family: var(--font-display); font-weight: 800; font-size: var(--t-note); padding: 0 14px; }
+.pill-btn { padding-inline: 16px; font-family: var(--font-display); font-weight: 700; font-size: var(--t-note); }
+
+/* Spinner */
+.stage { container-type: size; display: grid; place-items: center; min-height: 0; }
+.wheel-box {
+  position: relative;
+  /* inset from the screen edges so a flick on an outer wedge isn't read as Android's back gesture */
+  width: min(100cqw - 28px, 100cqh); aspect-ratio: 1;
+  touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab;
+}
+.wheel-box.pressed { cursor: grabbing; }
+.ring { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; display: block; }
+.layer { position: absolute; inset: 0; pointer-events: none; }
+.layer svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.rot { will-change: transform; transform-origin: 50% 50%; }
+.fade { will-change: opacity; opacity: 0; }
+.shadow-off { position: absolute; inset: 0; pointer-events: none; transform: translate(0, 2.4%); transition: transform 0.16s ease-out; }
+.pressed .shadow-off { transform: translate(0, 0.8%); }
+.press { position: absolute; inset: 0; pointer-events: none; transition: transform 0.2s cubic-bezier(0.3, 1.8, 0.5, 1); }
+.pressed .press { transform: scale(0.965); }
+
+.wedge { cursor: pointer; outline: none; transition: opacity 0.25s, transform 0.3s cubic-bezier(0.3, 1.7, 0.5, 1); }
+.wedge:focus-visible { stroke: var(--ink); stroke-width: 5; }
+.landed .wedge { opacity: 0.38; }
+.landed .wedge.lit { opacity: 1; transform: scale(1.035); }
+.wedge-label {
+  font-family: var(--font-display); font-size: 18px; font-weight: 700; letter-spacing: 0.03em;
+  fill: var(--on-color); pointer-events: none;
+  transition: opacity 0.25s, transform 0.3s cubic-bezier(0.3, 1.7, 0.5, 1);
+}
+.wedge-label.small { font-size: 15px; letter-spacing: 0.01em; }
+.landed .wedge-label { opacity: 0.45; }
+.landed .wedge-label.lit { opacity: 1; transform: scale(1.035); }
+
+.shadow-shape { fill: var(--shadow); opacity: var(--shadow-strength); }
+.blade { fill: var(--drone); }
+.blade-tr { fill: var(--drone-edge); opacity: 0.55; }
+.blade-le { fill: none; stroke: var(--drone-top); stroke-width: 4; }
+.blade-ol { fill: none; stroke: var(--drone-edge); stroke-width: 1.5; }
+.tipband { fill: var(--mark, var(--led)); }
+.tipstripe { fill: var(--prop); }
+.hubcap { fill: var(--drone-top); stroke: var(--drone-edge); stroke-width: 2; }
+.nut { fill: var(--drone-edge); }
+.chev { fill: var(--mark, var(--ink)); stroke: var(--ink); stroke-width: 1.5; stroke-linejoin: round; }
+.tipring { fill: none; stroke: var(--mark, var(--led)); stroke-width: 12; }
+.pulse .tipband { animation: pulse 0.6s ease-in-out 2; }
+@keyframes pulse { 50% { opacity: 0.5; } }
+
+.hub {
+  position: absolute; left: 50%; top: 50%; width: 14%; aspect-ratio: 1; min-width: 48px;
+  transform: translate(-50%, -50%); padding: 0;
+  border: 3px solid var(--drone-edge); border-radius: 50%;
+  background: var(--ink); color: var(--mat);
+  font-family: var(--font-display); font-weight: 800; font-size: max(0.8rem, 3.6cqmin);
+  transition: transform 0.2s cubic-bezier(0.3, 1.8, 0.5, 1);
+}
+.hub:active, .pressed .hub { transform: translate(-50%, -50%) scale(0.94); }
+
+/* Tray */
+.tray { display: flex; flex-direction: column; min-height: 0; background: var(--card); border-radius: 24px; overflow: hidden; }
+.tray-scroll { position: relative; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 16px 18px 12px; }
+.rest { display: flex; flex-direction: column; gap: 10px; }
+.rest-title {
+  margin: 0; font-family: var(--font-display); font-size: 1.75rem; font-weight: 800;
+  font-stretch: 85%; line-height: 1.1; text-wrap: balance;
+}
+.stats {
+  margin: 0; padding-top: 10px; border-top: 2px solid var(--mat);
+  font-size: var(--t-note); color: var(--ink-soft); font-variant-numeric: tabular-nums;
+}
+.q { display: flex; flex-direction: column; gap: 8px; }
+.q.arrive { animation: arrive 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes arrive { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.q-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.chip {
+  padding: 3px 12px; border-radius: 999px; background: var(--chip, var(--line)); color: var(--on-color);
+  font-family: var(--font-display); font-size: var(--t-small); font-weight: 700; letter-spacing: 0.03em;
+}
+.keep-btn {
+  height: 40px; padding-inline: 12px; border: 2px solid var(--line); border-radius: 20px; background: transparent;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-display); font-weight: 700; font-size: var(--t-small);
+}
+.keep-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+.keep-btn[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--card); }
+.keep-btn[aria-pressed="true"] svg { fill: currentColor; }
+.q-text {
+  margin: 2px 0 0; font-family: var(--font-display); font-size: var(--t-head); font-weight: 800;
+  font-stretch: 88%; line-height: 1.14; text-wrap: balance; overflow-wrap: anywhere;
+}
+.opts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.opts li.gone { display: none; }
+.opt {
+  width: 100%; text-align: left; display: grid; grid-template-columns: 2rem minmax(0, 1fr); gap: 10px; align-items: start;
+  padding: 11px 14px; min-height: 48px; border-radius: 16px; border: 2px solid var(--line); background: transparent;
+  font-size: var(--t-note); line-height: 1.35;
+}
+.opt b {
+  width: 2rem; height: 2rem; border-radius: 50%; display: grid; place-items: center;
+  border: 2px solid var(--line); font-family: var(--font-display); font-size: var(--t-small);
+}
+.opt span { padding-top: 4px; }
+.opt[disabled] { cursor: default; }
+.opt.right { border-color: var(--good); background: color-mix(in srgb, var(--good) 14%, transparent); }
+.opt.right b { background: var(--good); border-color: var(--good); color: var(--card); }
+.opt.wrong { border-color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent); }
+.opt.wrong b { background: var(--warn); border-color: var(--warn); color: var(--card); }
+.why-box { display: flex; flex-direction: column; gap: 4px; padding: 2px 2px 0; }
+.why-text { margin: 0; font-size: var(--t-note); overflow-wrap: anywhere; }
+.src { margin: 0; font-size: var(--t-small); color: var(--ink-soft); overflow-wrap: anywhere; }
+.src a { color: var(--ink-soft); text-underline-offset: 3px; display: inline-block; padding: 6px 0; }
+.next-row { flex: none; padding: 10px 18px 14px; border-top: 2px solid var(--mat); background: var(--card); }
+.act {
+  min-height: 48px; width: 100%; padding-inline: 18px; border-radius: 24px; border: 2px solid var(--ink); background: transparent;
+  font-family: var(--font-display); font-weight: 700; font-size: 1rem;
+}
+.act.primary { background: var(--ink); color: var(--card); }
+@media (max-height: 700px) {
+  :root { --t-head: 1.2rem; --t-body: 1rem; --t-note: 0.875rem; }
+  .app { gap: 6px; }
+  .tray-scroll { padding: 12px 16px 10px; }
+  .q { gap: 6px; }
+  .opt { padding: 8px 12px; }
+  .next-row { padding: 8px 16px 10px; }
+}
+@media (max-width: 380px) { :root { --t-name: 1.3rem; } }
+
+/* Panels */
+.panel {
+  position: fixed; inset: 0; z-index: 10; overflow-y: auto; background: var(--mat);
+  padding: calc(env(safe-area-inset-top, 0px) + 10px) 16px calc(env(safe-area-inset-bottom, 0px) + 28px);
+}
+.panel-inner { max-width: 33rem; margin-inline: auto; display: flex; flex-direction: column; gap: 14px; }
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.panel-note { margin: 0; color: var(--ink-soft); }
+.msg { margin: 0; font-size: var(--t-note); font-weight: 700; color: var(--warn); }
+.msg:empty { display: none; }
+.dot { width: 14px; height: 14px; border-radius: 50%; background: var(--chip); flex: none; }
+.stack { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.cat-row, .kept, .box { background: var(--card); border-radius: 20px; padding: 14px 16px; }
+.cat-row { display: flex; align-items: center; gap: 12px; }
+.cat-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cat-info strong { font-family: var(--font-display); font-weight: 800; font-stretch: 85%; font-size: 1.2rem; line-height: 1.15; }
+.cat-info span { color: var(--ink-soft); font-size: var(--t-small); font-variant-numeric: tabular-nums; }
+.switch {
+  flex: none; width: 54px; height: 32px; padding: 0; border: 2px solid var(--ink-soft); border-radius: 16px;
+  background: transparent; position: relative; transition: background 0.15s;
+}
+.switch::before { content: ""; position: absolute; inset: -8px; }
+.switch::after {
+  content: ""; position: absolute; top: 4px; left: 4px; width: 20px; height: 20px; border-radius: 50%;
+  background: var(--ink-soft); transition: transform 0.15s;
+}
+.switch[aria-checked="true"] { background: var(--ink); border-color: var(--ink); }
+.switch[aria-checked="true"]::after { transform: translateX(22px); background: var(--card); }
+details.box summary {
+  cursor: pointer; font-family: var(--font-display); font-weight: 800; font-stretch: 85%; font-size: 1.2rem;
+  min-height: 32px; display: flex; align-items: center;
+}
+.kept-list { margin-top: 10px; }
+.kept { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; background: var(--mat); }
+.kept-title { margin: 0; font-family: var(--font-display); font-weight: 800; font-stretch: 88%; font-size: 1.05rem; line-height: 1.2; display: flex; gap: 8px; overflow-wrap: anywhere; }
+.kept-title .dot { transform: translateY(3px); }
+.kept p { margin: 0; grid-column: 1 / -1; overflow-wrap: anywhere; }
+.kept .ans { font-weight: 700; }
+.kept .why { color: var(--ink-soft); font-size: var(--t-note); }
+.link-btn {
+  border: 0; background: transparent; color: var(--ink-soft); font-size: var(--t-small); font-weight: 700;
+  text-decoration: underline; text-underline-offset: 3px; padding: 4px 0; min-height: 40px;
+}
+.empty { margin: 8px 0 0; color: var(--ink-soft); }
+.row-btns { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+.danger { align-self: flex-start; border: 0; background: transparent; color: var(--warn); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; padding: 8px 0; min-height: 44px; }
+.fine { margin: 0; color: var(--ink-soft); font-size: var(--t-small); }
+
+/* Practice test */
+.test-card { background: var(--card); border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.test-meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-variant-numeric: tabular-nums; font-size: var(--t-note); color: var(--ink-soft); }
+.test-meta strong { color: var(--ink); font-family: var(--font-display); }
+.bar { height: 6px; border-radius: 3px; background: var(--mat); overflow: hidden; }
+.bar span { display: block; height: 100%; width: 0; background: var(--ink); transition: width 0.25s; }
+.choice-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.score { margin: 0; font-family: var(--font-display); font-size: 3rem; font-weight: 800; font-stretch: 80%; line-height: 1; font-variant-numeric: tabular-nums; }
+.verdict { margin: 0; font-family: var(--font-display); font-size: 1.375rem; font-weight: 800; }
+.verdict.pass { color: var(--good); }
+.verdict.fail { color: var(--warn); }
+.topic-row { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: var(--t-note); font-variant-numeric: tabular-nums; }
+
+.toast {
+  position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 64px); z-index: 20;
+  transform: translateX(-50%); max-width: calc(100% - 32px);
+  padding: 10px 16px; border-radius: 999px; border: 0; background: var(--ink); color: var(--mat);
+  font-size: var(--t-note); font-weight: 700; box-shadow: 0 4px 16px rgba(0,0,0,.18);
+}
+@media (prefers-reduced-motion: reduce) {
+  .q.arrive { animation: none; }
+  .wedge, .wedge-label, .press, .shadow-off, .hub, .switch, .switch::after { transition: none; }
+  .pulse .tipband { animation: none; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="top">
+    <h1 class="name">Didja Spin <small>107</small></h1>
+    <div class="top-actions">
+      <button id="testBtn" class="icon-btn test-btn" type="button">Test</button>
+      <button id="soundBtn" class="icon-btn" type="button" aria-pressed="false" aria-label="Sound">
+        <svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6"/><path d="M18.2 6.5a8 8 0 0 1 0 11"/></svg>
+        <svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z"/><path d="M16 9.5l5 5"/><path d="M21 9.5l-5 5"/></svg>
+      </button>
+      <button id="catsBtn" class="icon-btn" type="button" aria-label="Topics and settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3"/><path d="M12 3.5V9"/><path d="M19.4 16.2l-4.8-2.7"/><path d="M4.6 16.2l4.8-2.7"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="stage">
+    <div id="wheelBox" class="wheel-box">
+      <svg id="ring" class="ring" viewBox="-205 -205 410 410" role="group" aria-label="Topic wheel. Long-press a wedge to drill one topic."><defs id="ringDefs"></defs><g id="ringG"></g></svg>
+      <div class="shadow-off"><div id="shadowL" class="layer rot"></div></div>
+      <div class="press">
+        <div id="discL" class="layer fade"></div>
+        <div id="ringL" class="layer fade"></div>
+        <div id="propL" class="layer rot"></div>
+      </div>
+      <button id="hub" class="hub" type="button" aria-label="Spin">Spin</button>
+    </div>
+  </main>
+
+  <section id="tray" class="tray">
+    <div id="trayScroll" class="tray-scroll">
+      <div id="rest" class="rest">
+        <h2 id="restTitle" class="rest-title">Flick the prop.</h2>
+        <p id="stats" class="stats"></p>
+      </div>
+      <div id="q" class="q" hidden>
+        <div class="q-top">
+          <span id="qCat" class="chip"></span>
+          <button id="keepBtn" class="keep-btn hit" type="button" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9l-5.2 2.8 1-5.9L3.5 9.7l5.9-.8L12 3.5z"/></svg>
+            <span id="keepLabel">Keep</span>
+          </button>
+        </div>
+        <h2 id="qText" class="q-text"></h2>
+        <ul id="choices" class="opts"></ul>
+        <div id="whyBox" class="why-box" hidden>
+          <p id="whyText" class="why-text"></p>
+          <p class="src"><span id="srcText"></span> · <a id="reportLink" href="#">Report a problem</a></p>
+        </div>
+      </div>
+    </div>
+    <div id="nextRow" class="next-row" hidden>
+      <button id="nextBtn" class="act primary" type="button">Spin again</button>
+    </div>
+  </section>
+</div>
+
+<section id="test" class="panel" role="dialog" aria-modal="true" aria-labelledby="testTitle" hidden>
+  <div class="panel-inner">
+    <div class="panel-head">
+      <h2 id="testTitle" class="name">Practice test</h2>
+      <button id="testClose" class="pill-btn" type="button">Back to spinner</button>
+    </div>
+    <div id="testStart" class="test-card">
+      <p class="panel-note">Three choices per question, pulled at random from every topic. The real FAA test is 60 questions in 2 hours, and you need 70% to pass.</p>
+      <button id="resumeBtn" class="act" type="button" hidden>Resume test</button>
+      <div class="choice-row">
+        <button id="start20" class="act" type="button">Quick 20</button>
+        <button id="start60" class="act primary" type="button">Full 60</button>
+      </div>
+      <p class="fine">Quick 20 has no clock. Full 60 gives you 2 hours, like the real test.</p>
+      <p id="lastScore" class="fine"></p>
+    </div>
+    <div id="testRun" class="test-card" hidden>
+      <div class="test-meta"><strong id="tNum">1 of 60</strong><span id="tClock"></span></div>
+      <div class="bar"><span id="tBar"></span></div>
+      <span id="tCat" class="chip" style="align-self:flex-start"></span>
+      <h3 id="tQ" class="q-text"></h3>
+      <ul id="tOpts" class="opts"></ul>
+      <div id="tWhyBox" class="why-box" hidden><p id="tWhy" class="why-text"></p><p id="tSrc" class="src"></p></div>
+      <button id="tNext" class="act primary" type="button" hidden>Next</button>
+      <button id="tQuit" class="link-btn" type="button" style="align-self:flex-start">End test and score it</button>
+    </div>
+    <div id="testDone" class="test-card" hidden>
+      <p id="tScore" class="score"></p>
+      <p id="tVerdict" class="verdict"></p>
+      <p id="tSub" class="panel-note"></p>
+      <ul id="tTopics" class="stack" style="gap:8px"></ul>
+      <p class="fine">Questions you missed now come up more often on the spinner.</p>
+      <div class="choice-row">
+        <button id="tAgain" class="act" type="button">New test</button>
+        <button id="tDone" class="act primary" type="button">Back to spinner</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="cats" class="panel" role="dialog" aria-modal="true" aria-labelledby="catsTitle" hidden>
+  <div class="panel-inner">
+    <div class="panel-head">
+      <h2 id="catsTitle" class="name">Topics</h2>
+      <button id="catsClose" class="pill-btn" type="button">Back to spinner</button>
+    </div>
+    <p class="panel-note">Switch off what you've got down. Keep at least two on the wheel. Long-press a wedge to drill just that topic.</p>
+    <p id="catsMsg" class="msg" role="status"></p>
+    <ul id="catsList" class="stack"></ul>
+    <div class="cat-row">
+      <div class="cat-info"><strong>Haptics</strong><span>A click on each wedge as it slows</span></div>
+      <button id="hapticsSw" class="switch" type="button" role="switch" aria-checked="true" aria-label="Haptics"></button>
+    </div>
+    <details id="keptBox" class="box">
+      <summary>Kept cards (<span id="keptN">0</span>)</summary>
+      <p id="keptEmpty" class="empty">Nothing kept yet. Tap Keep on a question you want to review.</p>
+      <ul id="keptList" class="stack kept-list"></ul>
+    </details>
+    <div class="row-btns">
+      <button id="copyBtn" class="link-btn" type="button">Copy my progress</button>
+      <button id="pasteBtn" class="link-btn" type="button">Paste progress</button>
+    </div>
+    <button id="resetBtn" class="danger" type="button">Reset my progress</button>
+    <p class="fine">Content checked against FAA sources: Nov 2026. Study aid, not an official FAA test.</p>
+    <p class="fine">Version 3 · build 9c62b4e570</p>
+  </div>
+</section>
+
+<button id="toast" class="toast" type="button" hidden></button>
+<p id="sr" class="sr" role="status" aria-live="polite"></p>
+
+<!-- DECK: swap this block to update questions. Rows: [id, q, correct, why, wrong1, wrong2, src] -->
+<script id="deck">
+const DECK = {
+  rules: [
+    ["r01","Max altitude under Part 107?","400 feet above ground level (AGL).","Exception: within 400 ft of a structure, you can fly up to 400 ft above its top.","500 feet above ground level (AGL).","400 feet above sea level (MSL).","14 CFR 107.51(b)"],
+    ["r02","Top speed allowed?","100 mph groundspeed, which is 87 knots.","It's groundspeed, so a tailwind counts against you.","115 mph groundspeed, which is 100 knots.","87 mph groundspeed, which is 100 knots.","14 CFR 107.51(a)"],
+    ["r03","Minimum flight visibility?","3 statute miles, measured from the control station.","Weather reports give visibility in statute miles (SM).","5 statute miles, measured from the control station.","3 nautical miles, measured from the control station.","14 CFR 107.51(c)"],
+    ["r04","How far must you stay from clouds?","At least 500 ft below and 2,000 ft horizontally.","Memory aid: 5 under, 20 out.","At least 2,000 ft below and 500 ft horizontally.","At least 500 ft below and 1,000 ft horizontally.","14 CFR 107.51(d)"],
+    ["r05","Max weight for a small UAS?","Under 55 lb at takeoff, including everything on board.","Payload, battery, and attachments all count.","Under 25 lb at takeoff, including everything on board.","Under 55 lb empty, before the battery and payload are added.","14 CFR 107.3"],
+    ["r06","What counts as visual line of sight?","The RPIC or visual observer sees the drone with their own eyes.","Glasses and contacts are fine. Binoculars, FPV goggles, and the camera feed are not.","The RPIC can follow the drone through its live camera feed.","The RPIC or visual observer sees the drone through binoculars.","14 CFR 107.31"],
+    ["r07","Minimum age for a remote pilot certificate?","16.","You also pass the knowledge test and a TSA security check.","18.","21.","14 CFR 107.61"],
+    ["r08","How do you stay current?","Finish the free online recurrent training every 24 calendar months.","It's on the FAA Safety Team site. No retest at a testing center.","Retake the full knowledge test at a testing center every 24 calendar months.","Finish the free online recurrent training every 12 calendar months.","14 CFR 107.65"],
+    ["r09","When must you report an accident to the FAA?","Within 10 days for serious injury, loss of consciousness, or over $500 damage.","The $500 is repair cost or fair market value, and it doesn't include the drone.","Within 30 days for serious injury, unconsciousness, or over $500 damage.","Within 10 days, but only for serious injury or over $5,000 in damage.","14 CFR 107.9"],
+    ["r10","Bottle to throttle?","At least 8 hours, and blood alcohol under 0.04%.","If you still feel it after 8 hours, you still don't fly.","At least 12 hours, and blood alcohol under 0.08%.","At least 8 hours, and blood alcohol under 0.08%.","14 CFR 91.17"],
+    ["r11","Who can ask to see your certificate?","The FAA, NTSB, TSA, or any federal, state, or local law officer.","Keep it on you every time you fly.","The FAA, NTSB, or TSA, but not state or local law enforcement.","The FAA and NTSB, plus federal but not local law enforcement.","14 CFR 107.7(a)"],
+    ["r12","You moved. When do you tell the FAA?","Within 30 days.","After 30 days without telling the FAA, you can't use your certificate. Update it online at faa.gov or by letter to the Airmen Certification Branch.","Within 60 days.","Within 10 days.","14 CFR 107.77"],
+    ["r13","Your drone or a manned aircraft: who has right of way?","The manned aircraft, in every class of airspace.","Don't pass over, under, or ahead of it unless you're well clear.","Whoever spots the other aircraft first keeps the right of way.","The manned aircraft, but only inside controlled airspace.","14 CFR 107.37(a)"],
+    ["r14","Can you fly at night?","Yes, with a test or training dated after April 6, 2021, plus lights.","The anti-collision lights must flash, and you can dim them but not turn them off. Any current pilot meets the training part.","Yes, but only with a night waiver issued through FAA DroneZone.","Yes, with anti-collision lights visible for 1 statute mile.","14 CFR 107.29(a)"],
+    ["r15","Flying in civil twilight?","Anti-collision lights visible for 3 statute miles are required.","Civil twilight runs 30 minutes before sunrise and after sunset in most of the U.S.","Anti-collision lights visible for 1 statute mile are required.","No lights are required until it is fully dark.","14 CFR 107.29(b)"],
+    ["r16","Can you fly from a moving vehicle?","Only over a sparsely populated area.","And not while carrying someone else's property for pay.","Anywhere, as long as you keep the drone in sight.","Only over a densely populated area, with a waiver.","14 CFR 107.25"],
+    ["r17","How many drones can one RPIC fly at once?","One.","Flying more than one takes a waiver.","Up to two.","Up to three, if a visual observer is helping.","14 CFR 107.35"],
+    ["r18","Can you carry hazardous materials?","No.","Hazmat is banned on small UAS under Part 107.","Yes, up to 5 lb of it.","Yes, if the shipper labeled it properly.","14 CFR 107.36"],
+    ["r19","How long is drone registration good for?","3 years.","Renew it online in FAA DroneZone before it expires.","1 year.","5 years.","14 CFR 48.100(c)"],
+    ["r20","What is Remote ID?","A digital license plate the drone broadcasts while flying.","Use built-in Standard Remote ID or add a broadcast module.","A transponder that reports the drone's position to ATC radar.","A registration sticker with a scannable QR code.","14 CFR Part 89"],
+    ["r21","Can you get a rule waived?","Some rules, yes, by applying for a waiver in FAA DroneZone.","Common ones: flying beyond visual line of sight or more than one drone at a time.","Yes, any Part 107 rule, by applying in FAA DroneZone.","Yes, by phoning the nearest control tower before the flight.","14 CFR 107.205"],
+    ["r22","Who's responsible for flight safety?","The remote pilot in command (RPIC).","The RPIC has final authority even when someone else is on the sticks.","The visual observer.","Whoever is physically holding the controller at the time.","14 CFR 107.19"],
+    ["r23","Category 1 for flying over people?","0.55 lb or less, with no exposed spinning parts that could cut skin.","Heavier drones need a maker's Category 2 or 3 declaration of compliance, or a Category 4 airworthiness certificate.","2.2 lb or less, as long as propeller guards are installed.","0.55 lb or less, but only with a maker's declaration of compliance.","14 CFR 107.110"],
+    ["r24","Can you drop something from your drone?","Yes, if it creates no undue hazard to people or property.","Plan the drop zone before you launch.","No. Dropping any object from a drone is prohibited.","Yes, but only with a waiver and while below 100 ft AGL.","14 CFR 107.23(b)"],
+    ["r25","How do you get ATC authorization to fly in controlled airspace?","Through LAANC or FAA DroneZone, before you take off.","LAANC approvals through approved service suppliers are near-instant, up to the altitude shown on the facility map.","Call the tower on the CTAF when you arrive at the site.","File a VFR flight plan with Flight Service before takeoff.","14 CFR 107.41"],
+    ["r26","A friend asks you to shoot drone photos for their business, free of charge. Which rules apply?","Part 107. It covers the operation whether you're paid or not.","The recreational exception only covers flying purely for fun. Business use, paid or free, is Part 107.","The recreational rules, because no money changed hands.","Part 135, because it involves a business.","49 U.S.C. 44809"],
+    ["r27","The FAA asks to inspect your drone and your required records. What must you do?","Allow any test or inspection and make required records available.","§107.7 covers the drone, the RPIC, the person on the controls, and any visual observer.","Allow it only if the FAA first shows a warrant or subpoena.","Allow it only if the drone was involved in a reported accident.","14 CFR 107.7(a)(3), (b)"],
+    ["r28","Under Part 107, which drones must be registered with the FAA?","All of them, no matter the weight.","The 0.55 lb registration threshold applies to recreational flyers. Every Part 107 drone gets registered.","Only drones weighing more than 0.55 lb at takeoff.","Only drones weighing more than 55 lb at takeoff.","14 CFR 48.15"],
+    ["r29","Before your first Part 107 flight with a newly bought drone, you must?","Register it and mark the number on an outside surface.","Part 48 requires the number on an external surface of the drone. Inside a battery bay or on the case doesn't count.","Have it inspected and signed off by an FAA-certified mechanic.","Register it and keep the number on the controller or case.","14 CFR 48.205(c)"],
+    ["r30","When is sustained flight over people not involved in the operation allowed?","With a Category 1, 2, or 4 drone, or if they're under cover or in a stationary vehicle.","Category 3 allows sustained flight over people only at a closed or restricted-access site with everyone on notice.","Only with a waiver, even for Category 1 drones, unless people are under cover.","With any category drone, as long as it has prop guards and stays above 100 ft AGL.","14 CFR 107.39"]
+  ],
+  airspace: [
+    ["a01","Which airspace needs no ATC authorization?","Class G.","It's uncontrolled. Every other Part 107 rule still applies.","Class A.","Class D.","14 CFR 107.41"],
+    ["a02","Which airspace needs ATC authorization?","Class B, C, D, and surface-area Class E.","Get it through LAANC or FAA DroneZone before you take off.","Class B, C, D, and all Class E from 700 ft AGL up.","Class B, C, and D, but not surface-area Class E.","14 CFR 107.41"],
+    ["a03","What is LAANC?","Low Altitude Authorization and Notification Capability.","Approved apps give near-instant approval up to the altitude on the facility map.","Low Altitude Airspace Notification and Control Center.","Local Area Authorization and Notification Capability.","FAA LAANC webpage"],
+    ["a04","How is Class B drawn on a sectional?","Solid blue lines.","It surrounds the busiest airports. B for busy, B for blue.","Solid magenta lines.","Dashed blue lines.","FAA Chart User's Guide"],
+    ["a05","How is Class C drawn?","Solid magenta lines.","Usually an inner 5 NM core and an outer shelf out to 10 NM.","Dashed magenta lines.","Solid blue lines.","Chart User's Guide; AIM 3-2-4"],
+    ["a06","How is Class D drawn?","Dashed blue lines.","The ceiling is a boxed number in hundreds of feet MSL. [25] means 2,500 ft.","Solid blue lines.","Dashed magenta lines.","FAA Chart User's Guide"],
+    ["a07","How is surface Class E drawn?","Dashed magenta lines.","You still need ATC authorization there, same as Class D.","Solid magenta lines.","Dashed blue lines.","FAA Chart User's Guide"],
+    ["a08","Faded magenta shading on a chart means?","Class E begins 700 ft above ground there.","Below that it's Class G. Faded blue means Class E begins at 1,200 ft AGL.","Class E begins 1,200 ft above ground there.","Class E begins at the surface there.","FAA Chart User's Guide"],
+    ["a09","In Class B, '70 over SFC' means?","That section runs from the surface up to 7,000 ft MSL.","Chart altitudes are in hundreds of feet above sea level.","The floor is 7,000 ft MSL and the ceiling is 10,000 ft MSL.","That section runs from the surface up to 700 ft MSL.","FAA Chart User's Guide"],
+    ["a10","Where does Class A start?","18,000 ft MSL.","It runs up to Flight Level 600. No drone business up there.","14,500 ft MSL.","10,000 ft MSL.","AIM 3-2-2"],
+    ["a11","Standard stadium TFR?","3 NM radius, up to 3,000 ft AGL.","1 hour before to 1 hour after MLB, NFL, and NCAA Division I football games at stadiums seating 30,000 or more, plus major NASCAR and IndyCar races.","1 NM radius, up to 1,000 ft AGL.","5 NM radius, up to 5,000 ft AGL.","FDC NOTAM 4/3621"],
+    ["a12","Where do you check for TFRs?","NOTAMs, the FAA TFR list, or your LAANC app.","TFRs pop up for VIP visits, wildfires, and disasters with little warning.","The airport's Chart Supplement entry and its remarks.","Only the sectional chart, since TFRs are printed on it.","14 CFR 107.49(a)"],
+    ["a13","A 'P-' area on the chart means?","Prohibited airspace. No flying, period.","Example: P-56 over the White House and National Mall.","Private airspace. Fly only with the landowner's permission.","A parachute jump area. Use caution and monitor CTAF.","AIM 3-4-2"],
+    ["a14","An 'R-' area means?","Restricted airspace with hidden hazards like artillery fire.","Stay out when it's active unless the controlling agency OKs it.","Recreational airspace reserved for model aircraft clubs.","A radar coverage area where ATC vectors all traffic.","AIM 3-4-3"],
+    ["a15","What's a MOA?","A Military Operations Area for military training.","Drones may fly there, but fast jets fly low. Use extreme caution.","A Military Operations Area, and drones are prohibited inside it.","An area reserved for military drones only.","AIM 3-4-5"],
+    ["a16","Military route with 4 digits, like IR1007?","Flown at or below 1,500 ft AGL.","3 digits, like VR123, means some legs go above 1,500 ft.","Flown at or below 500 ft AGL.","Flown above 1,500 ft AGL on every leg.","AIM 3-5-2"],
+    ["a17","Tower shows 1549 and (1213). Meaning?","Top is 1,549 ft MSL. It stands 1,213 ft above the ground.","Bold is MSL. Parentheses are AGL.","Top is 1,213 ft MSL. It stands 1,549 ft above the ground.","Top is 1,549 ft AGL. It stands 1,213 ft above sea level.","FAA Chart User's Guide"],
+    ["a18","The big number in each chart grid square?","Maximum Elevation Figure: the highest terrain or obstacle there, MSL.","A big 3 with a small 5 means 3,500 ft MSL.","The minimum en route altitude for that square, in AGL.","The height of the tallest tower in the square, above ground.","FAA Chart User's Guide"],
+    ["a19","Blue vs magenta airport symbols?","Blue is towered. Magenta is non-towered.","Towered airports usually sit in Class B, C, or D.","Blue is non-towered. Magenta is towered.","Blue is a military field. Magenta is civilian.","FAA Chart User's Guide"],
+    ["a20","1 nautical mile is how far?","About 1.15 statute miles.","Charts measure distance in nautical miles. Visibility uses statute miles.","About 0.87 statute miles.","About 1.5 statute miles.","PHAK ch. 16"],
+    ["a21","Latitude vs longitude?","Latitude lines run east-west and measure north-south position.","Latitude lines are the rungs of a ladder; longitude lines run north-south. Each degree is 60 minutes.","Latitude lines run north-south and measure east-west.","Latitude and longitude both measure north-south position.","PHAK ch. 16"],
+    ["a22","In an airport data block on a sectional, 'CT - 118.3' tells you what?","The control tower frequency is 118.3.","CT marks the tower's primary frequency. Pilots call the tower on it.","The CTAF is 118.3, but only at night.","The field elevation is 1,183 ft MSL.","FAA Chart User's Guide"],
+    ["a23","A star symbol next to a frequency or service on the chart means?","It operates part-time only.","The airport's directory listing gives the hours. When a tower closes, its airspace may drop to Class E or G.","It is a military-only frequency.","It is monitored continuously by satellite.","FAA Chart User's Guide"],
+    ["a24","What is a VFR checkpoint, the magenta flag symbol on a sectional?","A visible landmark pilots use to report position.","Flags sit near busy airspace so pilots can call out a fix everyone can find on the chart.","A mandatory ATC reporting point for all aircraft, drones included.","A ground marker showing the edge of Class B airspace.","FAA Chart User's Guide"],
+    ["a25","An alert area (marked A-xxx) on the chart means?","A high volume of pilot training or unusual aerial activity.","Alert areas don't bar entry. Everyone inside shares the job of seeing and avoiding.","Hazards like artillery fire; entry needs permission.","Military low-level training; drones must stay out.","AIM 3-4-6"],
+    ["a26","Where do you find Class G airspace?","Wherever no other class applies, often below 700 or 1,200 ft AGL.","Class G fills the gaps under the Class E floor. Near many airports that floor is 700 ft AGL.","Only outside the 30 NM Mode C veil around Class B airports.","From 700 or 1,200 ft AGL up to 18,000 ft MSL.","AIM 3-3-1"],
+    ["a27","On a sectional, Class C numbers '41/SFC' for one sector mean?","Ceiling 4,100 ft MSL, and that sector starts at the surface.","Chart numbers are in hundreds of feet MSL: top number is the ceiling, the bottom is the floor.","Ceiling 4,100 ft AGL; that sector starts at the surface.","Ceiling 410 ft MSL, and that sector starts at the surface.","FAA Chart User's Guide"],
+    ["a28","Why do wildfire TFRs ground every unauthorized drone?","A drone sighting can force firefighting aircraft to stop flying.","'If you fly, we can't.' One drone in the area can shut down the whole air attack.","Drone radio links can jam the fire crews' handheld radios.","Fire TFRs are national-security TFRs under 14 CFR 99.7.","14 CFR 91.137; NIFC guidance"]
+  ],
+  weather: [
+    ["w01","What is a METAR?","The current weather at an airport, issued every hour.","A SPECI is a special report between hours when weather changes fast.","A forecast for one airport, valid for 24 hours.","A report issued only when the weather turns severe.","Aviation Weather Handbook"],
+    ["w02","What is a TAF?","A forecast for the 5 statute miles around an airport.","It usually covers 24 or 30 hours.","A forecast for the 10 nautical miles around an airport.","A forecast covering the whole county around an airport.","Aviation Weather Handbook"],
+    ["w03","METAR winds are measured from?","True north.","Tower and ATIS winds are magnetic.","Magnetic north.","The direction the wind is blowing toward.","Aviation Weather Handbook"],
+    ["w04","What time zone do METARs use?","UTC, called Zulu time.","Eastern Standard Time is Zulu minus 5 hours. Eastern Daylight Time is Zulu minus 4.","Local standard time at the airport.","Eastern time, year-round.","Aviation Weather Handbook"],
+    ["w05","What makes a ceiling?","The lowest BKN or OVC layer, or vertical visibility (VV).","FEW and SCT don't count. BKN015 is a 1,500 ft ceiling. VV004 is a 400 ft ceiling.","The lowest layer of any kind, including FEW or SCT.","The highest BKN or OVC layer, or vertical visibility (VV).","14 CFR 1.1"],
+    ["w06","Temperature and dew point close together?","Fog or low clouds are likely.","A small spread means the air is close to saturated, so fog or low clouds can form.","Strong, gusty surface winds are likely.","Clear skies and good visibility are likely.","PHAK ch. 12"],
+    ["w07","Standard atmosphere at sea level?","15 °C and 29.92 inches of mercury.","Temperature drops about 2 °C per 1,000 ft.","0 °C and 29.92 inches of mercury.","15 °C and 28.92 inches of mercury.","PHAK ch. 4"],
+    ["w08","What is density altitude?","How high the air 'feels' to your aircraft.","Hot, high, and humid raise it. Higher density altitude means less lift.","The altitude your altimeter shows after landing.","Pressure altitude corrected for runway length.","PHAK ch. 4"],
+    ["w09","Three stages of a thunderstorm?","Cumulus, mature, dissipating.","Mature is the worst: strong updrafts, downdrafts, and rain at the surface.","Building, storming, and clearing.","Cumulus, towering, and dissipating.","PHAK ch. 12"],
+    ["w10","What's a microburst?","A short, violent downdraft that spreads out when it hits the ground.","Downdrafts can hit 6,000 ft per minute. It's usually under 1 mile across, and its outflow spreads to about 2.5 miles across at the ground. Peak winds last 2 to 4 minutes, and the whole event seldom lasts over 15 minutes.","A short, violent updraft that forms ahead of a storm's gust front.","A rotating downdraft that dissipates before reaching the ground.","AIM 7-1-24"],
+    ["w11","Signs of stable air?","Stratus clouds, smooth air, steady rain, poor visibility.","Unstable air brings cumulus clouds, turbulence, showers, and good visibility.","Cumulus clouds, bumpy air, passing showers, good visibility.","Stratus clouds, bumpy air, passing showers, good visibility.","PHAK ch. 12"],
+    ["w12","What is a temperature inversion?","A layer where temperature rises as you go up.","It traps haze near the ground and can cause sudden wind shear.","A layer where temperature falls twice as fast as normal.","A thin layer of freezing rain sandwiched between warm layers.","PHAK ch. 12"],
+    ["w13","'+TSRA' in a METAR?","Thunderstorm with heavy rain.","The sign rates the rain, not the storm: + is heavy, - is light, no sign is moderate.","Thunderstorm with light rain.","Thunderstorm with moderate hail.","Aviation Weather Handbook"],
+    ["w14","Wind near buildings and ridges?","Mechanical turbulence on the downwind side.","Expect sudden gusts crossing rooftops and tree lines.","Smooth, rising air on the downwind side.","Turbulence, but only above 3,000 ft AGL.","PHAK ch. 12"],
+    ["w15","Which way does a sea breeze blow?","From the water onto land, during the day.","At night it flips: a land breeze blows out to sea.","From the land onto the water, during the day.","From the water onto the land, at night.","PHAK ch. 12"],
+    ["w16","How do you get an official weather briefing?","Flight Service: 1-800-WX-BRIEF or 1800wxbrief.com.","Briefing types: standard, abbreviated, and outlook.","The airport manager at your departure field.","A TV weather station's local office.","PHAK ch. 13"],
+    ["w17","'VRB' in a wind report?","Variable direction.","Usually shows up with light winds.","Veering: the wind is shifting clockwise.","Visibility reduced by blowing debris.","Aviation Weather Handbook"],
+    ["w18","Frost on the drone before launch?","Remove all of it before takeoff.","Even thin frost disrupts airflow and cuts lift.","Only the frost on the camera lens has to come off.","A thin layer of frost is fine once the props spin up.","PHAK ch. 12"],
+    ["w19","In a METAR, 'OVC008' means what?","An overcast ceiling at 800 ft AGL.","Cloud heights in a METAR are in hundreds of feet above the airport. 008 = 800 ft.","An overcast ceiling at 8,000 ft AGL.","Overcast clouds covering 8% of the sky.","Aviation Weather Handbook"],
+    ["w20","The METAR code 'BR' stands for?","Mist.","BR comes from the French 'brume'. It's thinner than fog.","Haze.","Blowing rain.","Aviation Weather Handbook"],
+    ["w21","The METAR code 'FG' means?","Fog, with visibility under 5/8 statute mile.","Fog that thick makes the 3 SM visibility rule impossible to meet. Stay on the ground.","Freezing fog, with visibility under 5/8 statute mile.","Fog, with visibility of 5/8 statute mile or more.","Aviation Weather Handbook"],
+    ["w22","A wind report of '18012G24KT' means?","Wind from the south at 12 knots, gusting to 24 knots.","Wind direction is where it comes FROM. 180° is south, G is the gust, KT is knots.","Wind from the north at 12 knots, gusting to 24 knots.","Wind blowing toward 180° at 12 mph, gusting to 24 mph.","Aviation Weather Handbook"],
+    ["w23","In a TAF, the group 'FM' means?","From: a rapid, lasting change starting at that time.","FM starts a whole new forecast period at once, unlike the gradual BECMG (becoming) groups.","Forecast Minimum: the lowest ceiling expected in the period.","From: conditions change gradually over the next two hours.","Aviation Weather Handbook"],
+    ["w24","In a TAF, 'TEMPO' means?","Temporary changes, each lasting under an hour at a time.","TEMPO conditions come and go, each lasting under an hour and totaling less than half the period. A separate PROB30 or PROB40 group gives the percent chance of a condition.","Temporary changes, each lasting 2 to 4 hours at a time.","A gradual, lasting change over the whole period.","Aviation Weather Handbook"],
+    ["w25","What do AIRMETs warn about?","Moderate hazards: IFR (Sierra), turbulence (Tango), icing (Zulu).","AIRMETs are the moderate tier, issued for large areas. SIGMETs cover the severe hazards.","Severe hazards: thunderstorms, tornadoes, and large hail.","Moderate hazards: icing (Sierra), turbulence (Tango), IFR (Zulu).","Aviation Weather Handbook"],
+    ["w26","A SIGMET warns of?","Severe icing, severe or extreme turbulence, dust or sandstorms, or volcanic ash.","Dust or sandstorms count when they drop visibility below 3 miles. Convective SIGMETs cover thunderstorm hazards: severe turbulence, icing, and low-level wind shear.","Moderate icing, moderate turbulence, 30-knot surface winds, or IFR.","Severe icing, moderate turbulence, widespread haze, or mountain obscuration.","Aviation Weather Handbook"],
+    ["w27","What does high density altitude do to your drone?","Less lift, a weaker climb, and harder-working motors.","Heat, altitude, and humidity all raise density altitude and thin the air your props bite into.","More lift, because thin air means less drag on the props.","Only a lower top speed; hover and climb are unchanged.","PHAK ch. 11"],
+    ["w28","What's the main risk of flying a typical consumer drone in rain?","Water can short the electronics and motors.","Most small drones carry no rain rating. The RPIC must judge whether it's in condition for safe flight.","Mostly a camera issue: raindrops blur the lens.","GPS loss, because rain blocks satellite signals.","14 CFR 107.15"]
+  ],
+  loading: [
+    ["l01","Four forces on an aircraft?","Lift, weight, thrust, and drag.","In a steady hover, upward thrust equals weight.","Lift, weight, thrust, and torque.","Lift, weight, thrust, and friction.","PHAK ch. 5"],
+    ["l02","Load factor in a 60° banked level turn?","2 Gs.","The aircraft acts twice as heavy, so it needs twice the lift.","1.5 Gs.","3 Gs.","PHAK ch. 5"],
+    ["l03","Load factor at 30° and 45° bank?","About 1.15 Gs at 30°, about 1.41 Gs at 45°.","It climbs fast after 45°.","About 1.41 Gs at 30°, about 2 Gs at 45°.","About 1.15 Gs at 30°, about 2 Gs at 45°.","PHAK ch. 5"],
+    ["l04","More load factor does what to stall speed?","Raises it.","Steep turns can stall a fixed-wing at a higher speed than normal.","Lowers it.","It raises it only in a climb.","PHAK ch. 5"],
+    ["l05","What causes a stall?","Going past the critical angle of attack.","It can happen at any airspeed and any attitude.","Flying slower than the published stall speed.","Climbing steeper than the motors can sustain.","PHAK ch. 5"],
+    ["l06","CG outside its limits?","The drone can be unstable or hard to control.","CG is the balance point. Mount payloads where the maker says.","Nothing changes; the flight controller corrects for any CG.","The drone only flies a little slower in a straight line.","PHAK ch. 10"],
+    ["l07","Extra weight does what to performance?","Shorter flights, slower climbs, less control margin.","Motors work harder to hold the same hover.","Shorter flights, but faster climbs from the extra mass.","No change, as long as the battery is fully charged.","PHAK ch. 10"],
+    ["l08","Who checks weight and balance?","The remote pilot in command.","Use the maker's data. If there isn't any, test it carefully.","The manufacturer, through the type certificate.","The visual observer, as part of the crew brief.","14 CFR 107.49(e)"],
+    ["l09","Hot day at a high site. Expect?","Less lift and shorter flights.","Thin air means each prop turn moves less air.","More lift, because warm air rises and helps the props.","No change; electric motors don't care about air density.","PHAK ch. 11"],
+    ["l10","Cold weather and LiPo batteries?","Capacity and voltage drop, so flights get shorter.","Keep batteries warm before launch and land with extra reserve. DJI warns that use below -10 °C can permanently damage the battery.","Capacity rises in the cold, so flights get a little longer.","Capacity drops, but only once it's colder than -20 °C.","DJI manual and battery guide"],
+    ["l11","Swollen, puffy LiPo battery?","Stop using it and dispose of it properly.","Swelling means internal damage and a fire risk.","Let it cool overnight and fly it if the swelling goes down.","Keep using it, but only for short, gentle flights.","DJI battery safety guide"],
+    ["l12","What is ground effect?","Extra lift within about one wingspan or rotor diameter of the ground.","It makes low hovers feel floaty and landings bouncy.","Reduced lift within about one rotor diameter, from rotor wash.","Extra lift within about ten rotor diameters of the ground.","PHAK ch. 5"],
+    ["l13","You drop a payload in flight. What changes?","Weight and CG change instantly.","Expect the drone to jump or yaw, and be ready for it.","Only weight changes; the drone handles the same.","Only CG changes; weight effects are negligible.","PHAK ch. 10"],
+    ["l14","Loose payload. What's the risk?","It can shift the CG mid-flight or fall off.","Secure it so it can't move in turns or gusts.","It only adds a little vibration and noise.","It only matters above 15 knots of wind.","14 CFR 107.49(e)"],
+    ["l15","In a 60° banked turn at 2 Gs, stall speed rises by about how much?","About 41%.","Stall speed grows with the square root of the load factor. √2 ≈ 1.41, so double the load factor raises stall speed about 41%, not 100%.","It doubles, rising 100%.","About 15%.","PHAK ch. 5"],
+    ["l16","An aft (rearward) CG does what to an aircraft?","Makes it less stable and harder to recover from a stall.","A forward CG is duller but more stable. An aft CG trades that stability for twitchy handling.","Makes it more stable, but slower to respond.","Raises stall speed and makes the aircraft nose-heavy.","PHAK ch. 5"],
+    ["l17","Why does a heavier drone burn more power just to hover?","Hover thrust must equal its full weight the whole time.","Every extra gram is being lifted by the motors for every second of the flight.","Heavier drones carry more momentum, which offsets it.","Only the takeoff uses extra power; hover is the same.","PHAK ch. 5"],
+    ["l18","In a level banked turn, what actually makes the aircraft turn?","The horizontal component of the tilted lift force.","Banking splits lift: the vertical part holds altitude, the horizontal part pulls you around the turn.","The vertical component of the tilted lift force.","Centrifugal force pulling outward from the turn.","PHAK ch. 5"],
+    ["l19","Angle of attack is the angle between what?","The wing's chord line and the relative wind.","Exceed the critical angle of attack and the wing stalls, at any airspeed, in any attitude.","The wing's chord line and the natural horizon.","The propeller's arc and the relative wind.","PHAK ch. 5"],
+    ["l20","The maker doesn't say where to mount a payload. Best spot?","As close to the CG as possible, secured so it can't shift.","Centered, fixed weight keeps the balance and handling predictable.","As far forward as possible, to keep the nose stable.","On a short swinging tether below, to lower the CG.","PHAK ch. 10"],
+    ["l21","You find a nick or a crack in a propeller. What do you do?","Replace the prop before flying.","A weakened prop can shed a blade at full RPM. Props are cheap; the alternative isn't.","Fly anyway if the drone still hovers smoothly.","Sand the other blade to rebalance it, then fly.","AC 107-2A ch. 7"],
+    ["l22","Flying at a density altitude of 8,000 ft instead of sea level, expect?","A noticeably weaker climb and shorter endurance.","Thin air gives the props less bite, and the motors get less cooling margin.","Better performance than at sea level.","Shorter endurance, but climb is unchanged.","PHAK ch. 11"],
+    ["l23","What happens to load factor when you pull up hard out of a dive?","It spikes above 1 G, just like a steep turn does.","Any strong pitch-up or bank loads the airframe beyond straight-and-level flight.","It drops below 1 G, like at the top of a climb.","It stays at 1 G as long as the wings are level.","PHAK ch. 5"],
+    ["l24","Why land with a battery reserve instead of flying to 0%?","Voltage sags near empty and can cut power with little warning.","A reserve covers headwinds, a go-around, and other surprises. Part 107 requires enough power for the intended operational time.","Part 107 requires a 30-minute power reserve, like manned VFR flights.","LiPos last longer when landed at 0% and fully recharged.","§107.49(d); AC 107-2A 5.11.1"]
+  ],
+  airports: [
+    ["p01","Runway 27 points which way?","About 270° magnetic, roughly west.","Drop the last zero. The other end is runway 9.","About 090° magnetic, roughly east.","About 027° magnetic, roughly north-northeast.","AIM 2-3-3"],
+    ["p02","Standard traffic pattern turns?","Left turns.","Unless the chart or Chart Supplement shows right traffic.","Right turns.","Whichever direction turns into the wind.","AIM 4-3-3"],
+    ["p03","Name the traffic pattern legs.","Upwind, crosswind, downwind, base, final.","Downwind runs parallel to the runway, often around 1,000 ft AGL.","Departure, arrival, holding, base, and final.","Upwind, downwind, overhead, base, and final.","AIM 4-3-3"],
+    ["p04","What is CTAF?","Common Traffic Advisory Frequency.","Pilots at non-towered airports announce their positions on it.","Central Traffic Advisory Frequency.","Controlled Tower Approach Frequency.","AIM 4-1-9"],
+    ["p05","What is UNICOM?","A non-government radio station at an airport.","At many small fields it doubles as the CTAF.","A government-run tower frequency for emergencies.","A satellite link that works at any airport.","Pilot/Controller Glossary"],
+    ["p06","Where do you look up airport details?","The Chart Supplement.","It used to be called the Airport/Facility Directory (A/FD).","The legend printed on the sectional chart.","The Pilot's Handbook of Aeronautical Knowledge.","PHAK ch. 14"],
+    ["p07","Phonetic alphabet for N, F, V?","November, Foxtrot, Victor.","Know all 26. They show up on the test.","Nancy, Foxtrot, Victor.","November, Foxtrot, Venice.","AIM 4-2-7"],
+    ["p08","Traffic at 2 o'clock. Where is it?","Ahead and to the right, about 60° off the nose.","12 o'clock is straight ahead. Each hour is 30°.","Behind and to the right, about 120° off the nose.","Ahead and to the left, about 60° off the nose.","AIM 4-1-15"],
+    ["p09","Rotating beacon flashing white and green?","A lighted civilian land airport.","White and yellow is a water airport. Two quick whites, then green, is military.","A lighted military airport.","A lighted civilian water airport.","AIM 2-1-9"],
+    ["p10","Beacon on during the day in controlled airspace?","Weather may be below basic VFR minimums.","That means a ceiling under 1,000 ft or visibility under 3 miles.","An emergency is in progress at the airport.","The airport has just closed to all traffic.","AIM 2-1-9"],
+    ["p11","Hold-short markings look like?","Two solid and two dashed yellow lines.","If the solid lines are on your side, stop.","Four solid red lines across the taxiway.","Two dashed white lines and a stop sign.","AIM 2-3-5"],
+    ["p12","VASI shows red over white?","On the glide path.","Red over white, you're all right. All red, you're too low.","Well above the glide path.","Slightly below the glide path.","AIM 2-1-2"],
+    ["p13","What's a NOTAM?","Notice to Airmen: time-critical news like closures and TFRs.","Check them before every flight.","Notice to Airmen: a monthly digest of new chart changes.","Notice of Airport Maintenance: planned runway work.","AIM 5-1-3"],
+    ["p14","Flying near a non-towered airport?","Stay out of the pattern and approach paths, and monitor CTAF.","Check the airspace first: some non-towered fields have a Class E surface area that needs authorization. Planes fly low near runways.","Join the traffic pattern at pattern altitude with the airplanes.","Land immediately the moment you hear any radio traffic.","14 CFR 107.43"],
+    ["p15","What does a segmented circle show?","Wind and traffic pattern info for the airport.","It's usually built around the wind sock.","The runway lighting status after dark.","The magnetic variation and field elevation for the airport.","AIM 4-3-4"],
+    ["p16","The MULTICOM frequency 122.9 is used for what?","Self-announcing at airports with no tower, FSS, or UNICOM.","The AIM also lists 122.9 for temporary, seasonal, emergency, and search-and-rescue activity. Air-to-air chatter goes on 122.75, not 122.9.","The emergency frequency for reaching ATC from any plane.","Contacting Flight Service for an in-flight weather update.","AIM 4-1-11"],
+    ["p17","What is an AWOS or ASOS?","An automated station broadcasting airport weather 24/7.","Tune it in before flying near the field to hear the wind, visibility, ceiling, and altimeter.","A recorded broadcast of runway and NOTAM info, updated by staff.","A forecast for the airport, issued every 6 hours.","PHAK ch. 13"],
+    ["p18","Runway numbers are based on what?","The runway's magnetic heading, rounded to the nearest 10 degrees.","Runway 18 points about 180° magnetic, due south. Drop the last zero from the heading.","The runway's true heading, rounded to the nearest 10 degrees.","The runway's length, in hundreds of feet.","AIM 2-3-3"],
+    ["p19","White arrows on the pavement before the runway numbers mark a displaced threshold. That pavement may be used for?","Taxi, takeoff, and rollout from the other end, but not touchdown.","The arrows lead to the threshold bar, where touchdown may begin. Pavement behind it is open for takeoffs either way and rollout from the other end.","Taxi and touchdown, but not the takeoff roll either way.","Taxi only; it's closed to all takeoffs and to landing rollout.","AIM 2-3-3"],
+    ["p20","Yellow chevrons painted on pavement before a runway mean?","A blast pad or stopway, not for normal taxi, takeoff, or landing.","Chevron pavement isn't built to bear normal operations. It's there for emergencies and jet blast.","A helicopter landing zone, closed to airplane taxi and takeoff.","A displaced threshold, usable for taxi and takeoff.","AIM 2-3-3"],
+    ["p21","A runway holding position sign looks like?","White numbers on a red background.","Red means a mandatory instruction: stop there unless ATC clears you. It shows the runway ahead.","Black numbers on a yellow background.","White letters on a green background.","AIM 2-3-8"],
+    ["p22","A sign with a yellow background, black letters, and an arrow is?","A direction sign, pointing the way to a taxiway or runway.","Don't mix them up: location signs are the reverse, yellow letters on a black background.","A location sign, showing which taxiway you're on.","A mandatory sign marking an area you may not enter.","AIM 2-3-10"],
+    ["p23","Good practice for self-announce calls on CTAF is to?","Say the airport name first and last, plus position and intentions.","Many airports share one frequency. Leading and closing with the field name keeps calls sorted.","Give position and intentions; the airport name isn't needed.","Say the airport name once, at the end of the call.","AIM 4-1-9"],
+    ["p24","What altitude do propeller airplanes normally fly the traffic pattern at?","About 1,000 ft AGL.","Turbine traffic flies it higher, around 1,500 ft AGL. Drones yield and stay clear of both.","About 500 ft AGL.","About 2,500 ft AGL.","AIM 4-3-3"],
+    ["p25","The Chart Supplement is reissued how often?","Every 56 days.","Seven regional volumes cover the lower 48, Puerto Rico and the Virgin Islands; Alaska and the Pacific have their own supplements.","Every 28 days.","Once a year.","FAA Chart Supplement page"],
+    ["p26","In an airport data block, 'RP 27' means?","Runway 27 uses a right-hand traffic pattern.","RP flags the nonstandard right traffic. The listed runways are the ones it applies to.","Runway 27 has a precision approach path indicator.","Repairs are in progress on runway 27.","FAA Chart User's Guide"]
+  ],
+  pilot: [
+    ["h01","What does IMSAFE stand for?","Illness, Medication, Stress, Alcohol, Fatigue, Emotion.","A quick self-check before every flight.","Injury, Medication, Stress, Altitude, Fatigue, Ego.","Illness, Money, Stress, Alcohol, Fatigue, Ego.","PHAK ch. 2"],
+    ["h02","What does PAVE stand for?","Pilot, Aircraft, enVironment, External pressures.","Four risk areas to check before you commit.","Pilot, Altitude, Visibility, and External pressures.","People, Aircraft, Venue, and Equipment checks.","PHAK ch. 2"],
+    ["h03","Steps of the DECIDE model?","Detect, Estimate, Choose, Identify, Do, Evaluate.","A step-by-step way to handle a change mid-flight.","Decide, Engage, Climb, Inspect, Descend, Evaluate.","Detect, Estimate, Choose, Identify, Do, Examine.","PHAK ch. 2"],
+    ["h04","Antidote to anti-authority?","\"Follow the rules. They're usually right.\"","Anti-authority sounds like \"Don't tell me what to do.\"","\"The rules don't apply to people with my experience.\"","\"Someone else will deal with it.\"","PHAK ch. 2"],
+    ["h05","Antidote to impulsivity?","\"Not so fast. Think first.\"","Impulsivity sounds like \"Do something, quick!\"","\"Do something, and do it quick!\"","\"It could happen to me.\"","PHAK ch. 2"],
+    ["h06","Antidote to invulnerability?","\"It could happen to me.\"","This attitude sounds like \"It won't happen to me.\"","\"Taking chances is foolish.\"","\"What's the use of trying?\"","PHAK ch. 2"],
+    ["h07","Antidote to macho?","\"Taking chances is foolish.\"","Macho sounds like \"I can do it. Watch this.\"","\"I can do it. Watch this.\"","\"Follow the rules. They're usually right.\"","PHAK ch. 2"],
+    ["h08","Antidote to resignation?","\"I'm not helpless. I can make a difference.\"","Resignation sounds like \"What's the use?\"","\"Someone else will handle it. I'll wait.\"","\"Follow the rules. They're usually right.\"","PHAK ch. 2"],
+    ["h09","What is CRM?","Crew Resource Management: using all your people and tools.","Brief your visual observer and tell them to speak up.","Cockpit Risk Management: a solo checklist for rating hazards.","Crew Role Matrix: a chart of who flies and who watches.","PHAK ch. 2"],
+    ["h10","Best way to scan the sky?","Short stops of about 1 second, roughly 10° apart.","Eyes don't catch movement well while sweeping.","One long, slow sweep across the whole sky.","Fixing your eyes on one spot for about 10 seconds.","AIM 8-1-6"],
+    ["h11","Spotting things in the dark?","Look slightly to the side, not straight at them.","Off-center viewing uses the rods, which work better in dim light.","Look straight at it with both eyes.","Scan fast without stopping so your eyes stay adjusted.","PHAK ch. 17"],
+    ["h12","How long for full night vision?","About 30 minutes.","One bright light can reset it. Use dim red light on the ground.","About 5 minutes.","About 2 hours.","AIM 8-1-6"],
+    ["h13","Over-the-counter meds and flying?","Many cause drowsiness or slow reactions. Read the label.","If it says don't drive or run machinery, don't fly.","They're fine once you've taken the first dose without trouble.","Only prescription medications can impair a pilot's reactions.","AIM 8-1-1"],
+    ["h14","What is hyperventilation?","Breathing too fast, often from stress, lowering blood CO2.","Fix it by slowing your breathing or talking out loud.","Too little oxygen reaching the brain, from thin air.","Breathing too fast, which raises CO2 in the blood.","AIM 8-1-3"],
+    ["h15","What is a risk matrix?","A chart of likelihood against severity.","High likelihood plus high severity means don't fly as planned.","A chart that plots wind against temperature.","A printed list of emergency contacts.","Risk Mgmt Handbook"],
+    ["h16","Effects of dehydration?","Headache, fatigue, and slower thinking.","Long, hot field days need water breaks.","Mostly muscle cramps; thinking isn't affected.","Mainly thirst; symptoms start only after a full day.","PHAK ch. 17"],
+    ["h17","What is situational awareness?","Knowing what's going on around you and the drone, now and next.","Fatigue, stress, and complacency wear it down first.","Watching the camera feed closely for the whole flight.","Knowing your drone's position and battery level throughout.","PHAK ch. 2"],
+    ["h18","In the PAVE checklist, 'External pressures' includes things like?","A waiting client, a tight schedule, fear of letting people down.","Pressure to fly is a hazard in itself. Name it during the preflight, before it decides for you.","Weather, terrain, and obstacles at the site you're flying.","Your own fatigue, stress, illness, or medication that day.","PHAK ch. 2"],
+    ["h19","Which hazardous attitude says, 'It won't happen to me'?","Invulnerability.","Pilots with this attitude assume accidents only happen to other people.","Impulsivity.","Anti-authority.","PHAK ch. 2"],
+    ["h20","Stress and fatigue most directly wear down what?","Your situational awareness and decision-making.","That's why both sit inside the IMSAFE self-check you run before every flight.","Only your reaction time; your judgment stays sharp.","Mainly your eyesight, not your decisions.","PHAK ch. 17"],
+    ["h21","What's a sound go/no-go habit before a paid job?","Set personal minimums in advance and brief the crew.","Limits decided calmly on the ground hold up. Limits invented under pressure on site don't.","Set your limits on site, once you see the conditions.","Let the client set the weather limits for the job.","Risk Mgmt Handbook"],
+    ["h22","Your visual observer calls out a manned aircraft you didn't see. Best response?","Yield right away and thank them.","The observer is briefed to speak up, and the RPIC acts on it. Right of way is never yours to keep.","Finish the current shot first, then look for it.","Find the aircraft yourself before you react.","14 CFR 107.37(a)"]
+  ],
+  ops: [
+    ["o01","In-flight emergency. What can you do?","Break any Part 107 rule needed to handle it.","If the FAA asks, you must send a written report.","Only the altitude limit, and only to avoid a collision.","You may break rules if your visual observer approves first.","14 CFR 107.21"],
+    ["o02","Lost link. What should happen?","The drone runs its lost-link setting, usually return-to-home.","Set return altitude above the tallest obstacle on the route.","The drone lands straight down wherever it happens to be.","The drone keeps flying its last heading until the battery dies.","AC 107-2A ch. 5"],
+    ["o03","What must the RPIC check before every flight?","Site and airspace hazards, crew brief, link, power, payload.","Part 107.49 lists these preflight checks.","Battery, props, GPS count, and the maker's app checklist.","Site and weather once a day, plus the battery each flight.","14 CFR 107.49"],
+    ["o04","What is a visual observer?","A person who helps keep the drone in sight.","Optional. If you use one, you must be able to talk to each other the whole flight.","A second certificated RPIC who shares the controls.","The person who flies while the RPIC watches the camera screen.","14 CFR 107.33"],
+    ["o05","Military GPS interference testing is planned near your job site. How is it announced?","By NOTAM, published at least 24 hours before testing.","Testing can make GPS unreliable or unavailable. Report anomalies per AIM 1-1-13.","In the Chart Supplement remarks for the nearest airport.","On the sectional chart, as a dashed GPS outage ring.","AIM 1-1-13; FAA GPS advisory"],
+    ["o06","Compass error at launch?","Move away from metal, vehicles, and rebar, then recalibrate.","Bad compass data can cause circling drift or a flyaway.","Take off quickly and let GPS fix the heading in flight.","Recalibrate next to the vehicle, then launch from there.","AC 107-2A ch. 7"],
+    ["o07","LiPo battery catches fire?","Keep people clear and use sand or a dry-powder extinguisher.","LiPo smoke is toxic. Prevent fires: charge on a nonflammable surface and stay with it.","Unplug it and carry it outside to a safe spot by hand.","Smother it with your jacket and hold it down.","DJI battery safety guide"],
+    ["o08","Does Part 107 require maintenance logs?","No, but the FAA says they can be beneficial.","Logs help you spot repeat problems before they bite.","Part 107 requires them for every flight.","Part 107 requires them, and the FAA must approve them each year.","AC 107-2A 7.3.5"],
+    ["o09","Who decides if the drone is safe to fly?","The RPIC, before every flight.","If it isn't in condition for safe operation, it stays on the ground.","The manufacturer, through the app's checklist.","The property owner where you're flying.","14 CFR 107.15"],
+    ["o10","Under Part 107, what must the RPIC ensure in case of a loss of control or flyaway?","That it poses no undue hazard to people, aircraft, or property.","Plan the area, altitude and failsafe so a lost drone can't endanger anyone. The RPIC is responsible for loss of control for any reason.","That flyaway insurance covers any damage the drone causes.","That return-to-home is enabled, as Part 107 requires.","14 CFR 107.19(c)"],
+    ["o11","Can someone without a certificate fly?","Yes, if an RPIC directly supervises and can take over at once.","The RPIC stays responsible.","No. Only certificate holders may fly, even with supervision.","Yes, if they hold a recreational TRUST certificate.","14 CFR 107.12(a)"],
+    ["o12","Why brief the crew?","Part 107 requires it: conditions, roles, hazards, emergency plans.","Everyone directly involved needs to know the plan.","Part 107 requires it only for flights with a visual observer.","It's recommended, but Part 107 only requires it for waivers.","14 CFR 107.49(b)"],
+    ["o13","Firmware update right before a job?","Don't. Update at home and test-fly first.","Makers can push unscheduled software updates. Do them where you can test-fly before the job.","Update on site, then do one quick hover test.","Only if the app forces it; otherwise skip it.","AC 107-2A 7.2.2 (best practice)"],
+    ["o14","Launching in a national park?","Prohibited on NPS land unless specifically approved.","The park service has banned launching and landing there since 2014.","Allowed in a park if you check in at the ranger station first.","Allowed on NPS land with a state park drone permit.","NPS Policy Memo 14-05"],
+    ["o15","Sustained flight over an open-air assembly of people requires the drone to?","Qualify as Category 1, 2, or 4 and meet Part 89 Remote ID requirements.","107.110, 107.115 and 107.140 each require Remote ID for open-air assemblies. Category 3 may not fly over open-air assemblies at all (107.125).","Qualify as any category, including Category 3, with Remote ID on.","Qualify as Category 1 only; Remote ID isn't required for Category 1.","14 CFR 107 Subpart D"],
+    ["o16","What is a FRIA?","An FAA-recognized site where drones can fly without Remote ID.","Flying fields and schools can hold FRIAs. You must stay inside its borders and keep visual line of sight.","An FAA-recognized site where drones can fly unregistered.","An FAA-recognized site where drones can fly beyond sight.","14 CFR 89.115(b)"],
+    ["o17","How long must the registration number stay on the drone?","Affixed so it stays on for the whole of every operation.","The number must stay legible and attached for the entire flight, not just at registration.","Only until the FAA accepts your registration online.","Only during flights in controlled airspace.","14 CFR 48.205(b)"],
+    ["o18","A LiPo battery that was dropped hard or punctured should be?","Taken out of service and disposed of safely.","Internal damage can short a cell and start a fire hours after the impact.","Charged slowly once, to test whether it still works.","Used again if it still holds a full charge.","DJI battery safety guide"],
+    ["o19","Safe LiPo charging means charging?","Attended, on a nonflammable surface, away from combustibles.","DJI's battery guide says never leave a charging battery unattended, and never charge on or near carpet, wood, or other flammables.","Overnight on a nonflammable surface, so packs are ready.","Unattended in the car, so packs are warm for the flight.","DJI battery safety guide"],
+    ["o20","Your drone starts behaving strangely mid-flight. First move?","Hold position, assess, and land as soon as it's safe.","Get control of the situation first. Pushing on with a sick aircraft invites a flyaway or a crash.","Recalibrate the compass in flight, then continue.","Climb for more margin, then finish the shot.","14 CFR 107.15"],
+    ["o21","Your drone clips a bird and lands safely. Before the next flight you should?","Inspect it for damage, especially props, arms, and motors.","Hidden damage from a strike can fail at the next takeoff. Looking costs a minute.","Hover-test it; if it's stable, it's fine.","Report it to the FAA as an accident no matter what.","14 CFR 107.15"],
+    ["o22","Why keep bystanders well back from the launch and landing spot?","A loss of control near the ground could hit them.","Brief spectators to stay back, and never let anyone walk under the drone.","So rotor wash doesn't throw dust into the camera.","It's only required when flying over a crowd.","14 CFR 107.19(c)"],
+    ["o23","A proper preflight check of the control link includes?","Confirming the controls respond correctly and the failsafe is set.","Verify the link and your failsafe behavior on the ground, before you need them in the air.","Confirming GPS lock and home point; the link checks itself.","Checking link signal strength once airborne, after takeoff.","14 CFR 107.49(c)"],
+    ["o24","On site, the wind is stronger than forecast and near your drone's limit. The RPIC should?","Delay or cancel. The RPIC has the final say.","107.49 makes the RPIC check actual conditions at the site, not just the morning's forecast.","Fly, since the morning forecast was within limits.","Fly, but stay below 100 ft AGL where wind is weaker.","14 CFR 107.49(a)"]
+  ],
+};
+</script>
+
+<script>
+(() => {
+  'use strict';
+  const BUILD = '9c62b4e570';
+  const CATS = [
+    { key: 'rules', label: 'Rules', full: 'Regulations', color: 0 },
+    { key: 'airspace', label: 'Airspace', full: 'Airspace and charts', color: 1 },
+    { key: 'weather', label: 'Weather', full: 'Weather and reports', color: 2 },
+    { key: 'loading', label: 'Loading', full: 'Loading and performance', color: 3 },
+    { key: 'airports', label: 'Airports', full: 'Airports and radio', color: 4 },
+    { key: 'pilot', label: 'Pilot', full: 'Decision-making and physiology', color: 5 },
+    { key: 'ops', label: 'Ops', full: 'Preflight, maintenance, emergencies', color: 6 }
+  ];
+  const CAT = {}, BY_ID = {};
+  let TOTAL = 0;
+  CATS.forEach((c) => {
+    CAT[c.key] = c;
+    c.cards = (typeof DECK !== 'undefined' && DECK[c.key]) || [];
+    c.cards.forEach((r) => { BY_ID[r[0]] = { id: r[0], cat: c.key, q: r[1], a: r[2], why: r[3] || '', d: [r[4] || '', r[5] || ''], src: r[6] || '' }; TOTAL++; });
+  });
+
+  const $ = (id) => document.getElementById(id);
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+  /* ---------- Saved state (this device only) ---------- */
+  const KEY = 'didja-spin-107-v3', V2KEY = 'didja-spin-107-v2';
+  const defaults = () => ({ v: 3, n: 0, cards: {}, keep: [], days: {}, sound: false, haptics: true, off: [], ans: {}, ok: {}, pulsed: false, toldSound: false });
+  const isObj = (o) => o && typeof o === 'object' && !Array.isArray(o);
+  function normalize(raw) {
+    const s = defaults();
+    if (!isObj(raw)) return s;
+    if (Number.isFinite(raw.n)) s.n = raw.n;
+    if (isObj(raw.cards)) for (const id in raw.cards) {
+      const c = raw.cards[id];
+      if (BY_ID[id] && isObj(c)) s.cards[id] = { c: Math.max(0, c.c | 0), t: Number.isFinite(c.t) ? c.t : 0, m: c.m ? 1 : 0 };
+    }
+    if (Array.isArray(raw.keep)) s.keep = raw.keep.filter((id) => BY_ID[id]);
+    if (isObj(raw.days)) s.days = raw.days;
+    if (raw.sound === true) s.sound = true;
+    if (raw.haptics === false) s.haptics = false;
+    if (Array.isArray(raw.off)) s.off = raw.off.filter((k) => CAT[k]);
+    if (isObj(raw.ans)) s.ans = raw.ans;
+    if (isObj(raw.ok)) s.ok = raw.ok;
+    if (raw.pulsed) s.pulsed = true;
+    if (raw.toldSound) s.toldSound = true;
+    return s;
+  }
+  /* v2 kept {s:'g'|'a'|'n', t} per card. One right answer ('g') is c=1 under the v3 rule, not known yet. */
+  function fromV2(o) {
+    const s = normalize({ n: o.n, keep: o.keep, days: o.days, off: o.off, ans: o.ans, ok: o.ok });
+    if (isObj(o.cards)) for (const id in o.cards) {
+      const c = o.cards[id];
+      if (!BY_ID[id] || !isObj(c)) continue;
+      const t = Number.isFinite(c.t) ? c.t : 0;
+      if (c.s === 'g') s.cards[id] = { c: 1, t, m: 0 };
+      else if (c.s === 'a') s.cards[id] = { c: 0, t, m: 1 };
+    }
+    return s;
+  }
+  let S = defaults();
+  const lsGet = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* full or blocked */ } };
+  const lsDel = (k) => { try { localStorage.removeItem(k); } catch (e) { /* ignore */ } };
+  function save() { lsSet(KEY, JSON.stringify(S)); }
+  (function load() {
+    const raw = lsGet(KEY);
+    if (raw != null) {
+      let parsed;
+      try { parsed = JSON.parse(raw); } catch (e) { parsed = undefined; }
+      if (isObj(parsed)) { S = normalize(parsed); return; }
+      lsSet(KEY + '-corrupt', raw);        /* keep the bad copy; never silently overwrite progress */
+      S = defaults();
+      return;
+    }
+    const v2 = lsGet(V2KEY);
+    if (v2) {
+      try {
+        S = fromV2(JSON.parse(v2));
+        const last = lsGet(V2KEY + '-last');
+        if (last) lsSet(KEY + '-last', last);
+        lsSet(V2KEY + '-migrated', new Date().toISOString());   /* v2 data is left in place */
+        save();
+      } catch (e) { S = defaults(); }
+    }
+  })();
+  let persistAsked = false;
+  function askPersist() {
+    if (persistAsked) return;
+    persistAsked = true;
+    try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) { /* ignore */ }
+  }
+
+  let lock = null;            /* topic lock: long-press a wedge. Not saved between sessions. */
+  let WHEEL = [];
+  function refreshCats() {
+    WHEEL = CATS.filter((c) => S.off.indexOf(c.key) < 0);
+    if (WHEEL.length < 2) { S.off = []; WHEEL = CATS.slice(); }
+    if (lock && !WHEEL.some((c) => c.key === lock)) lock = null;
+  }
+  const colorOf = (key) => 'var(--p' + CAT[key].color + ')';
+  const stepDeg = () => 360 / WHEEL.length;
+
+  function dayKey(offset) {
+    const d = new Date();
+    d.setDate(d.getDate() - (offset || 0));
+    const p = (n) => String(n).padStart(2, '0');
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+  function streakFrom(offset) { let c = 0; while (S.days[dayKey(offset + c)]) c++; return c; }
+
+  /* ---------- Spaced repetition ----------
+     Known = 2 correct in a row, at least 10 spins apart. A miss resets it. */
+  const isKnown = (id) => S.cards[id] && S.cards[id].c >= 2;
+  function record(card, correct) {
+    const id = card.id, st = S.cards[id];
+    if (!correct) S.cards[id] = { c: 0, t: S.n, m: 1 };
+    else if (!st || st.c === 0) S.cards[id] = { c: 1, t: S.n, m: 0 };
+    else if (S.n - st.t >= 10) S.cards[id] = { c: st.c + 1, t: S.n, m: 0 };
+    else S.cards[id] = { c: st.c, t: st.t, m: 0 };    /* too soon to count; keep the clock */
+    S.ans[card.cat] = (S.ans[card.cat] || 0) + 1;
+    if (correct) S.ok[card.cat] = (S.ok[card.cat] || 0) + 1;
+  }
+  let lastId = null;
+  function pick(catKey) {
+    const pool = CAT[catKey].cards;
+    let total = 0;
+    const weights = pool.map((row) => {
+      if (row[0] === lastId && pool.length > 1) return 0;
+      const st = S.cards[row[0]];
+      let w;
+      if (!st) w = 6;
+      else {
+        const since = S.n - st.t;
+        if (st.m) w = since >= 4 ? 9 : 0.3;               /* missed: comes back soon */
+        else if (st.c >= 2) w = since >= 40 ? 0.6 : 0.03;  /* known: mostly stays away */
+        else if (st.c === 1) w = since >= 10 ? 3 : 0.2;    /* one right: ask again after 10 spins */
+        else w = since >= 12 ? 2 : 0.2;
+      }
+      total += w;
+      return w;
+    });
+    let r = Math.random() * total;
+    for (let i = 0; i < pool.length; i++) { r -= weights[i]; if (r <= 0 && weights[i] > 0) return BY_ID[pool[i][0]]; }
+    return BY_ID[pool[pool.length - 1][0]];
+  }
+
+  /* ---------- Drawing ---------- */
+  const NS = 'http://www.w3.org/2000/svg';
+  function svg(name, attrs, parent) {
+    const e = document.createElementNS(NS, name);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  const rad = (deg) => (deg * Math.PI) / 180;
+  const pt = (r, deg) => (r * Math.cos(rad(deg))).toFixed(2) + ' ' + (r * Math.sin(rad(deg))).toFixed(2);
+
+  const ringSvg = $('ring'), ringG = $('ringG'), ringDefs = $('ringDefs'), box = $('wheelBox');
+  let wedges = [], labels = [];
+  const R_OUT = 200, R_IN = 152, GAP = 1.3;
+  function buildRing() {
+    ringG.textContent = '';
+    ringDefs.textContent = '';
+    wedges = []; labels = [];
+    const step = stepDeg();
+    WHEEL.forEach((c, i) => {
+      const shown = lock ? CAT[lock] : c;
+      const mid = -90 + step * i;
+      const a0 = mid - step / 2 + GAP, a1 = mid + step / 2 - GAP;
+      const wedge = svg('path', {
+        class: 'wedge',
+        d: 'M' + pt(R_OUT, a0) + ' A' + R_OUT + ' ' + R_OUT + ' 0 0 1 ' + pt(R_OUT, a1) + ' L' + pt(R_IN, a1) + ' A' + R_IN + ' ' + R_IN + ' 0 0 0 ' + pt(R_IN, a0) + ' Z',
+        role: 'button', tabindex: '0', 'data-cat': c.key,
+        'aria-label': lock ? 'Only ' + CAT[lock].full + '. Press to bring all topics back' : c.full + '. Press to drill only this topic',
+        'aria-pressed': lock ? 'true' : 'false'
+      }, ringG);
+      wedge.style.fill = colorOf(shown.key);
+      wedges.push(wedge);
+      const upper = Math.sin(rad(mid)) <= 0.01;
+      const r = upper ? 169 : 182;
+      const half = Math.min(step / 2 - 3, 80);
+      const from = upper ? mid - half : mid + half, to = upper ? mid + half : mid - half;
+      svg('path', { id: 'labelArc' + i, d: 'M' + pt(r, from) + ' A' + r + ' ' + r + ' 0 0 ' + (upper ? 1 : 0) + ' ' + pt(r, to) }, ringDefs);
+      const room = rad(half * 2) * 169;
+      const text = svg('text', { class: 'wedge-label' + (shown.label.length * 11 > room * 0.94 ? ' small' : ''), 'aria-hidden': 'true' }, ringG);
+      const tp = svg('textPath', { href: '#labelArc' + i, startOffset: '50%', 'text-anchor': 'middle' }, text);
+      tp.textContent = shown.label;
+      labels.push(text);
+    });
+  }
+
+  /* The propeller: 3 blades seen from above. Blade 0 (pointing up at angle 0) is the pointer.
+     Leading edge on +x, since positive angles turn clockwise. */
+  const BLADE = 'M7 -18 C16 -30 16 -50 13 -75 C11 -95 8 -115 4 -126 Q0 -131 -5 -126 C-9 -118 -13 -100 -15 -80 C-17 -60 -16 -42 -7 -18 Z';
+  const LEAD = 'M7 -18 C16 -30 16 -50 13 -75 C11 -95 8 -115 4 -126';
+  const VB = 'viewBox="-205 -205 410 410" aria-hidden="true" focusable="false"';
+  function propSvg() {
+    let s = '<svg ' + VB + ' xmlns="' + NS + '"><defs><clipPath id="bladeClip"><path d="' + BLADE + '"/></clipPath></defs>';
+    for (let k = 0; k < 3; k++) {
+      s += '<g transform="rotate(' + k * 120 + ')"><path class="blade" d="' + BLADE + '"/><g clip-path="url(#bladeClip)">' +
+        '<rect class="blade-tr" x="-20" y="-135" width="19" height="120"/><path class="blade-le" d="' + LEAD + '"/>' +
+        (k === 0 ? '<rect class="tipband" x="-20" y="-135" width="40" height="35"/>' : '<rect class="tipstripe" x="-20" y="-122" width="40" height="3"/>') +
+        '</g><path class="blade-ol" d="' + BLADE + '"/></g>';
+    }
+    s += '<circle class="hubcap" r="18"/><circle class="nut" r="8"/><path class="chev" d="M0 -151 L-11 -133 L0 -138 L11 -133 Z"/></svg>';
+    return s;
+  }
+  function shadowSvg() {
+    let s = '<svg ' + VB + '><g class="shadow-shape">';
+    for (let k = 0; k < 3; k++) s += '<path transform="rotate(' + k * 120 + ')" d="' + BLADE + '"/>';
+    return s + '<circle r="18"/></g></svg>';
+  }
+  const propL = $('propL'), shadowL = $('shadowL'), discL = $('discL'), ringL = $('ringL');
+  propL.innerHTML = propSvg();
+  shadowL.innerHTML = shadowSvg();
+  discL.innerHTML = '<svg ' + VB + '><defs><radialGradient id="discGrad" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="130">' +
+    '<stop offset="0.14" style="stop-color:var(--prop);stop-opacity:0"/><stop offset="0.5" style="stop-color:var(--prop);stop-opacity:0.25"/>' +
+    '<stop offset="0.93" style="stop-color:var(--prop);stop-opacity:0.55"/><stop offset="1" style="stop-color:var(--prop);stop-opacity:0.1"/></radialGradient></defs>' +
+    '<circle r="130" fill="url(#discGrad)"/></svg>';
+  ringL.innerHTML = '<svg ' + VB + '><circle class="tipring" r="115"/></svg>';
+
+  /* ---------- Sound ----------
+     A DJI-style quad, synthesized live. Tune it here. Shaft frequency (Hz) at full flick speed;
+     it idles at minFrac of that. Pitch and level follow rpm = |angular velocity| / VMAX. */
+  const SOUND_PROFILE = {
+    shaftHz: 95, blades: 2, rotors: 4, detunePct: [-1.6, -0.5, 0.6, 1.7], polePairs: 7,
+    toneGain: 0.34, elecGain: 0.012, noiseGain: 0.07, noiseHz: 1500,
+    minFrac: 0.45, harmonics: 32, oddLevel: 0.1, lfoHz: [0.6, 1.6], lfoDepth: 0.22, chimeGain: 0
+  };
+  const Sound = {
+    ac: null, comp: null, noiseBuf: null, motor: null, sleepT: 0, lastSet: 0,
+    ctx() {
+      if (!S.sound) return null;
+      try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        if (!Ctx) return null;
+        if (!this.ac) {
+          this.ac = new Ctx();
+          this.comp = this.ac.createDynamicsCompressor();
+          this.comp.threshold.value = -18; this.comp.knee.value = 12; this.comp.ratio.value = 4;
+          this.comp.attack.value = 0.005; this.comp.release.value = 0.15;
+          const out = this.ac.createGain(); out.gain.value = 0.9;
+          this.comp.connect(out); out.connect(this.ac.destination);
+        }
+        clearTimeout(this.sleepT);
+        if (this.ac.state === 'suspended') this.ac.resume().catch(() => {});
+        return this.ac;
+      } catch (e) { return null; }
+    },
+    wave() {
+      const P = SOUND_PROFILE, n = P.harmonics + 1, re = new Float32Array(n), im = new Float32Array(n);
+      for (let h = 1; h < n; h++) im[h] = (h % P.blades === 0 ? 1 : P.oddLevel) / Math.pow(h, 1.2);
+      return this.ac.createPeriodicWave(re, im);
+    },
+    noise() {
+      if (this.noiseBuf) return this.noiseBuf;
+      const len = this.ac.sampleRate * 2, buf = this.ac.createBuffer(1, len, this.ac.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      return (this.noiseBuf = buf);
+    },
+    start() {
+      if (this.motor || !this.ctx()) return;
+      const ac = this.ac, P = SOUND_PROFILE, t = ac.currentTime;
+      try {
+        const nodes = [];
+        const tone = ac.createGain(); tone.gain.value = 0; tone.connect(this.comp);
+        const wave = this.wave();
+        const rotors = [];
+        for (let i = 0; i < P.rotors; i++) {
+          const o = ac.createOscillator(); o.setPeriodicWave(wave); o.frequency.value = P.shaftHz * P.minFrac;
+          const g = ac.createGain(); g.gain.value = 1 - P.lfoDepth;
+          const lfo = ac.createOscillator(); lfo.frequency.value = P.lfoHz[0] + Math.random() * (P.lfoHz[1] - P.lfoHz[0]);
+          const lg = ac.createGain(); lg.gain.value = P.lfoDepth;
+          lfo.connect(lg); lg.connect(g.gain); o.connect(g); g.connect(tone);
+          o.start(t); lfo.start(t);
+          nodes.push(o, lfo);
+          rotors.push({ o, k: 1 + (P.detunePct[i % P.detunePct.length] || 0) / 100 });
+        }
+        const elec = ac.createGain(); elec.gain.value = 0; elec.connect(this.comp);
+        const e1 = ac.createOscillator(), e2 = ac.createOscillator(), e2g = ac.createGain();
+        e1.type = e2.type = 'sine'; e2g.gain.value = 0.4;
+        e1.connect(elec); e2.connect(e2g); e2g.connect(elec); e1.start(t); e2.start(t);
+        nodes.push(e1, e2);
+        const src = ac.createBufferSource(); src.buffer = this.noise(); src.loop = true;
+        const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.7; bp.frequency.value = P.noiseHz * 0.4;
+        const wash = ac.createGain(); wash.gain.value = 0;
+        src.connect(bp); bp.connect(wash); wash.connect(this.comp); src.start(t);
+        nodes.push(src);
+        this.motor = { nodes, rotors, tone, elec, e1, e2, bp, wash, buses: [tone, elec, wash] };
+      } catch (e) { this.motor = null; }
+    },
+    set(rpm) {
+      const m = this.motor;
+      if (!m) return;
+      const now = performance.now();
+      if (now - this.lastSet < 30) return;          /* ~33 updates a second is plenty */
+      this.lastSet = now;
+      const P = SOUND_PROFILE, t = this.ac.currentTime, r = clamp(rpm, 0, 1);
+      const shaft = P.shaftHz * (P.minFrac + (1 - P.minFrac) * r);
+      m.rotors.forEach((x) => x.o.frequency.setTargetAtTime(shaft * x.k, t, 0.04));
+      m.e1.frequency.setTargetAtTime(P.polePairs * shaft, t, 0.04);
+      m.e2.frequency.setTargetAtTime(6 * P.polePairs * shaft, t, 0.04);
+      m.bp.frequency.setTargetAtTime(P.noiseHz * (0.4 + 0.8 * r), t, 0.05);
+      m.tone.gain.setTargetAtTime(P.toneGain * Math.pow(r, 1.8), t, 0.05);
+      m.elec.gain.setTargetAtTime(P.elecGain * Math.pow(r, 1.5), t, 0.05);
+      m.wash.gain.setTargetAtTime(P.noiseGain * Math.pow(r, 1.5), t, 0.05);
+    },
+    stop() {
+      const m = this.motor;
+      if (!m) { this.sleepSoon(); return; }
+      this.motor = null;
+      const t = this.ac.currentTime;
+      m.buses.forEach((g) => { g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0, t, 0.07); });
+      setTimeout(() => { m.nodes.forEach((n) => { try { n.stop(); } catch (e) { /* already stopped */ } }); m.buses.forEach((g) => g.disconnect()); }, 450);
+      this.sleepSoon();
+    },
+    kill() {                                         /* app hidden: stop everything right now */
+      const m = this.motor;
+      this.motor = null;
+      if (m) { m.nodes.forEach((n) => { try { n.stop(); } catch (e) { /* ignore */ } }); m.buses.forEach((g) => g.disconnect()); }
+      clearTimeout(this.sleepT);
+      if (this.ac && this.ac.state === 'running') this.ac.suspend().catch(() => {});
+    },
+    sleepSoon() {
+      clearTimeout(this.sleepT);
+      this.sleepT = setTimeout(() => { if (this.ac && this.ac.state === 'running' && !this.motor) this.ac.suspend().catch(() => {}); }, 3000);
+    },
+    notes(freqs, step, len) {                        /* square-ish motor beeps, bandpassed */
+      if (!this.ctx()) return;
+      const ac = this.ac, t0 = ac.currentTime + 0.02;
+      const re = new Float32Array(8), im = new Float32Array(8);
+      [1, 0, 1 / 3, 0, 1 / 5, 0, 1 / 7].forEach((v, i) => { im[i + 1] = v; });
+      const wave = ac.createPeriodicWave(re, im);
+      const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1700; bp.Q.value = 0.9;
+      const g = ac.createGain(); g.gain.value = SOUND_PROFILE.chimeGain;
+      bp.connect(g); g.connect(this.comp);
+      freqs.forEach((f, i) => {
+        const o = ac.createOscillator(), e = ac.createGain(), s = t0 + i * step, l = i === freqs.length - 1 ? len * 1.8 : len;
+        o.setPeriodicWave(wave); o.frequency.value = f;
+        e.gain.setValueAtTime(0, s); e.gain.linearRampToValueAtTime(1, s + 0.006);
+        e.gain.setValueAtTime(1, s + l - 0.02); e.gain.linearRampToValueAtTime(0, s + l);
+        o.connect(e); e.connect(bp); o.start(s); o.stop(s + l + 0.02);
+      });
+      setTimeout(() => g.disconnect(), (freqs.length * step + len * 2) * 1000 + 300);
+      this.sleepSoon();
+    },
+    chime() { this.notes([1175, 1397, 1760], 0.085, 0.07); },
+    correct() { this.notes([1397, 1760], 0.07, 0.06); }
+  };
+
+  /* ---------- Haptics ---------- */
+  let lastBuzz = 0;
+  function buzz(p) { if (!S.haptics) return; try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) { /* ignore */ } }
+  function tick(speed) {
+    if (speed > 900) return;                        /* detent clicks fade in as it slows */
+    const now = performance.now();
+    if (now - lastBuzz < 40) return;
+    lastBuzz = now;
+    buzz(5);
+  }
+
+  /* ---------- Spinning ---------- */
+  const VMAX = 2800, DRAG = 1.25, NOTCH_SPEED = 140, SPRING = 220, DAMP = 16.3, MAGNET = 1.6, MAGNET_DEG = 4;
+  let RUB = 95;          /* friction gets the randomness, not the release speed */
+  let angle = 0, vel = 0, mode = 'idle', notchAt = 0, glide = null, deal = false, tickSlot = 0, raf = 0, lastFrame = 0, drag = null, dragSpeed = 0;
+  const last = { rot: '', p: -1, d: -1, r: -1, sh: -1 };
+
+  function blurFor(speed) {
+    if (reducedMotion.matches || speed < 300) return { p: 1, d: 0, r: 0 };
+    if (speed < 900) { const k = (speed - 300) / 600; return { p: 1 - 0.45 * k, d: 0.35 * k, r: clamp((speed - 700) / 400, 0, 1) * 0.5 }; }
+    const k = clamp((speed - 900) / 600, 0, 1);
+    return { p: 0.55 - 0.4 * k, d: 0.35 + 0.05 * k, r: 0.5 * clamp((speed - 700) / 400, 0, 1) };
+  }
+  function setOp(el, key, v) { v = Math.round(v * 100) / 100; if (last[key] !== v) { last[key] = v; el.style.opacity = v; } }
+  function render() {
+    const rot = 'rotate(' + angle.toFixed(2) + 'deg)';
+    if (rot !== last.rot) { last.rot = rot; propL.style.transform = rot; shadowL.style.transform = rot; }
+    const speed = mode === 'drag' ? dragSpeed : Math.abs(vel);
+    const b = blurFor(speed);
+    setOp(propL, 'p', b.p); setOp(discL, 'd', b.d); setOp(ringL, 'r', b.r); setOp(shadowL, 'sh', 1 - 0.6 * (1 - b.p));
+    const step = stepDeg();
+    const slot = Math.floor((angle + step / 2) / step);
+    if (slot !== tickSlot) { tickSlot = slot; tick(speed); }
+    if (Sound.motor) Sound.set(speed / VMAX);
+  }
+  function nearBoundary(a) {
+    const step = stepDeg(), m = ((a % step) + step) % step;
+    return Math.abs(m - step / 2) < MAGNET_DEG;
+  }
+  function frame(now) {
+    const dt = clamp((now - lastFrame) / 1000, 0, 0.05);
+    lastFrame = now;
+    if (mode === 'glide') {
+      const p = Math.min(1, (now - glide.t0) / glide.ms);
+      angle = glide.from + (glide.to - glide.from) * (1 - Math.pow(1 - p, 3));
+      if (p >= 1) { angle = glide.to; vel = 0; mode = 'idle'; }
+    } else {
+      const parts = Math.max(1, Math.ceil(dt / 0.006)), h = dt / parts;
+      for (let i = 0; i < parts && mode !== 'idle'; i++) {
+        if (mode === 'free') {
+          const s = vel < 0 ? -1 : 1;
+          const rub = RUB * (nearBoundary(angle) ? MAGNET : 1);   /* a little magnetic catch at each wedge edge */
+          vel -= (DRAG * vel + rub * s) * h;
+          if ((vel < 0 ? -1 : 1) !== s) vel = 0;
+          angle += vel * h;
+          if (Math.abs(vel) < NOTCH_SPEED) { const st = stepDeg(); notchAt = Math.round((angle + vel * 0.22) / st) * st; mode = 'notch'; }
+        } else if (mode === 'notch') {
+          vel += (-SPRING * (angle - notchAt) - DAMP * vel) * h;
+          angle += vel * h;
+          if (Math.abs(vel) < 4 && Math.abs(angle - notchAt) < 0.3) { angle = notchAt; vel = 0; mode = 'idle'; }
+        }
+      }
+    }
+    render();
+    if (mode === 'idle') {
+      raf = 0;
+      Sound.stop();
+      normalizeAngle();
+      if (deal) { deal = false; land(); }
+    } else raf = requestAnimationFrame(frame);
+  }
+  function normalizeAngle() {
+    angle = ((angle % 360) + 360) % 360;
+    const step = stepDeg();
+    tickSlot = Math.floor((angle + step / 2) / step);
+  }
+  function run() { if (raf) return; lastFrame = performance.now(); raf = requestAnimationFrame(frame); }
+  function stopLoop() { if (raf) { cancelAnimationFrame(raf); raf = 0; } }
+  function halt() {               /* stop without dealing (opening a panel) */
+    stopLoop();
+    if (mode !== 'idle' || drag) { const st = stepDeg(); angle = Math.round(angle / st) * st; }
+    vel = 0; mode = 'idle'; deal = false; drag = null; box.classList.remove('pressed');
+    Sound.stop();
+    normalizeAngle();
+    render();
+  }
+  function settle(withDeal) {     /* let it click into the nearest notch */
+    const st = stepDeg();
+    notchAt = Math.round(angle / st) * st;
+    vel = 0;
+    mode = reducedMotion.matches ? 'idle' : 'notch';
+    if (mode === 'idle') angle = notchAt;
+    deal = !!withDeal;
+    if (mode === 'idle') { render(); normalizeAngle(); if (deal) { deal = false; land(); } }
+    else run();
+  }
+  function launch(v) {
+    clearLanding();
+    deal = true;
+    askPersist();
+    if (!S.sound && !S.toldSound) { S.toldSound = true; save(); toast('Sound is off. Tap the speaker for motor sound.'); }
+    const dir = v < 0 ? -1 : 1;
+    if (reducedMotion.matches) {
+      const st = stepDeg(), hops = 1 + Math.floor(Math.random() * WHEEL.length);
+      glide = { from: angle, to: (Math.round(angle / st) + dir * hops) * st, t0: performance.now(), ms: 450 };
+      vel = 0; mode = 'glide';
+    } else {
+      vel = clamp(v, -VMAX, VMAX);                  /* 1:1 with the flick */
+      RUB = 80 + Math.random() * 35;
+      mode = 'free';
+      if (S.sound) Sound.start();
+    }
+    run();
+  }
+  function spinDefault() { launch(1500 + Math.random() * 700); }
+
+  function land() {
+    const n = WHEEL.length;
+    const idx = ((Math.round(angle / stepDeg()) % n) + n) % n;
+    const catKey = lock || WHEEL[idx].key;
+    ringSvg.classList.add('landed');
+    wedges[idx].classList.add('lit');
+    labels[idx].classList.add('lit');
+    box.style.setProperty('--mark', colorOf(catKey));
+    const card = pick(catKey);
+    lastId = card.id;
+    S.n += 1;
+    const today = dayKey(0);
+    S.days[today] = (S.days[today] || 0) + 1;
+    const keys = Object.keys(S.days).sort();
+    while (keys.length > 400) delete S.days[keys.shift()];
+    save();
+    buzz(20);
+    if (S.sound) Sound.chime();
+    clearTimeout(dealT);
+    dealT = setTimeout(() => showCard(card), reducedMotion.matches ? 0 : 120);   /* eye goes to the wedge first */
+  }
+  let dealT = 0;
+  function clearLanding() {
+    clearTimeout(dealT);
+    ringSvg.classList.remove('landed');
+    wedges.forEach((w) => w.classList.remove('lit'));
+    labels.forEach((l) => l.classList.remove('lit'));
+    box.style.removeProperty('--mark');
+    showRest();
+  }
+
+  /* ---------- Touch ---------- */
+  let center = { x: 0, y: 0 };
+  const angleAt = (x, y) => (Math.atan2(y - center.y, x - center.x) * 180) / Math.PI;
+  const questionOpen = () => !!current && !answered;
+  box.addEventListener('pointerdown', (e) => {
+    if (e.button || drag) return;
+    const r = box.getBoundingClientRect();            /* cached for the whole gesture */
+    center = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    const wedgeEl = e.target.closest ? e.target.closest('[data-cat]') : null;
+    const spinning = mode !== 'idle';
+    const caught = spinning && (mode !== 'notch' || deal);   /* the startup wiggle isn't a spin */
+    if (spinning) { stopLoop(); vel = 0; deal = false; Sound.stop(); }
+    mode = 'drag';
+    dragSpeed = 0;
+    drag = { id: e.pointerId, x: e.clientX, y: e.clientY, last: angleAt(e.clientX, e.clientY), live: false, caught, long: false, samples: [{ t: e.timeStamp, a: angle }], lp: 0 };
+    if (!caught && wedgeEl && !questionOpen()) {
+      const key = wedgeEl.getAttribute('data-cat');
+      drag.lp = setTimeout(() => { if (drag && !drag.live) { drag.long = true; buzz(20); toggleLock(key); } }, 500);
+    }
+    box.classList.add('pressed');
+    try { box.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+    if (e.target.closest && e.target.closest('#hub')) e.preventDefault();
+  });
+  box.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id || drag.long) return;
+    const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
+    const list = evs.length ? evs : [e];
+    if (!drag.live) {
+      const lastEv = list[list.length - 1];
+      if (Math.hypot(lastEv.clientX - drag.x, lastEv.clientY - drag.y) < 8) return;
+      drag.live = true;
+      clearTimeout(drag.lp);
+      if (questionOpen()) { sr('Skipped.'); toast('Skipped', null, 900); }   /* a real flick skips; the card isn't counted */
+      clearLanding();
+      drag.last = angleAt(lastEv.clientX, lastEv.clientY);
+      drag.samples = [{ t: lastEv.timeStamp, a: angle }];
+      return;
+    }
+    for (const ev of list) {
+      let d = angleAt(ev.clientX, ev.clientY) - drag.last;
+      if (d > 180) d -= 360;
+      if (d < -180) d += 360;
+      drag.last += d;
+      angle += d;
+      drag.samples.push({ t: ev.timeStamp, a: angle });
+    }
+    while (drag.samples.length > 2 && drag.samples[0].t < e.timeStamp - 150) drag.samples.shift();
+    const s = drag.samples, a = s[Math.max(0, s.length - 4)], z = s[s.length - 1];
+    dragSpeed = z.t > a.t ? Math.abs((z.a - a.a) / (z.t - a.t)) * 1000 : 0;
+    render();
+  });
+  function releaseVelocity(tUp) {
+    const s = drag.samples, z = s[s.length - 1];
+    if (tUp - z.t > 60) return 0;                     /* finger stopped before letting go */
+    let a = s[0];
+    for (let i = s.length - 1; i >= 0; i--) { if (z.t - s[i].t >= 70) { a = s[i]; break; } a = s[i]; }
+    const dt = (z.t - a.t) / 1000;
+    return dt > 0.008 ? (z.a - a.a) / dt : 0;
+  }
+  function endDrag(e, cancelled) {
+    if (!drag || e.pointerId !== drag.id) return;
+    const d = drag;
+    clearTimeout(d.lp);
+    box.classList.remove('pressed');
+    if (d.long) { drag = null; mode = 'idle'; return; }
+    if (!d.live) {
+      drag = null;
+      mode = 'idle';
+      if (d.caught) { settle(true); return; }          /* caught mid-spin: it stops and clicks in */
+      if (cancelled || questionOpen()) { render(); return; }   /* taps are ignored while a question is open */
+      spinDefault();
+      return;
+    }
+    const v = cancelled ? 0 : releaseVelocity(e.timeStamp);
+    drag = null;
+    mode = 'idle';
+    if (Math.abs(v) < 120) { settle(true); return; }   /* placed it: let it click in */
+    launch(v);
+  }
+  box.addEventListener('pointerup', (e) => endDrag(e, false));
+  box.addEventListener('pointercancel', (e) => endDrag(e, true));
+  box.addEventListener('contextmenu', (e) => e.preventDefault());
+  $('hub').addEventListener('click', (e) => {           /* keyboard only; pointer taps are handled above */
+    if (e.detail !== 0 || questionOpen()) return;
+    Sound.ctx(); spinDefault();
+  });
+  ringG.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const cat = e.target.getAttribute && e.target.getAttribute('data-cat');
+    if (!cat) return;
+    e.preventDefault();
+    toggleLock(cat);
+    const again = ringG.querySelector('[data-cat="' + cat + '"]');
+    if (again) again.focus();
+  });
+  function toggleLock(key) {
+    halt();
+    lock = lock ? null : key;
+    buildRing();
+    clearLanding();
+    sr(lock ? 'Only ' + CAT[lock].full + '.' : 'All topics back on the wheel.');
+  }
+
+  /* ---------- Tray ---------- */
+  const app = $('app'), rest = $('rest'), qBox = $('q'), trayScroll = $('trayScroll');
+  let current = null, answered = false, spunThisVisit = false;
+  function showRest() {
+    current = null; answered = false;
+    qBox.hidden = true; $('whyBox').hidden = true; $('nextRow').hidden = true;
+    rest.hidden = false;
+    app.classList.remove('dealt');
+    $('restTitle').textContent = lock ? 'Only ' + CAT[lock].label + '. Flick it.' : (spunThisVisit ? 'Flick again.' : 'Flick the prop.');
+    $('hub').removeAttribute('aria-disabled');
+    paintStats();
+  }
+  function showCard(card) {
+    current = card; answered = false; spunThisVisit = true;
+    $('qCat').textContent = CAT[card.cat].full;
+    qBox.style.setProperty('--chip', colorOf(card.cat));
+    $('qText').textContent = card.q;
+    $('whyBox').hidden = true;
+    $('nextRow').hidden = true;
+    paintKeepButton();
+    const list = $('choices');
+    list.textContent = '';
+    shuffle([card.a].concat(card.d)).forEach((text, i) => {
+      const li = el('li');
+      const b = button('opt', '', () => answerSpin(b, text));
+      b.dataset.text = text;
+      b.append(el('b', '', 'ABC'[i]), el('span', '', text));
+      li.appendChild(b);
+      list.appendChild(li);
+    });
+    rest.hidden = true;
+    app.classList.add('dealt');
+    qBox.hidden = false;
+    qBox.classList.remove('arrive'); void qBox.offsetWidth; qBox.classList.add('arrive');
+    trayScroll.scrollTop = 0;
+    $('hub').setAttribute('aria-disabled', 'true');
+    sr(CAT[card.cat].label + '. Question: ' + card.q);
+  }
+  function answerSpin(btn, text) {
+    if (!current || answered) return;
+    answered = true;
+    const correct = text === current.a;
+    $('choices').querySelectorAll('button').forEach((b) => {
+      b.disabled = true;
+      if (b.dataset.text === current.a) b.classList.add('right');
+      else if (b === btn) b.classList.add('wrong');
+      else b.parentNode.classList.add('gone');          /* collapse the unpicked wrong option */
+    });
+    record(current, correct);
+    save();
+    $('whyText').textContent = current.why;
+    $('srcText').textContent = 'Source: ' + current.src + ' · card ' + current.id;
+    $('reportLink').href = 'mailto:jukes31ryan@gmail.com?subject=' + encodeURIComponent('Didja Spin 107 card ' + current.id) +
+      '&body=' + encodeURIComponent('Card ' + current.id + ': ' + current.q + '\n\nWhat looks wrong:\n');
+    $('whyBox').hidden = false;
+    $('nextRow').hidden = false;
+    $('hub').removeAttribute('aria-disabled');
+    sr(correct ? 'Correct. ' + current.why : 'Not quite. Answer: ' + current.a + '. ' + current.why);
+    if (correct) { buzz([10, 40, 10]); if (S.sound) Sound.correct(); }
+    paintStats();
+    requestAnimationFrame(revealWhy);
+    $('nextBtn').focus({ preventScroll: true });
+  }
+  function revealWhy() {
+    const w = $('whyBox');
+    const top = w.offsetTop, bottom = top + w.offsetHeight, view = trayScroll.clientHeight;
+    let target = trayScroll.scrollTop;
+    if (bottom > target + view) target = bottom - view + 4;
+    if (top < target) target = Math.max(0, top - 8);
+    if (target !== trayScroll.scrollTop) trayScroll.scrollTo({ top: target, behavior: reducedMotion.matches ? 'auto' : 'smooth' });
+  }
+  $('nextBtn').addEventListener('click', () => { if (S.sound) Sound.ctx(); spinDefault(); });
+
+  function knownCount(key) { return (key ? CAT[key].cards : Object.values(DECK).flat()).filter((r) => isKnown(r[0])).length; }
+  function paintStats() {
+    const today = S.days[dayKey(0)] || 0;
+    const run = today ? streakFrom(0) : streakFrom(1);
+    let line = knownCount() + ' of ' + TOTAL + ' known';
+    if (run >= 2) line += ' · ' + run + '-day streak';
+    $('stats').textContent = line;
+  }
+
+  /* ---------- Small helpers ---------- */
+  function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function button(cls, text, onClick, label) { const b = el('button', cls, text); b.type = 'button'; if (label) b.setAttribute('aria-label', label); b.addEventListener('click', onClick); return b; }
+  function dotFor(key) { const d = el('span', 'dot'); d.style.setProperty('--chip', colorOf(key)); return d; }
+  const srEl = $('sr');
+  function sr(text) { srEl.textContent = ''; setTimeout(() => { srEl.textContent = text; }, 30); }
+  const toastEl = $('toast');
+  let toastT = 0, toastTap = null;
+  function toast(text, onTap, ms) {
+    toastEl.textContent = text;
+    toastTap = onTap || null;
+    toastEl.hidden = false;
+    clearTimeout(toastT);
+    toastT = setTimeout(() => { toastEl.hidden = true; }, ms || (onTap ? 8000 : 2600));
+  }
+  toastEl.addEventListener('click', () => { toastEl.hidden = true; if (toastTap) toastTap(); });
+
+  /* ---------- Keep ---------- */
+  function paintKeepButton() {
+    const kept = current && S.keep.indexOf(current.id) >= 0;
+    $('keepBtn').setAttribute('aria-pressed', kept ? 'true' : 'false');
+    $('keepLabel').textContent = kept ? 'Kept' : 'Keep';
+  }
+  $('keepBtn').addEventListener('click', () => {
+    if (!current) return;
+    const i = S.keep.indexOf(current.id);
+    if (i >= 0) S.keep.splice(i, 1); else S.keep.push(current.id);
+    save();
+    paintKeepButton();
+  });
+
+  /* ---------- Panels: Back closes them, and the app behind goes inert ---------- */
+  let openP = null, openerBtn = null;
+  function openPanel(panel, focusEl, opener) {
+    if (openP) return;
+    halt();
+    clearLanding();
+    panel.hidden = false;
+    panel.scrollTop = 0;
+    app.inert = true;
+    openP = panel; openerBtn = opener;
+    history.pushState({ panel: panel.id }, '');
+    if (focusEl) focusEl.focus({ preventScroll: true });
+  }
+  function hidePanel() {
+    if (!openP) return;
+    openP.hidden = true;
+    app.inert = false;
+    openP = null;
+    if (openerBtn) openerBtn.focus({ preventScroll: true });
+  }
+  function closePanel() {
+    if (!openP) return;
+    if (history.state && history.state.panel) history.back();   /* popstate does the hiding */
+    else hidePanel();
+  }
+  addEventListener('popstate', () => { if (openP) hidePanel(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePanel(); });
+
+  /* ---------- Topics panel ---------- */
+  const catsPanel = $('cats');
+  function paintCats(focusKey) {
+    const list = $('catsList');
+    list.textContent = '';
+    CATS.forEach((c) => {
+      const li = el('li', 'cat-row');
+      const info = el('div', 'cat-info');
+      const tries = S.ans[c.key] || 0, hits = S.ok[c.key] || 0;
+      const acc = tries ? Math.round(hits / tries * 100) + '% right (' + hits + '/' + tries + ')' : 'not tried yet';
+      info.append(el('strong', '', c.full), el('span', '', c.cards.length + ' questions · ' + knownCount(c.key) + ' known · ' + acc));
+      const sw = button('switch', '', () => toggleCat(c.key), c.full + ' on the wheel');
+      sw.setAttribute('role', 'switch');
+      sw.setAttribute('aria-checked', WHEEL.indexOf(c) >= 0 ? 'true' : 'false');
+      sw.setAttribute('data-switch', c.key);
+      li.append(dotFor(c.key), info, sw);
+      list.appendChild(li);
+    });
+    $('hapticsSw').setAttribute('aria-checked', S.haptics ? 'true' : 'false');
+    paintKept();
+    if (focusKey) { const f = list.querySelector('[data-switch="' + focusKey + '"]'); if (f) f.focus({ preventScroll: true }); }
+  }
+  function paintKept() {
+    const list = $('keptList');
+    list.textContent = '';
+    $('keptN').textContent = S.keep.length;
+    $('keptEmpty').hidden = S.keep.length > 0;
+    S.keep.slice().reverse().forEach((id) => {
+      const card = BY_ID[id];
+      if (!card) return;
+      const li = el('li', 'kept');
+      const h = el('h3', 'kept-title');
+      h.append(dotFor(card.cat), document.createTextNode(card.q));
+      const rm = button('link-btn', 'Remove', () => { S.keep = S.keep.filter((k) => k !== id); save(); paintKept(); paintKeepButton(); $('keptBox').focus(); }, 'Remove from kept cards');
+      li.append(h, rm, el('p', 'ans', card.a));
+      if (card.why) li.append(el('p', 'why', card.why));
+      list.appendChild(li);
+    });
+  }
+  function toggleCat(key) {
+    const on = WHEEL.some((c) => c.key === key);
+    if (on && WHEEL.length <= 2) $('catsMsg').textContent = 'Keep at least two on the wheel.';
+    else {
+      if (on) S.off.push(key); else S.off = S.off.filter((k) => k !== key);
+      $('catsMsg').textContent = '';
+      refreshCats(); save(); halt(); angle = 0; tickSlot = 0; buildRing(); render(); clearLanding();
+    }
+    paintCats(key);
+  }
+  $('hapticsSw').addEventListener('click', () => { S.haptics = !S.haptics; save(); paintCats(); if (S.haptics) buzz(20); $('hapticsSw').focus(); });
+  let resetArmed = 0;
+  $('resetBtn').addEventListener('click', () => {
+    const now = Date.now();
+    if (now - resetArmed > 5000) { resetArmed = now; $('resetBtn').textContent = 'Tap again to clear all progress and kept cards'; return; }
+    resetArmed = 0;
+    const keepPrefs = { sound: S.sound, haptics: S.haptics, off: S.off, pulsed: true, toldSound: S.toldSound };
+    S = Object.assign(defaults(), keepPrefs);
+    save();
+    lsDel(KEY + '-last'); lsDel(KEY + '-test'); T = null;
+    $('resetBtn').textContent = 'Reset my progress';
+    paintCats(); paintStats(); paintKeepButton();
+    $('catsMsg').textContent = 'Progress cleared.';
+  });
+  const encode = (o) => btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+  const decode = (s) => JSON.parse(decodeURIComponent(escape(atob(s.trim()))));
+  $('copyBtn').addEventListener('click', async () => {
+    const code = encode(S);
+    try { await navigator.clipboard.writeText(code); $('catsMsg').textContent = 'Progress copied. Paste it somewhere safe.'; }
+    catch (e) { prompt('Copy this progress code:', code); }
+  });
+  $('pasteBtn').addEventListener('click', () => {
+    const code = prompt('Paste your progress code:');
+    if (!code) return;
+    try {
+      const o = decode(code);
+      if (!isObj(o) || !isObj(o.cards)) throw new Error('bad');
+      lsSet(KEY + '-backup', JSON.stringify(S));
+      S = normalize(o); save(); refreshCats(); buildRing(); paintCats(); paintStats();
+      $('catsMsg').textContent = 'Progress restored.';
+    } catch (e) { $('catsMsg').textContent = "That code didn't work. Nothing was changed."; }
+  });
+  $('catsBtn').addEventListener('click', () => {
+    $('catsMsg').textContent = '';
+    $('resetBtn').textContent = 'Reset my progress';
+    resetArmed = 0;
+    paintCats();
+    openPanel(catsPanel, $('catsClose'), $('catsBtn'));
+  });
+  $('catsClose').addEventListener('click', closePanel);
+
+  /* ---------- Practice test: the card's own 3 options, shuffled ---------- */
+  const testPanel = $('test');
+  let T = null, clockTimer = 0;
+  const TKEY = KEY + '-test';
+  function saveTest() { if (T) lsSet(TKEY, JSON.stringify(T)); else lsDel(TKEY); }
+  function loadTest() {
+    try {
+      const o = JSON.parse(lsGet(TKEY) || 'null');
+      if (isObj(o) && Array.isArray(o.ids) && o.ids.every((id) => BY_ID[id]) && Array.isArray(o.opts) && Array.isArray(o.picks)) return o;
+    } catch (e) { /* ignore */ }
+    return null;
+  }
+  function buildTest(count) {
+    const ids = shuffle(Object.keys(BY_ID)).slice(0, count);
+    return { ids, opts: ids.map((id) => shuffle([BY_ID[id].a].concat(BY_ID[id].d))), picks: ids.map(() => -1), i: 0, ends: count >= 60 ? Date.now() + 120 * 60000 : 0 };
+  }
+  function fmtClock(ms) {
+    const s = Math.max(0, Math.round(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
+    return h + ':' + String(m).padStart(2, '0') + ':' + String(x).padStart(2, '0');
+  }
+  function paintClock() {
+    if (!T || !T.ends) { $('tClock').textContent = ''; return; }
+    const left = T.ends - Date.now();
+    $('tClock').textContent = fmtClock(left) + ' left';
+    if (left <= 0) {
+      const wasClosed = testPanel.hidden;
+      finishTest();
+      if (wasClosed) toast("Time's up. Your test was scored. Open Test to see it.");
+    }
+  }
+  function testView(which) { $('testStart').hidden = which !== 'start'; $('testRun').hidden = which !== 'run'; $('testDone').hidden = which !== 'done'; }
+  function openTest() {
+    const lastScore = lsGet(KEY + '-last') || '';
+    $('lastScore').textContent = lastScore ? 'Last test: ' + lastScore : '';
+    let focus = $('testClose');
+    if (T) testView('run');
+    else if ($('testDone').hidden) {
+      testView('start');
+      const saved = loadTest();
+      $('resumeBtn').hidden = !saved;
+      if (saved) $('resumeBtn').textContent = 'Resume test (' + (saved.i + 1) + ' of ' + saved.ids.length + ')';
+    }
+    openPanel(testPanel, focus, $('testBtn'));
+  }
+  function beginTest(t) {
+    T = t;
+    clearInterval(clockTimer);
+    if (T.ends) clockTimer = setInterval(paintClock, 1000);
+    saveTest();
+    testView('run');
+    paintQ();
+  }
+  function paintQ() {
+    const id = T.ids[T.i], card = BY_ID[id], opts = T.opts[T.i], pickI = T.picks[T.i];
+    $('tNum').textContent = (T.i + 1) + ' of ' + T.ids.length;
+    $('tBar').style.width = (T.i / T.ids.length * 100) + '%';
+    $('tCat').textContent = CAT[card.cat].full;
+    $('tCat').style.setProperty('--chip', colorOf(card.cat));
+    $('tQ').textContent = card.q;
+    $('tWhyBox').hidden = true;
+    $('tNext').hidden = true;
+    const list = $('tOpts');
+    list.textContent = '';
+    opts.forEach((text, i) => {
+      const li = el('li');
+      const b = button('opt', '', () => choose(i));
+      b.append(el('b', '', 'ABC'[i]), el('span', '', text));
+      li.appendChild(b);
+      list.appendChild(li);
+    });
+    paintClock();
+    if (pickI >= 0) showPick(pickI, false);
+    $('testRun').scrollIntoView({ block: 'start' });
+    const first = list.querySelector('button:not([disabled])');
+    if (first) first.focus({ preventScroll: true });
+  }
+  function showPick(i, fresh) {
+    const card = BY_ID[T.ids[T.i]], opts = T.opts[T.i], right = opts.indexOf(card.a);
+    $('tOpts').querySelectorAll('button').forEach((b, k) => {
+      b.disabled = true;
+      if (k === right) b.classList.add('right'); else if (k === i) b.classList.add('wrong');
+    });
+    $('tWhy').textContent = (i === right ? 'Correct. ' : 'Answer: ' + card.a + ' ') + card.why;
+    $('tSrc').textContent = 'Source: ' + card.src;
+    $('tWhyBox').hidden = false;
+    $('tNext').textContent = T.i + 1 < T.ids.length ? 'Next' : 'See my score';
+    $('tNext').hidden = false;
+    if (fresh) { $('tNext').focus({ preventScroll: true }); sr(i === right ? 'Correct.' : 'Not quite. Answer: ' + card.a); }
+  }
+  function choose(i) {
+    if (!T || T.picks[T.i] >= 0) return;
+    T.picks[T.i] = i;
+    const card = BY_ID[T.ids[T.i]];
+    record(card, T.opts[T.i][i] === card.a);
+    save(); saveTest();
+    showPick(i, true);
+  }
+  $('tNext').addEventListener('click', () => { if (!T) return; if (T.i + 1 < T.ids.length) { T.i++; saveTest(); paintQ(); } else finishTest(); });
+  function finishTest() {
+    if (!T) return;
+    clearInterval(clockTimer);
+    const total = T.ids.length;
+    let right = 0, done = 0;
+    T.ids.forEach((id, k) => { if (T.picks[k] >= 0) { done++; if (T.opts[k][T.picks[k]] === BY_ID[id].a) right++; } });
+    const pct = Math.round(right / total * 100), pass = pct >= 70;
+    $('tScore').textContent = pct + '%';
+    $('tVerdict').textContent = pass ? 'Passing score' : 'Not passing yet';
+    $('tVerdict').className = 'verdict ' + (pass ? 'pass' : 'fail');
+    $('tSub').textContent = right + ' of ' + total + ' correct' + (done < total ? ' (' + (total - done) + ' left blank count as wrong)' : '') + '. You need ' + Math.ceil(total * 0.7) + ' to pass.';
+    const list = $('tTopics');
+    list.textContent = '';
+    CATS.forEach((c) => {
+      const ks = T.ids.map((id, k) => k).filter((k) => BY_ID[T.ids[k]].cat === c.key);
+      if (!ks.length) return;
+      const ok = ks.filter((k) => T.picks[k] >= 0 && T.opts[k][T.picks[k]] === BY_ID[T.ids[k]].a).length;
+      const li = el('li', 'topic-row');
+      li.append(dotFor(c.key), el('span', '', c.full), el('strong', '', ok + '/' + ks.length));
+      list.appendChild(li);
+    });
+    lsSet(KEY + '-last', pct + '% (' + right + '/' + total + ') on ' + new Date().toLocaleDateString());
+    T = null;
+    saveTest();
+    testView('done');
+    paintStats();
+    if (!testPanel.hidden) $('tAgain').focus({ preventScroll: true });
+  }
+  $('tQuit').addEventListener('click', finishTest);
+  $('start20').addEventListener('click', () => beginTest(buildTest(20)));
+  $('start60').addEventListener('click', () => beginTest(buildTest(60)));
+  $('resumeBtn').addEventListener('click', () => { const t = loadTest(); if (t) beginTest(t); });
+  $('tAgain').addEventListener('click', () => { testView('start'); $('resumeBtn').hidden = true; $('start60').focus({ preventScroll: true }); });
+  $('tDone').addEventListener('click', () => { testView('start'); $('resumeBtn').hidden = true; closePanel(); });
+  $('testClose').addEventListener('click', closePanel);
+  $('testBtn').addEventListener('click', openTest);
+
+  /* ---------- Sound toggle ---------- */
+  const soundBtn = $('soundBtn');
+  function paintSound() { soundBtn.setAttribute('aria-pressed', S.sound ? 'true' : 'false'); }
+  soundBtn.addEventListener('click', () => {
+    S.sound = !S.sound;
+    save();
+    paintSound();
+    if (S.sound) { if (Sound.ctx()) Sound.chime(); } else Sound.kill();
+  });
+
+  /* ---------- Going to the background: no sound, no stray spin ---------- */
+  function onHide() {
+    if (drag) { clearTimeout(drag.lp); drag = null; box.classList.remove('pressed'); }
+    if (mode !== 'idle') {
+      const wasDeal = deal;
+      stopLoop();
+      const st = stepDeg();
+      angle = Math.round(angle / st) * st; vel = 0; mode = 'idle'; deal = false;
+      render(); normalizeAngle();
+      if (wasDeal) land();
+    }
+    Sound.kill();
+  }
+  document.addEventListener('visibilitychange', () => { if (document.hidden) onHide(); });
+  addEventListener('pagehide', onHide);
+
+  /* ---------- Start ---------- */
+  refreshCats();
+  buildRing();
+  paintSound();
+  showRest();
+  render();
+  if (!S.pulsed) {
+    S.pulsed = true; save();
+    propL.classList.add('pulse');
+    setTimeout(() => propL.classList.remove('pulse'), 1400);
+  }
+  if (!reducedMotion.matches) {
+    angle = -stepDeg() * 0.3;
+    tickSlot = Math.floor((angle + stepDeg() / 2) / stepDeg());
+    notchAt = 0;
+    mode = 'notch';
+    run();
+  }
+
+  /* Read-only hooks for automated checks. */
+  window.__toast = toast;
+  window.__didja = {
+    build: BUILD,
+    state: () => ({ mode, angle, vel, current: current && current.id, answer: current && current.a, answered, lock, known: knownCount(), panel: openP && openP.id }),
+    audio: () => (Sound.ac ? Sound.ac.state : 'none'),
+    motor: () => !!Sound.motor,
+    profile: SOUND_PROFILE,
+    deal: (id) => { if (!BY_ID[id] || openP) return false; halt(); clearLanding(); showCard(BY_ID[id]); return true; }
+  };
+})();
+</script>
+
+<script>
+/* Offline support and content-update notices. */
+if ('serviceWorker' in navigator) {
+  addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((reg) => {
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
+    }).catch(() => { /* offline support unavailable */ });
+  });
+  navigator.serviceWorker.addEventListener('message', (e) => {
+    if (!e.data || e.data.type !== 'content-updated') return;
+    if (window.__toast) window.__toast('Questions updated. Tap to reload.', () => location.reload(), 10000);
+  });
+}
+</script>
+</body>
+</html>
