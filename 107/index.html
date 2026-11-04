@@ -417,7 +417,7 @@ details.box summary {
     </div>
     <button id="resetBtn" class="danger" type="button">Reset my progress</button>
     <p class="fine">Content checked against FAA sources: Nov 2026. Study aid, not an official FAA test.</p>
-    <p class="fine">Version 3 · build 46db0965d0</p>
+    <p class="fine">Version 3 · build 635c247f15</p>
   </div>
 </section>
 
@@ -629,7 +629,7 @@ const DECK = {
 <script>
 (() => {
   'use strict';
-  const BUILD = '46db0965d0';
+  const BUILD = '635c247f15';
   const CATS = [
     { key: 'rules', label: 'Rules', full: 'Regulations', color: 0 },
     { key: 'airspace', label: 'Airspace', full: 'Airspace and charts', color: 1 },
@@ -855,7 +855,7 @@ const DECK = {
   const SOUND_PROFILE = {
     shaftHz: 95, blades: 2, rotors: 4, detunePct: [-1.6, -0.5, 0.6, 1.7], polePairs: 7,
     toneGain: 0.34, elecGain: 0.012, noiseGain: 0.07, noiseHz: 1500,
-    minFrac: 0.06, harmonics: 32, oddLevel: 0.1, lfoHz: [0.6, 1.6], lfoDepth: 0.22, chimeGain: 0, selectGain: 0.16, spoolSec: 0.55
+    minFrac: 0.06, harmonics: 32, oddLevel: 0.1, lfoHz: [0.6, 1.6], lfoDepth: 0.22, chimeGain: 0, selectGain: 0.16, spoolSec: 0.04
   };
   const Sound = {
     ac: null, comp: null, noiseBuf: null, motor: null, sleepT: 0, lastSet: 0,
@@ -1014,7 +1014,8 @@ const DECK = {
 
   /* ---------- Spinning ---------- */
   const VMAX = 2800, DRAG = 1.25, NOTCH_SPEED = 140, SPRING = 220, DAMP = 16.3, MAGNET = 1.6, MAGNET_DEG = 4;
-  let RUB = 95;          /* friction gets the randomness, not the release speed */
+  let RUB = 95, spool = null;
+  const SPOOL_MS = 750;   /* how long the prop keeps speeding up after a flick */          /* friction gets the randomness, not the release speed */
   let angle = 0, vel = 0, mode = 'idle', notchAt = 0, glide = null, deal = false, tickSlot = 0, raf = 0, lastFrame = 0, drag = null, dragSpeed = 0;
   const last = { rot: '', p: -1, d: -1, r: -1, sh: -1 };
 
@@ -1050,7 +1051,12 @@ const DECK = {
     } else {
       const parts = Math.max(1, Math.ceil(dt / 0.006)), h = dt / parts;
       for (let i = 0; i < parts && mode !== 'idle'; i++) {
-        if (mode === 'free') {
+        if (mode === 'spool') {
+          const p = Math.min(1, (now - spool.t0) / spool.ms);
+          vel = spool.v0 + (spool.v1 - spool.v0) * (1 - Math.pow(1 - p, 2));
+          angle += vel * h;
+          if (p >= 1) mode = 'free';
+        } else if (mode === 'free') {
           const s = vel < 0 ? -1 : 1;
           const rub = RUB * (nearBoundary(angle) ? MAGNET : 1);   /* a little magnetic catch at each wedge edge */
           vel -= (DRAG * vel + rub * s) * h;
@@ -1108,14 +1114,20 @@ const DECK = {
       glide = { from: angle, to: (Math.round(angle / st) + dir * hops) * st, t0: performance.now(), ms: 450 };
       vel = 0; mode = 'glide';
     } else {
-      vel = clamp(v, -VMAX, VMAX);                  /* 1:1 with the flick */
+      /* The prop leaves your finger at the flick's speed, then the "motors" keep pushing:
+         it speeds up for SPOOL_MS, then coasts down. Sound pitch follows the real speed. */
+      const v0 = clamp(v, -VMAX, VMAX), a = Math.abs(v0);
       RUB = 80 + Math.random() * 35;
-      mode = 'free';
+      if (a < 300) { vel = v0; mode = 'free'; }
+      else {
+        const v1 = dir * Math.min(VMAX, Math.max(a * 1.6, a + 500));
+        vel = v0; spool = { v0, v1, t0: performance.now(), ms: SPOOL_MS }; mode = 'spool';
+      }
       if (S.sound) Sound.start(Math.abs(vel) / VMAX);
     }
     run();
   }
-  function spinDefault() { launch(1500 + Math.random() * 700); }
+  function spinDefault() { launch(1000 + Math.random() * 500); }   /* hub tap: spools up from there */
 
   function land() {
     const n = WHEEL.length;
