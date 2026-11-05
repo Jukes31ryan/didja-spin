@@ -235,17 +235,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .dot { width: 14px; height: 14px; border-radius: 50%; background: var(--chip); flex: none; }
 .stack { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .cat-row, .kept, .box { background: var(--card); border-radius: 20px; padding: 14px 16px; }
-.sound-box { display: flex; flex-direction: column; gap: 10px; }
-.sound-head { font-family: var(--font-display); font-weight: 800; font-stretch: 85%; font-size: 1.25rem; }
-.style-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.style-opt { width: 100%; text-align: left; display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; align-items: center;
-  padding: 10px 14px; border-radius: 16px; border: 2px solid var(--line); background: transparent; }
-.style-opt strong { font-family: var(--font-display); font-weight: 800; }
-.style-opt span { grid-column: 1; color: var(--ink-soft); font-size: var(--t-small); }
-.style-opt em { grid-row: 1 / span 2; grid-column: 2; font-style: normal; font-weight: 700; font-size: var(--t-small); }
-.style-opt[aria-checked="true"] { border-color: var(--ink); background: var(--mat); }
-.vol-row { display: flex; align-items: center; gap: 12px; font-weight: 700; }
-.vol-row input { flex: 1; accent-color: var(--ink); height: 32px; }
 .cat-row { display: flex; align-items: center; gap: 12px; }
 .cat-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .cat-info strong { font-family: var(--font-display); font-weight: 800; font-stretch: 85%; font-size: 1.2rem; line-height: 1.15; }
@@ -414,11 +403,6 @@ details.box summary {
     <p class="panel-note">Switch off what you've got down. Keep at least two on the wheel. Long-press a wedge to drill just that topic.</p>
     <p id="catsMsg" class="msg" role="status"></p>
     <ul id="catsList" class="stack"></ul>
-    <div class="box sound-box">
-      <strong class="sound-head">Spin sound</strong>
-      <ul id="styleList" class="style-list"></ul>
-      <label class="vol-row"><span>Volume</span><input id="volSlider" type="range" min="0" max="100" step="5"></label>
-    </div>
     <div class="cat-row">
       <div class="cat-info"><strong>Haptics</strong><span>A click on each wedge as it slows</span></div>
       <button id="hapticsSw" class="switch" type="button" role="switch" aria-checked="true" aria-label="Haptics"></button>
@@ -882,12 +866,12 @@ const DECK = {
   const STYLE_KEYS = Object.keys(STYLES);
   const SOUND_PROFILE = {
     refSpeed: 1700,
-    get pegsPerWedge() { return (STYLES[S.sstyle] || STYLES.wheel).pegs; }
+    pegsPerWedge: 1
   };
   const ARCADE_SCALE = [523, 587, 659, 784, 880, 1047, 1175, 1319, 1568];
   const Sound = {
     ac: null, comp: null, master: null, noiseBuf: null, motor: null, sleepT: 0, lastSet: 0, lastClick: 0, step: 0,
-    style() { return STYLES[S.sstyle] ? S.sstyle : 'wheel'; },
+    style() { return 'drone'; },                     /* official sound: Smooth Drone (Nov 2026) */
     ctx() {
       if (!S.sound) return null;
       try {
@@ -901,7 +885,7 @@ const DECK = {
           this.master = this.ac.createGain();
           this.comp.connect(this.master); this.master.connect(this.ac.destination);
         }
-        this.master.gain.value = 0.7 * Math.pow(clamp(S.vol, 0, 1), 1.6);   /* slider feels even */
+        this.master.gain.value = 0.85;
         clearTimeout(this.sleepT);
         if (this.ac.state === 'suspended') this.ac.resume().catch(() => {});
         return this.ac;
@@ -1002,7 +986,7 @@ const DECK = {
         const f = 70 + 85 * Math.sqrt(r);              /* low and gentle: 70 to ~165 Hz */
         m.oscs.forEach((x) => x.o.frequency.setTargetAtTime(f * x.k, t, 0.08));
         m.lp.frequency.setTargetAtTime(380 + 500 * r, t, 0.1);
-        m.out.gain.setTargetAtTime(0.16 * env, t, 0.1);
+        m.out.gain.setTargetAtTime(0.34 * env, t, 0.1);
       } else {
         const g = { air: 0.05, reel: 0.03, bearing: 0.035 }[m.bed] * env;
         if (m.bed === 'air') m.bp.frequency.setTargetAtTime(220 + 380 * r, t, 0.08);
@@ -1038,7 +1022,7 @@ const DECK = {
       const t = this.ac.currentTime + 0.01, st = this.style();
       if (st === 'wheel') { this.bell(784, t, 0.35, 0.06); this.bell(1175, t + 0.07, 0.4, 0.05); }
       else if (st === 'slots') { [1568, 1568, 2093].forEach((f, i) => this.bell(f, t + i * 0.11, 0.35, 0.05)); }
-      else if (st === 'drone') { this.tone('sine', 880, t, 0.09, 0.05); this.tone('sine', 1320, t + 0.1, 0.14, 0.05); }
+      else if (st === 'drone') { this.tone('sine', 880, t, 0.09, 0.1); this.tone('sine', 1320, t + 0.1, 0.14, 0.1); }
       else if (st === 'bearing') { this.snap(t, 900, 3, 0.03, 0.2); this.bell(1047, t + 0.02, 0.5, 0.04); }
       else if (st === 'arcade') { this.tone('square', 988, t, 0.07, 0.04); this.tone('square', 1319, t + 0.07, 0.25, 0.04); }
       this.sleepSoon();
@@ -1048,7 +1032,7 @@ const DECK = {
       const t = this.ac.currentTime + 0.01, st = this.style();
       if (st === 'arcade') [523, 659, 784, 1047].forEach((f, i) => this.tone('square', f, t + i * 0.06, 0.08, 0.035));
       else if (st === 'slots') [2093, 2637, 3136, 2637, 3136].forEach((f, i) => this.bell(f, t + i * 0.05, 0.2, 0.025));
-      else [1047, 1319, 1568].forEach((f, i) => this.bell(f, t + i * 0.06, 0.3, 0.035));
+      else [1047, 1319, 1568].forEach((f, i) => this.bell(f, t + i * 0.06, 0.3, 0.07));
       this.sleepSoon();
     },
     demo() {                                           /* a pretend 2.5-second spin for the picker */
@@ -1081,8 +1065,8 @@ const DECK = {
   }
 
   /* ---------- Spinning ---------- */
-  const VMAX = 2800, DRAG = 1.25, NOTCH_SPEED = 140, SPRING = 220, DAMP = 16.3, MAGNET = 1.6, MAGNET_DEG = 4;
-  let RUB = 95;          /* friction gets the randomness, not the release speed */
+  const VMAX = 2800, DRAG = 0.5, NOTCH_SPEED = 140, SPRING = 220, DAMP = 16.3, MAGNET = 1.6, MAGNET_DEG = 4;
+  let RUB = 38;          /* friction gets the randomness, not the release speed */
   let pegSlot = 0, angle = 0, vel = 0, mode = 'idle', notchAt = 0, glide = null, deal = false, tickSlot = 0, raf = 0, lastFrame = 0, drag = null, dragSpeed = 0;
   const last = { rot: '', p: -1, d: -1, r: -1, sh: -1 };
 
@@ -1179,7 +1163,7 @@ const DECK = {
       vel = 0; mode = 'glide';
     } else {
       vel = clamp(v, -VMAX, VMAX);                  /* 1:1 with the flick */
-      RUB = 80 + Math.random() * 35;
+      RUB = 32 + Math.random() * 14;
       mode = 'free';
       if (S.sound) Sound.start();
     }
@@ -1687,31 +1671,6 @@ const DECK = {
   $('tDone').addEventListener('click', () => { testView('start'); $('resumeBtn').hidden = true; closePanel(); });
   $('testClose').addEventListener('click', closePanel);
   $('testBtn').addEventListener('click', openTest);
-
-  /* ---------- Spin sound picker ---------- */
-  function paintStyles() {
-    const list = $('styleList');
-    list.textContent = '';
-    STYLE_KEYS.forEach((k) => {
-      const li = el('li');
-      const on = Sound.style() === k;
-      const b = button('style-opt', '', () => {
-        S.sstyle = k;
-        if (!S.sound) { S.sound = true; paintSound(); }
-        save(); paintStyles();
-        Sound.demo();
-      });
-      b.setAttribute('role', 'radio');
-      b.setAttribute('aria-checked', on ? 'true' : 'false');
-      b.append(el('strong', '', STYLES[k].name), el('span', '', STYLES[k].note), el('em', '', on ? 'Playing ▸' : 'Try ▸'));
-      li.appendChild(b);
-      list.appendChild(li);
-    });
-    $('volSlider').value = Math.round(S.vol * 100);
-  }
-  $('volSlider').addEventListener('input', (e) => { S.vol = e.target.value / 100; if (Sound.master) Sound.ctx(); });
-  $('volSlider').addEventListener('change', () => { save(); if (!S.sound) { S.sound = true; paintSound(); } Sound.chime(); });
-  $('catsBtn').addEventListener('click', paintStyles);
 
   /* ---------- Sound toggle ---------- */
   const soundBtn = $('soundBtn');
