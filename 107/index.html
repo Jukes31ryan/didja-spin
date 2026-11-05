@@ -857,7 +857,7 @@ const DECK = {
     /* Prize-wheel sound: a wooden clack every time a peg passes the nose, over a soft
        bearing whirr that rises with speed. Clacks get louder and lower as it slows,
        so the last few clicks before it lands are the ones you hear most. */
-    pegsPerWedge: 2, clickGain: 0.55, whirrGain: 0.07, refSpeed: 1700, maxFrac: 1.4, chimeGain: 0.07
+    pegsPerWedge: 1, clickGain: 0.5, clickFadeFrom: 1100, clickFadeTo: 500, minGapMs: 55, whirrGain: 0.05, refSpeed: 1700, maxFrac: 1.2, chimeGain: 0.07
   };
   const Sound = {
     ac: null, comp: null, noiseBuf: null, motor: null, sleepT: 0, lastSet: 0, lastClick: 0,
@@ -888,14 +888,18 @@ const DECK = {
     click(speed) {                                   /* one peg hitting the flapper */
       if (!this.ac || this.ac.state !== 'running') return;
       const now = performance.now();
-      if (now - this.lastClick < 14) return;
+      const P = SOUND_PROFILE;
+      if (now - this.lastClick < P.minGapMs) return;   /* never a buzz: at most ~18 clicks a second */
+      /* fast spin = just the whoosh; clicks fade in as it slows down */
+      const fade = clamp((P.clickFadeFrom - speed) / (P.clickFadeFrom - P.clickFadeTo), 0, 1);
+      if (fade <= 0.02) return;
       this.lastClick = now;
-      const ac = this.ac, t = ac.currentTime, k = clamp(speed / SOUND_PROFILE.refSpeed, 0, 1);
-      const vol = SOUND_PROFILE.clickGain * (1 - 0.6 * k) * (0.85 + Math.random() * 0.3);
+      const ac = this.ac, t = ac.currentTime;
+      const vol = P.clickGain * fade * (0.9 + Math.random() * 0.2);
       /* the snap: a few ms of filtered noise */
       const src = ac.createBufferSource(); src.buffer = this.noise();
       const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 2.2;
-      bp.frequency.value = 2600 + 1400 * k + Math.random() * 300;
+      bp.frequency.value = 1500 + Math.random() * 150;
       const g = ac.createGain();
       g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.022);
       src.connect(bp); bp.connect(g); g.connect(this.comp);
@@ -903,7 +907,7 @@ const DECK = {
       /* the body: a short woody knock */
       const o = ac.createOscillator(), og = ac.createGain();
       o.type = 'triangle';
-      o.frequency.setValueAtTime(520 + 260 * k, t); o.frequency.exponentialRampToValueAtTime(240, t + 0.03);
+      o.frequency.setValueAtTime(320, t); o.frequency.exponentialRampToValueAtTime(170, t + 0.035);
       og.gain.setValueAtTime(vol * 0.5, t); og.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
       o.connect(og); og.connect(this.comp);
       o.start(t); o.stop(t + 0.05);
@@ -913,8 +917,8 @@ const DECK = {
       const ac = this.ac, t = ac.currentTime;
       try {
         const src = ac.createBufferSource(); src.buffer = this.noise(); src.loop = true;
-        const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.7; bp.frequency.value = 500;
-        const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2500;
+        const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.9; bp.frequency.value = 220;
+        const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900;
         const wash = ac.createGain(); wash.gain.value = 0;
         const flutter = ac.createOscillator(); flutter.frequency.value = 6;     /* arms passing make the air pulse */
         const fg = ac.createGain(); fg.gain.value = 0;
@@ -933,10 +937,10 @@ const DECK = {
       const P = SOUND_PROFILE, t = this.ac.currentTime;
       r = clamp(r, 0, P.maxFrac);
       const env = P.whirrGain * Math.min(1, Math.pow(r, 1.4));
-      m.bp.frequency.setTargetAtTime(350 + 1100 * r, t, 0.06);
+      m.bp.frequency.setTargetAtTime(220 + 380 * r, t, 0.08);
       m.wash.gain.setTargetAtTime(env, t, 0.06);
-      m.fg.gain.setTargetAtTime(env * 0.6, t, 0.06);
-      m.flutter.frequency.setTargetAtTime(Math.max(1, (r * P.refSpeed / 360) * 3), t, 0.06);
+      m.fg.gain.setTargetAtTime(env * 0.35, t, 0.08);
+      m.flutter.frequency.setTargetAtTime(clamp((r * P.refSpeed / 360) * 3, 1, 9), t, 0.08);
     },
     stop() {
       const m = this.motor;
