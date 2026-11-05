@@ -72,8 +72,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   padding: calc(env(safe-area-inset-top, 0px) + 8px) 16px calc(env(safe-area-inset-bottom, 0px) + 12px);
   display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 8px;
 }
-.app.dealt { grid-template-rows: auto minmax(0, 0.62fr) minmax(0, 1fr); }
-@media (max-height: 700px) { .app.dealt { grid-template-rows: auto minmax(0, 0.5fr) minmax(0, 1fr); } }
+/* The spinner never shrinks: flick it again any time, answered or not. */
 
 .top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .name {
@@ -154,7 +153,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .hub:active, .pressed .hub { transform: translate(-50%, -50%) scale(0.94); }
 
 /* Tray */
-.tray { display: flex; flex-direction: column; min-height: 0; background: var(--card); border-radius: 24px; overflow: hidden; }
+.tray { height: clamp(17rem, 44dvh, 22rem); display: flex; flex-direction: column; min-height: 0; background: var(--card); border-radius: 24px; overflow: hidden; }
+.spin-hint { margin: 0; padding: 6px 18px 10px; text-align: center; color: var(--ink-soft); font-size: var(--t-small); }
 .tray-scroll { position: relative; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 16px 18px 12px; }
 .rest { display: flex; flex-direction: column; gap: 10px; }
 .rest-title {
@@ -350,6 +350,7 @@ details.box summary {
     <div id="nextRow" class="next-row" hidden>
       <button id="nextBtn" class="act primary" type="button">Got it</button>
     </div>
+    <p class="spin-hint">Flick the prop any time for the next one.</p>
   </section>
 </div>
 
@@ -853,14 +854,13 @@ const DECK = {
      A DJI-style quad, synthesized live. Tune it here. Shaft frequency (Hz) at full flick speed;
      it idles at minFrac of that. Pitch and level follow rpm = |angular velocity| / VMAX. */
   const SOUND_PROFILE = {
-    /* Same model as the "Mavic-class spin" sound Ryan picked (#2): 4 detuned rotors, 2-blade props,
-       motor whine at 7x and 42x shaft, prop wash. Pitch runs from 0 up to ~1.15x as spin speed rises. */
-    shaftHz: 95, blades: 2, rotors: 4, detunePct: [-1.6, -0.5, 0.6, 1.7], polePairs: 7,
-    toneGain: 0.14, elecGain: 0.012, noiseGain: 0.09, refSpeed: 1700, maxFrac: 1.15,
-    harmonics: 20, lfoHz: [0.6, 1.6], lfoDepth: 0.15, chimeGain: 0
+    /* Prize-wheel sound: a wooden clack every time a peg passes the nose, over a soft
+       bearing whirr that rises with speed. Clacks get louder and lower as it slows,
+       so the last few clicks before it lands are the ones you hear most. */
+    pegsPerWedge: 2, clickGain: 0.55, whirrGain: 0.07, refSpeed: 1700, maxFrac: 1.4, chimeGain: 0.07
   };
   const Sound = {
-    ac: null, comp: null, noiseBuf: null, motor: null, sleepT: 0, lastSet: 0,
+    ac: null, comp: null, noiseBuf: null, motor: null, sleepT: 0, lastSet: 0, lastClick: 0,
     ctx() {
       if (!S.sound) return null;
       try {
@@ -869,8 +869,8 @@ const DECK = {
         if (!this.ac) {
           this.ac = new Ctx();
           this.comp = this.ac.createDynamicsCompressor();
-          this.comp.threshold.value = -16; this.comp.ratio.value = 5;
-          this.comp.attack.value = 0.005; this.comp.release.value = 0.15;
+          this.comp.threshold.value = -14; this.comp.ratio.value = 4;
+          this.comp.attack.value = 0.002; this.comp.release.value = 0.12;
           const out = this.ac.createGain(); out.gain.value = 0.9;
           this.comp.connect(out); out.connect(this.ac.destination);
         }
@@ -879,63 +879,64 @@ const DECK = {
         return this.ac;
       } catch (e) { return null; }
     },
-    wave() {
-      const P = SOUND_PROFILE, n = P.harmonics + 1, re = new Float32Array(n), im = new Float32Array(n);
-      for (let k = 1; k < n; k++) { if (k % 2 === 0) { im[k] = 1 / Math.pow(k / 2, 1.2); re[k] = 0.12 / (k / 2); } else im[k] = 0.04 / k; }
-      return this.ac.createPeriodicWave(re, im);
-    },
     noise() {
       if (this.noiseBuf) return this.noiseBuf;
       const len = this.ac.sampleRate * 2, buf = this.ac.createBuffer(1, len, this.ac.sampleRate), d = buf.getChannelData(0);
       for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
       return (this.noiseBuf = buf);
     },
+    click(speed) {                                   /* one peg hitting the flapper */
+      if (!this.ac || this.ac.state !== 'running') return;
+      const now = performance.now();
+      if (now - this.lastClick < 14) return;
+      this.lastClick = now;
+      const ac = this.ac, t = ac.currentTime, k = clamp(speed / SOUND_PROFILE.refSpeed, 0, 1);
+      const vol = SOUND_PROFILE.clickGain * (1 - 0.6 * k) * (0.85 + Math.random() * 0.3);
+      /* the snap: a few ms of filtered noise */
+      const src = ac.createBufferSource(); src.buffer = this.noise();
+      const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 2.2;
+      bp.frequency.value = 2600 + 1400 * k + Math.random() * 300;
+      const g = ac.createGain();
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.022);
+      src.connect(bp); bp.connect(g); g.connect(this.comp);
+      src.start(t, Math.random() * 1.5, 0.03);
+      /* the body: a short woody knock */
+      const o = ac.createOscillator(), og = ac.createGain();
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(520 + 260 * k, t); o.frequency.exponentialRampToValueAtTime(240, t + 0.03);
+      og.gain.setValueAtTime(vol * 0.5, t); og.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+      o.connect(og); og.connect(this.comp);
+      o.start(t); o.stop(t + 0.05);
+    },
     start() {
       if (this.motor || !this.ctx()) return;
-      const ac = this.ac, P = SOUND_PROFILE, t = ac.currentTime;
+      const ac = this.ac, t = ac.currentTime;
       try {
-        const nodes = [];
-        const tone = ac.createGain(); tone.gain.value = 0; tone.connect(this.comp);
-        const wave = this.wave();
-        const rotors = [];
-        for (let i = 0; i < P.rotors; i++) {
-          const o = ac.createOscillator(); o.setPeriodicWave(wave); o.frequency.value = 2;
-          const g = ac.createGain(); g.gain.value = 1;
-          const lfo = ac.createOscillator(); lfo.frequency.value = 0.6 + i * 0.31;
-          const lg = ac.createGain(); lg.gain.value = P.lfoDepth;
-          lfo.connect(lg); lg.connect(g.gain); o.connect(g); g.connect(tone);
-          o.start(t); lfo.start(t);
-          nodes.push(o, lfo);
-          rotors.push({ o, k: 1 + (P.detunePct[i % P.detunePct.length] || 0) / 100 });
-        }
-        const elec = ac.createGain(); elec.gain.value = 0; elec.connect(this.comp);
-        const e1 = ac.createOscillator(), e2 = ac.createOscillator(), e2g = ac.createGain();
-        e1.type = e2.type = 'sine'; e2g.gain.value = 0.35;
-        e1.connect(elec); e2.connect(e2g); e2g.connect(elec); e1.start(t); e2.start(t);
-        nodes.push(e1, e2);
         const src = ac.createBufferSource(); src.buffer = this.noise(); src.loop = true;
-        const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.6; bp.frequency.value = 400;
+        const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.7; bp.frequency.value = 500;
+        const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2500;
         const wash = ac.createGain(); wash.gain.value = 0;
-        src.connect(bp); bp.connect(wash); wash.connect(this.comp); src.start(t);
-        nodes.push(src);
-        this.motor = { nodes, rotors, tone, elec, e1, e2, bp, wash, buses: [tone, elec, wash] };
+        const flutter = ac.createOscillator(); flutter.frequency.value = 6;     /* arms passing make the air pulse */
+        const fg = ac.createGain(); fg.gain.value = 0;
+        flutter.connect(fg); fg.connect(wash.gain);
+        src.connect(bp); bp.connect(lp); lp.connect(wash); wash.connect(this.comp);
+        src.start(t); flutter.start(t);
+        this.motor = { nodes: [src, flutter], bp, wash, flutter, fg, buses: [wash] };
       } catch (e) { this.motor = null; }
     },
-    set(rpm) {
+    set(r) {
       const m = this.motor;
       if (!m) return;
       const now = performance.now();
-      if (now - this.lastSet < 30) return;          /* ~33 updates a second is plenty */
+      if (now - this.lastSet < 30) return;
       this.lastSet = now;
-      const P = SOUND_PROFILE, t = this.ac.currentTime, r = clamp(rpm, 0, P.maxFrac);
-      const shaft = Math.max(2, P.shaftHz * r), env = Math.min(1, Math.pow(r, 1.8));
-      m.rotors.forEach((x) => x.o.frequency.setTargetAtTime(shaft * x.k, t, 0.04));
-      m.e1.frequency.setTargetAtTime(P.polePairs * shaft, t, 0.04);
-      m.e2.frequency.setTargetAtTime(6 * P.polePairs * shaft, t, 0.04);
-      m.bp.frequency.setTargetAtTime(Math.max(400, 900 + 2200 * r), t, 0.05);
-      m.tone.gain.setTargetAtTime(P.toneGain * env, t, 0.05);
-      m.elec.gain.setTargetAtTime(P.elecGain * Math.sqrt(env), t, 0.05);
-      m.wash.gain.setTargetAtTime(P.noiseGain * env, t, 0.05);
+      const P = SOUND_PROFILE, t = this.ac.currentTime;
+      r = clamp(r, 0, P.maxFrac);
+      const env = P.whirrGain * Math.min(1, Math.pow(r, 1.4));
+      m.bp.frequency.setTargetAtTime(350 + 1100 * r, t, 0.06);
+      m.wash.gain.setTargetAtTime(env, t, 0.06);
+      m.fg.gain.setTargetAtTime(env * 0.6, t, 0.06);
+      m.flutter.frequency.setTargetAtTime(Math.max(1, (r * P.refSpeed / 360) * 3), t, 0.06);
     },
     stop() {
       const m = this.motor;
@@ -957,27 +958,24 @@ const DECK = {
       clearTimeout(this.sleepT);
       this.sleepT = setTimeout(() => { if (this.ac && this.ac.state === 'running' && !this.motor) this.ac.suspend().catch(() => {}); }, 3000);
     },
-    notes(freqs, step, len) {                        /* square-ish motor beeps, bandpassed */
+    notes(freqs, step, len) {                        /* soft marimba-ish notes */
       if (!this.ctx()) return;
-      const ac = this.ac, t0 = ac.currentTime + 0.02;
-      const re = new Float32Array(8), im = new Float32Array(8);
-      [1, 0, 1 / 3, 0, 1 / 5, 0, 1 / 7].forEach((v, i) => { im[i + 1] = v; });
-      const wave = ac.createPeriodicWave(re, im);
-      const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 1700; bp.Q.value = 0.9;
-      const g = ac.createGain(); g.gain.value = SOUND_PROFILE.chimeGain;
-      bp.connect(g); g.connect(this.comp);
+      const ac = this.ac, t0 = ac.currentTime + 0.01;
       freqs.forEach((f, i) => {
-        const o = ac.createOscillator(), e = ac.createGain(), s = t0 + i * step, l = i === freqs.length - 1 ? len * 1.8 : len;
-        o.setPeriodicWave(wave); o.frequency.value = f;
-        e.gain.setValueAtTime(0, s); e.gain.linearRampToValueAtTime(1, s + 0.006);
-        e.gain.setValueAtTime(1, s + l - 0.02); e.gain.linearRampToValueAtTime(0, s + l);
-        o.connect(e); e.connect(bp); o.start(s); o.stop(s + l + 0.02);
+        const s0 = t0 + i * step;
+        [[f, 1], [f * 4, 0.18]].forEach(([fr, amp]) => {
+          const o = ac.createOscillator(), e = ac.createGain();
+          o.type = 'sine'; o.frequency.value = fr;
+          e.gain.setValueAtTime(0.0001, s0);
+          e.gain.exponentialRampToValueAtTime(SOUND_PROFILE.chimeGain * amp, s0 + 0.005);
+          e.gain.exponentialRampToValueAtTime(0.0001, s0 + len * (amp === 1 ? 1 : 0.35));
+          o.connect(e); e.connect(this.comp); o.start(s0); o.stop(s0 + len + 0.05);
+        });
       });
-      setTimeout(() => g.disconnect(), (freqs.length * step + len * 2) * 1000 + 300);
       this.sleepSoon();
     },
-    chime() { this.notes([1175, 1397, 1760], 0.085, 0.07); },
-    correct() { this.notes([1397, 1760], 0.07, 0.06); }
+    chime() { this.notes([784, 1175], 0.07, 0.35); },
+    correct() { this.notes([1047, 1319, 1568], 0.06, 0.3); }
   };
 
   /* ---------- Haptics ---------- */
@@ -994,7 +992,7 @@ const DECK = {
   /* ---------- Spinning ---------- */
   const VMAX = 2800, DRAG = 1.25, NOTCH_SPEED = 140, SPRING = 220, DAMP = 16.3, MAGNET = 1.6, MAGNET_DEG = 4;
   let RUB = 95;          /* friction gets the randomness, not the release speed */
-  let angle = 0, vel = 0, mode = 'idle', notchAt = 0, glide = null, deal = false, tickSlot = 0, raf = 0, lastFrame = 0, drag = null, dragSpeed = 0;
+  let pegSlot = 0, angle = 0, vel = 0, mode = 'idle', notchAt = 0, glide = null, deal = false, tickSlot = 0, raf = 0, lastFrame = 0, drag = null, dragSpeed = 0;
   const last = { rot: '', p: -1, d: -1, r: -1, sh: -1 };
 
   function blurFor(speed) {
@@ -1013,6 +1011,8 @@ const DECK = {
     const step = stepDeg();
     const slot = Math.floor((angle + step / 2) / step);
     if (slot !== tickSlot) { tickSlot = slot; tick(speed); }
+    const peg = Math.floor(angle / (step / SOUND_PROFILE.pegsPerWedge));
+    if (peg !== pegSlot) { pegSlot = peg; if (S.sound && mode !== 'idle') Sound.click(speed); }
     if (Sound.motor) Sound.set(speed / SOUND_PROFILE.refSpeed);
   }
   function nearBoundary(a) {
@@ -1080,7 +1080,7 @@ const DECK = {
     clearLanding();
     deal = true;
     askPersist();
-    if (!S.sound && !S.toldSound) { S.toldSound = true; save(); toast('Sound is off. Tap the speaker for motor sound.'); }
+    if (!S.sound && !S.toldSound) { S.toldSound = true; save(); toast('Sound is off. Tap the speaker for spin sound.'); }
     const dir = v < 0 ? -1 : 1;
     if (reducedMotion.matches) {
       const st = stepDeg(), hops = 1 + Math.floor(Math.random() * WHEEL.length);
@@ -1146,6 +1146,7 @@ const DECK = {
       const key = wedgeEl.getAttribute('data-cat');
       drag.lp = setTimeout(() => { if (drag && !drag.live) { drag.long = true; buzz(20); toggleLock(key); } }, 500);
     }
+    if (S.sound) Sound.ctx();
     box.classList.add('pressed');
     try { box.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
     if (e.target.closest && e.target.closest('#hub')) e.preventDefault();
@@ -1285,13 +1286,13 @@ const DECK = {
     $('reportLink').href = 'mailto:jukes31ryan@gmail.com?subject=' + encodeURIComponent('Didja Spin 107 card ' + current.id) +
       '&body=' + encodeURIComponent('Card ' + current.id + ': ' + current.q + '\n\nWhat looks wrong:\n');
     $('whyBox').hidden = false;
-    $('nextRow').hidden = false;
+    /* no "Got it" step: just flick again */
     $('hub').removeAttribute('aria-disabled');
     sr(correct ? 'Correct. ' + current.why : 'Not quite. Answer: ' + current.a + '. ' + current.why);
     if (correct) { buzz([10, 40, 10]); if (S.sound) Sound.correct(); }
     paintStats();
     requestAnimationFrame(revealWhy);
-    $('nextBtn').focus({ preventScroll: true });
+    $('hub').focus({ preventScroll: true });
   }
   function revealWhy() {
     const w = $('whyBox');
