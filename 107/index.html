@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Didja Spin 107</title>
-<meta name="description" content="Flick the prop, learn one Part 107 fact.">
+<meta name="description" content="Flick the drone, learn one Part 107 fact.">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#E7EBDF">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0F1722">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Didja 107">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
-<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <style>
 /* Didja Spin 107 v3. One screen: a 3-blade propeller seen from above is the spinner,
@@ -328,7 +328,7 @@ details.box summary {
   <section id="tray" class="tray">
     <div id="trayScroll" class="tray-scroll">
       <div id="rest" class="rest">
-        <h2 id="restTitle" class="rest-title">Flick the prop.</h2>
+        <h2 id="restTitle" class="rest-title">Flick the drone.</h2>
         <p id="stats" class="stats"></p>
       </div>
       <div id="q" class="q" hidden>
@@ -350,7 +350,7 @@ details.box summary {
     <div id="nextRow" class="next-row" hidden>
       <button id="nextBtn" class="act primary" type="button">Got it</button>
     </div>
-    <p class="spin-hint">Flick the prop any time for the next one.</p>
+    <p class="spin-hint">Flick the drone any time for the next one.</p>
   </section>
 </div>
 
@@ -828,20 +828,13 @@ const DECK = {
   const LEAD = 'M7 -18 C16 -30 16 -50 13 -75 C11 -95 8 -115 4 -126';
   const VB = 'viewBox="-205 -205 410 410" aria-hidden="true" focusable="false"';
   function propSvg() {
-    let s = '<svg ' + VB + ' xmlns="' + NS + '"><defs><clipPath id="bladeClip"><path d="' + BLADE + '"/></clipPath></defs>';
-    for (let k = 0; k < 3; k++) {
-      s += '<g transform="rotate(' + k * 120 + ')"><path class="blade" d="' + BLADE + '"/><g clip-path="url(#bladeClip)">' +
-        '<rect class="blade-tr" x="-20" y="-135" width="19" height="120"/><path class="blade-le" d="' + LEAD + '"/>' +
-        (k === 0 ? '<rect class="tipband" x="-20" y="-135" width="40" height="35"/>' : '<rect class="tipstripe" x="-20" y="-122" width="40" height="3"/>') +
-        '</g><path class="blade-ol" d="' + BLADE + '"/></g>';
-    }
-    s += '<circle class="hubcap" r="18"/><circle class="nut" r="8"/><path class="chev" d="M0 -151 L-11 -133 L0 -138 L11 -133 Z"/></svg>';
-    return s;
+    return '<svg ' + VB + ' xmlns="' + NS + '"><defs><clipPath id="droneClip"><circle r="128"/></clipPath></defs>' +
+      '<circle r="131" fill="var(--drone-edge)"/>' +
+      '<image href="drone.png" x="-128" y="-128" width="256" height="256" preserveAspectRatio="xMidYMid slice" clip-path="url(#droneClip)"/>' +
+      '<path class="chev" d="M0 -168 L-11 -150 L0 -155 L11 -150 Z"/></svg>';
   }
   function shadowSvg() {
-    let s = '<svg ' + VB + '><g class="shadow-shape">';
-    for (let k = 0; k < 3; k++) s += '<path transform="rotate(' + k * 120 + ')" d="' + BLADE + '"/>';
-    return s + '<circle r="18"/></g></svg>';
+    return '<svg ' + VB + '><g class="shadow-shape"><circle r="128"/></g></svg>';
   }
   const propL = $('propL'), shadowL = $('shadowL'), discL = $('discL'), ringL = $('ringL');
   propL.innerHTML = propSvg();
