@@ -152,6 +152,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .hub:active, .pressed .hub { transform: translate(-50%, -50%) scale(0.94); }
 
+.drone-front { display: grid; place-items: center; }
+.drone-front img {
+  width: 47%; aspect-ratio: 1; border-radius: 50%;
+  border: 3px solid var(--drone-edge);
+  box-shadow: 0 6px 22px rgba(16, 24, 40, 0.35);
+}
+
 /* Tray */
 .tray { height: clamp(17rem, 44dvh, 22rem); display: flex; flex-direction: column; min-height: 0; background: var(--card); border-radius: 24px; overflow: hidden; }
 .spin-hint { margin: 0; padding: 6px 18px 10px; text-align: center; color: var(--ink-soft); font-size: var(--t-small); }
@@ -321,6 +328,7 @@ details.box summary {
         <div id="ringL" class="layer fade"></div>
         <div id="propL" class="layer rot"></div>
       </div>
+      <div class="layer drone-front"><img src="drone.png" alt="Quadcopter drone"></div>
       <button id="hub" class="hub" type="button" aria-label="Spin">Spin</button>
     </div>
   </main>
