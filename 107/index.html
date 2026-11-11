@@ -1264,12 +1264,17 @@ TOPICS107.forEach((t) => {
       if (!m) return;
       const now = performance.now();
       if (now - this.lastSet < 30) return;
+      const dtS = Math.min(0.1, (now - this.lastSet) / 1000);
       this.lastSet = now;
       const t = this.ac.currentTime;
       r = clamp(r, 0, 1.2);
-      const env = Math.min(1, Math.pow(r, 1.3));
+      /* Spool up like a real prop (rises over about half a second), then follow the spinner down as it slows. */
+      if (m.r === undefined) m.r = 0;
+      m.r = r > m.r ? Math.min(r, m.r + 2.2 * dtS) : r;
+      r = m.r;
+      const env = Math.min(1, Math.pow(r, 1.05));
       if (m.bed === 'drone') {
-        const f = (70 + 85 * Math.sqrt(r)) * m.fm;              /* low and gentle: 70 to ~165 Hz */
+        const f = (55 + 115 * Math.sqrt(r)) * m.fm;              /* low and gentle: 70 to ~165 Hz */
         m.oscs.forEach((x) => x.o.frequency.setTargetAtTime(f * x.k, t, 0.08));
         m.lp.frequency.setTargetAtTime((800 + 1000 * r) * Math.min(m.fm, 1.8), t, 0.1);
         m.out.gain.setTargetAtTime(0.55 * env, t, 0.1);
@@ -1544,6 +1549,7 @@ TOPICS107.forEach((t) => {
       box.classList.add('pressed');
       clearLanding();
       d = 0;
+      if (S.sound && !reducedMotion.matches) Sound.start();   /* the prop starts spooling as you spin it up */
     }
     angle += d;
     render();
