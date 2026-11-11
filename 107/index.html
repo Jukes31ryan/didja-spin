@@ -1139,6 +1139,8 @@ TOPICS107.forEach((t) => {
     wheel:  { name: 'Prize Wheel',   note: 'Wooden clacks as it slows, like a game-show wheel', pegs: 1, bed: 'air' },
     slots:  { name: 'Slot Machine',  note: 'Fast reel ticks and a ding-ding payout', pegs: 2, bed: 'reel' },
     drone:  { name: 'Smooth Drone',  note: 'A soft, low quadcopter hum that spools up and down', pegs: 1, bed: 'drone' },
+    buzz:   { name: 'Quad Buzz',     note: 'A mid-pitched quadcopter buzz', pegs: 1, bed: 'drone', fm: 1.6 },
+    whine:  { name: 'FPV Whine',     note: 'A high, fast racing-drone whine', pegs: 1, bed: 'drone', fm: 2.6 },
     bearing:{ name: 'Fidget Spinner',note: 'A smooth ball-bearing whirr, no clicks', pegs: 1, bed: 'bearing' },
     arcade: { name: 'Arcade',        note: 'Retro blips that climb a scale, coin sound on landing', pegs: 1, bed: null }
   };
@@ -1149,7 +1151,7 @@ TOPICS107.forEach((t) => {
   const ARCADE_SCALE = [523, 587, 659, 784, 880, 1047, 1175, 1319, 1568];
   const Sound = {
     ac: null, comp: null, master: null, noiseBuf: null, motor: null, sleepT: 0, lastSet: 0, lastClick: 0, step: 0,
-    style() { return 'drone'; },                     /* official sound: Smooth Drone (Nov 2026) */
+    style() { const q = new URLSearchParams(location.search).get('sound'); return q && STYLES[q] ? q : 'drone'; },   /* official: Smooth Drone; ?sound=<key> auditions the others */                     /* official sound: Smooth Drone (Nov 2026) */
     ctx() {
       if (!S.sound) return null;
       try {
@@ -1194,7 +1196,7 @@ TOPICS107.forEach((t) => {
     click(speed) {                                     /* called each time a peg passes the nose */
       if (!this.ac || this.ac.state !== 'running') return;
       const st = this.style(), now = performance.now(), t = this.ac.currentTime;
-      const gap = { wheel: 55, slots: 32, drone: 1e9, bearing: 1e9, arcade: 70 }[st];
+      const gap = { wheel: 55, slots: 32, drone: 1e9, buzz: 1e9, whine: 1e9, bearing: 1e9, arcade: 70 }[st];
       if (now - this.lastClick < gap) return;
       if (st === 'wheel') {
         const fade = clamp((1100 - speed) / 600, 0, 1);
@@ -1221,7 +1223,7 @@ TOPICS107.forEach((t) => {
       if (!bed) return;
       try {
         const out = ac.createGain(); out.gain.value = 0; out.connect(this.comp);
-        const nodes = [], m = { nodes, buses: [out], out, bed, oscs: [] };
+        const nodes = [], m = { nodes, buses: [out], out, bed, oscs: [], fm: STYLES[this.style()].fm || 1 };
         if (bed === 'drone') {
           const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900; lp.Q.value = 0.5; lp.connect(out);
           [-1.2, -0.4, 0.5, 1.3].forEach((d) => {
@@ -1267,9 +1269,9 @@ TOPICS107.forEach((t) => {
       r = clamp(r, 0, 1.2);
       const env = Math.min(1, Math.pow(r, 1.3));
       if (m.bed === 'drone') {
-        const f = 70 + 85 * Math.sqrt(r);              /* low and gentle: 70 to ~165 Hz */
+        const f = (70 + 85 * Math.sqrt(r)) * m.fm;              /* low and gentle: 70 to ~165 Hz */
         m.oscs.forEach((x) => x.o.frequency.setTargetAtTime(f * x.k, t, 0.08));
-        m.lp.frequency.setTargetAtTime(800 + 1000 * r, t, 0.1);
+        m.lp.frequency.setTargetAtTime((800 + 1000 * r) * Math.min(m.fm, 1.8), t, 0.1);
         m.out.gain.setTargetAtTime(0.55 * env, t, 0.1);
       } else {
         const g = { air: 0.05, reel: 0.03, bearing: 0.035 }[m.bed] * env;
@@ -1306,7 +1308,7 @@ TOPICS107.forEach((t) => {
       const t = this.ac.currentTime + 0.01, st = this.style();
       if (st === 'wheel') { this.bell(784, t, 0.35, 0.06); this.bell(1175, t + 0.07, 0.4, 0.05); }
       else if (st === 'slots') { [1568, 1568, 2093].forEach((f, i) => this.bell(f, t + i * 0.11, 0.35, 0.05)); }
-      else if (st === 'drone') { this.tone('sine', 880, t, 0.09, 0.1); this.tone('sine', 1320, t + 0.1, 0.14, 0.1); }
+      else if (st === 'drone' || st === 'buzz' || st === 'whine') { this.tone('sine', 880, t, 0.09, 0.1); this.tone('sine', 1320, t + 0.1, 0.14, 0.1); }
       else if (st === 'bearing') { this.snap(t, 900, 3, 0.03, 0.2); this.bell(1047, t + 0.02, 0.5, 0.04); }
       else if (st === 'arcade') { this.tone('square', 988, t, 0.07, 0.04); this.tone('square', 1319, t + 0.07, 0.25, 0.04); }
       this.sleepSoon();
