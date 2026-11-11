@@ -4,190 +4,477 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Didja Spin 107</title>
-<meta name="description" content="Flick the drone, learn one Part 107 fact.">
-<link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#E7EBDF">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0F1722">
+<meta name="description" content="Flick the spinner, study the FAA Part 107 test. 182 questions across seven topics, plus a practice test: Quick 20 or a full timed 60.">
+<meta name="theme-color" content="#E6E9F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#12162B" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Didja 107">
-<link rel="apple-touch-icon" href="icons/icon-180.png">
-<link rel="icon" type="image/png" href="icons/icon-192.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-title" content="Didja Spin 107">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0;padding:0}[hidden]{display:none!important}</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&display=swap">
 <style>
-/* Didja Spin 107 v3. One screen: a 3-blade propeller seen from above is the spinner,
-   a ring of Part 107 topics surrounds it, and the tray underneath deals the question.
-   Palette borrows from a VFR sectional chart. */
+/* Layout: one screen. The spinner fills the middle, the name sits top-left,
+   and a tray under the spinner holds the nugget it lands on. */
 :root {
-  --mat: #E7EBDF;
-  --ink: #12213A;
-  --ink-soft: #4F5B6D;
-  --card: #FAFBF6;
-  --drone: #2C3747;
-  --drone-edge: #18212E;
-  --drone-top: #55657C;
-  --prop: #8F9BAC;
-  --line: #C3CAB8;
-  --shadow: #12213A;
-  --shadow-strength: 0.18;
+  --mat: #E6E9F7;
+  --ink: #171D38;
+  --ink-soft: #545E88;
+  --card: #FFFFFF;
+  --spinner: #FBFBFE;
+  --spinner-edge: #B4BCDF;
+  --bearing: #8A93BC;
+  --line: #C4CAE6;
+  --shadow: #171D38;
+  --shadow-strength: 0.16;
   --warn: #B3362B;
-  --led: #E8524A;
   --good: #2A7A3B;
-  --p0: #5B8DEF; --p1: #D65BB0; --p2: #4FB6D6; --p3: #E9A23B; --p4: #7DBE55; --p5: #A47BE6; --p6: #EC7A63;
-  --on-color: #101A2A;
-  --font-display: ui-rounded, "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
-  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* Category colors. Text on them is always --on-color, in both themes. */
+  --p0: #5B8DEF;
+  --p1: #F2A93B;
+  --p2: #A77BEA;
+  --p3: #EF6B5E;
+  --p4: #2FBFAE;
+  --p5: #EE6FAE;
+  --p6: #A3D34F;
+  --p7: #55C4EC;
+  --on-color: #141A33;
+
+  --font-display: "Bricolage Grotesque", ui-rounded, "Segoe UI", system-ui, sans-serif;
+  --font-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
   --t-small: 0.8125rem;
   --t-note: 0.9375rem;
   --t-body: 1.0625rem;
-  --t-name: 1.5rem;
-  --t-head: 1.4rem;
-  color-scheme: light;
+  --t-name: 1.625rem;
+  --t-head: 1.875rem;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
-    --mat: #0F1722; --ink: #E8EDF3; --ink-soft: #A2AEBE; --card: #1A2533;
-    --drone: #3A4759; --drone-edge: #59687D; --drone-top: #7A8AA0; --prop: #8C99AB;
-    --line: #2F3C4E; --shadow: #000000; --shadow-strength: 0.45;
-    --warn: #FF9A8F; --led: #FF6B61; --good: #6FD08A;
+  :root:not([data-theme="light"]) {
+    --mat: #12162B;
+    --ink: #EDEFFA;
+    --ink-soft: #A3ACD2;
+    --card: #1F2649;
+    --spinner: #2C3564;
+    --spinner-edge: #4B5697;
+    --bearing: #7D88BE;
+    --line: #343D6E;
+    --shadow: #000000;
+    --shadow-strength: 0.4;
+    --warn: #FF9A8F; --good: #6FD08A;
     color-scheme: dark;
   }
 }
-html { height: 100%; -webkit-text-size-adjust: 100%; }
-*, *::before, *::after { box-sizing: border-box; }
+:root[data-theme="dark"] {
+  --mat: #12162B;
+  --ink: #EDEFFA;
+  --ink-soft: #A3ACD2;
+  --card: #1F2649;
+  --spinner: #2C3564;
+  --spinner-edge: #4B5697;
+  --bearing: #7D88BE;
+  --line: #343D6E;
+  --shadow: #000000;
+  --shadow-strength: 0.4;
+  --warn: #FF9A8F; --good: #6FD08A;
+  color-scheme: dark;
+}
+
+html {
+  height: 100%;
+  box-sizing: border-box;
+  padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px);
+  -webkit-text-size-adjust: 100%;
+}
+*, *::before, *::after { box-sizing: inherit; }
+[hidden] { display: none !important; }
 body {
-  height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none;
-  background: var(--mat); color: var(--ink);
-  font-family: var(--font-body); font-size: var(--t-body); line-height: 1.4;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--mat);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--t-body);
+  line-height: 1.4;
   -webkit-tap-highlight-color: transparent;
 }
-[hidden] { display: none !important; }
 button { font: inherit; color: inherit; cursor: pointer; }
 :focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
-.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.hit { position: relative; }
-.hit::after { content: ""; position: absolute; inset: -6px; }
 
 .app {
-  height: 100%; max-width: 35rem; margin-inline: auto;
-  padding: calc(env(safe-area-inset-top, 0px) + 8px) 16px calc(env(safe-area-inset-bottom, 0px) + 12px);
-  display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 8px;
+  height: 100%;
+  max-width: 35rem;
+  margin-inline: auto;
+  /* No inline padding: the stage runs full-bleed edge to edge, and the
+     header and tray carry their own 8px inset instead. */
+  padding-inline: 0;
+  padding-block: 8px 10px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: 8px;
 }
-/* The spinner never shrinks: flick it again any time, answered or not. */
 
-.top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+/* Header */
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-inline: 8px;
+}
 .name {
-  margin: 0; font-family: var(--font-display); font-size: var(--t-name); font-weight: 800;
-  font-stretch: 78%; letter-spacing: -0.01em; line-height: 1.1; white-space: nowrap;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--t-name);
+  font-weight: 800;
+  font-stretch: 78%;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
 }
-.name small {
-  font-size: 0.6em; font-weight: 700; margin-left: 4px; padding: 1px 7px; border-radius: 6px;
-  background: var(--ink); color: var(--mat); vertical-align: 0.25em;
-}
-.top-actions { display: flex; align-items: center; gap: 6px; }
+.top-actions { display: flex; align-items: center; gap: 8px; }
 .icon-btn, .pill-btn {
-  height: 48px; border: 2px solid var(--line); border-radius: 24px; background: transparent;
-  display: inline-flex; align-items: center; justify-content: center;
+  height: 44px;
+  border: 2px solid var(--line);
+  border-radius: 22px;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
-.icon-btn { min-width: 48px; padding: 0 10px; }
+.icon-btn { min-width: 44px; padding: 0 9px; gap: 6px; }
 .icon-btn svg { width: 22px; height: 22px; flex: none; }
 .icon-btn .off { display: none; }
 .icon-btn[aria-pressed="false"] .on { display: none; }
 .icon-btn[aria-pressed="false"] .off { display: block; }
-.test-btn { font-family: var(--font-display); font-weight: 800; font-size: var(--t-note); padding: 0 14px; }
-.pill-btn { padding-inline: 16px; font-family: var(--font-display); font-weight: 700; font-size: var(--t-note); }
+.pill-btn {
+  padding-inline: 16px;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--t-note);
+}
+.learned-count {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--t-small);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
 
 /* Spinner */
-.stage { container-type: size; display: grid; place-items: center; min-height: 0; }
+.stage {
+  container-type: size;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+}
 .wheel-box {
   position: relative;
-  /* inset from the screen edges so a flick on an outer wedge isn't read as Android's back gesture */
-  width: min(100cqw - 28px, 100cqh); aspect-ratio: 1;
-  touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab;
+  /* Full-bleed: the full viewport width at phone sizes, and never taller
+     than the stage, so the one-screen layout always fits. */
+  width: min(100vw, 100cqh);
+  aspect-ratio: 1;
+  max-width: 100%;
+  container-type: inline-size;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
 }
 .wheel-box.pressed { cursor: grabbing; }
-.ring { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; display: block; }
-.layer { position: absolute; inset: 0; pointer-events: none; }
-.layer svg { display: block; width: 100%; height: 100%; overflow: visible; }
-.rot { will-change: transform; transform-origin: 50% 50%; }
-.fade { will-change: opacity; opacity: 0; }
-.shadow-off { position: absolute; inset: 0; pointer-events: none; transform: translate(0, 2.4%); transition: transform 0.16s ease-out; }
-.pressed .shadow-off { transform: translate(0, 0.8%); }
-.press { position: absolute; inset: 0; pointer-events: none; transition: transform 0.2s cubic-bezier(0.3, 1.8, 0.5, 1); }
-.pressed .press { transform: scale(0.965); }
+.wheel { display: block; width: 100%; height: 100%; overflow: visible; }
 
-.wedge { cursor: pointer; outline: none; transition: opacity 0.25s, transform 0.3s cubic-bezier(0.3, 1.7, 0.5, 1); }
+.wedge {
+  cursor: pointer;
+  outline: none;
+  transition: opacity 0.25s, transform 0.3s cubic-bezier(0.3, 1.7, 0.5, 1);
+}
 .wedge:focus-visible { stroke: var(--ink); stroke-width: 5; }
 .landed .wedge { opacity: 0.38; }
 .landed .wedge.lit { opacity: 1; transform: scale(1.035); }
 .wedge-label {
-  font-family: var(--font-display); font-size: 18px; font-weight: 700; letter-spacing: 0.03em;
-  fill: var(--on-color); pointer-events: none;
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  fill: var(--on-color);
+  pointer-events: none;
   transition: opacity 0.25s, transform 0.3s cubic-bezier(0.3, 1.7, 0.5, 1);
 }
-.wedge-label.small { font-size: 15px; letter-spacing: 0.01em; }
+.wedge-label.small { font-size: 15.5px; letter-spacing: 0.01em; }
 .landed .wedge-label { opacity: 0.45; }
 .landed .wedge-label.lit { opacity: 1; transform: scale(1.035); }
 
-.shadow-shape { fill: var(--shadow); opacity: var(--shadow-strength); }
-.blade { fill: var(--drone); }
-.blade-tr { fill: var(--drone-edge); opacity: 0.55; }
-.blade-le { fill: none; stroke: var(--drone-top); stroke-width: 4; }
-.blade-ol { fill: none; stroke: var(--drone-edge); stroke-width: 1.5; }
-.tipband { fill: var(--mark, var(--led)); }
-.tipstripe { fill: var(--prop); }
-.hubcap { fill: var(--drone-top); stroke: var(--drone-edge); stroke-width: 2; }
-.nut { fill: var(--drone-edge); }
-.chev { fill: var(--mark, var(--ink)); stroke: var(--ink); stroke-width: 1.5; stroke-linejoin: round; }
-.tipring { fill: none; stroke: var(--mark, var(--led)); stroke-width: 12; }
-.pulse .tipband { animation: pulse 0.6s ease-in-out 2; }
-@keyframes pulse { 50% { opacity: 0.5; } }
+/* The spinner sits a little above the mat, and sinks when a finger holds it. */
+.shadow-wrap {
+  transform: translate(0, 9px);
+  opacity: var(--shadow-strength);
+  transition: transform 0.16s ease-out;
+}
+.body-shadow line { stroke: var(--shadow); }
+.body-shadow circle { fill: var(--shadow); }
+.press-wrap { transition: transform 0.2s cubic-bezier(0.3, 1.8, 0.5, 1); }
+.pressed .shadow-wrap { transform: translate(0, 3px); }
+.pressed .press-wrap { transform: scale(0.965); }
+
+.body-edge line { stroke: var(--spinner-edge); }
+.body-edge circle { fill: var(--spinner-edge); }
+.body-fill line { stroke: var(--spinner); }
+.body-fill circle { fill: var(--spinner); }
+.race { fill: var(--mat); stroke: var(--bearing); stroke-width: 5; }
+.ball { fill: var(--bearing); }
+.glint { fill: none; stroke: var(--spinner-edge); stroke-width: 2.5; stroke-linecap: round; opacity: 0.7; }
+.streak { fill: none; stroke: var(--bearing); stroke-width: 42; stroke-linecap: round; }
+.streak.marked { stroke: var(--ink); }
+.streak.tip { stroke: var(--ink); stroke-width: 15; }
+.race.marked { fill: var(--mark, var(--mat)); stroke: var(--ink); }
+.ball.marked { fill: var(--ink); }
+.pointer { fill: var(--ink); }
 
 .hub {
-  position: absolute; left: 50%; top: 50%; width: 14%; aspect-ratio: 1; min-width: 48px;
-  transform: translate(-50%, -50%); padding: 0;
-  border: 3px solid var(--drone-edge); border-radius: 50%;
-  background: var(--ink); color: var(--mat);
-  font-family: var(--font-display); font-weight: 800; font-size: max(0.8rem, 3.6cqmin);
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 20%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--mat);
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: max(0.875rem, 5cqw);
+  letter-spacing: 0.01em;
   transition: transform 0.2s cubic-bezier(0.3, 1.8, 0.5, 1);
 }
 .hub:active, .pressed .hub { transform: translate(-50%, -50%) scale(0.94); }
 
-.drone-front { display: grid; place-items: center; }
-.drone-front img {
-  width: 47%; aspect-ratio: 1; border-radius: 50%;
-  border: 3px solid var(--drone-edge);
-  box-shadow: 0 6px 22px rgba(16, 24, 40, 0.35);
-}
-
 /* Tray */
-.tray { height: clamp(17rem, 44dvh, 22rem); display: flex; flex-direction: column; min-height: 0; background: var(--card); border-radius: 24px; overflow: hidden; }
-.spin-hint { margin: 0; padding: 6px 18px 10px; text-align: center; color: var(--ink-soft); font-size: var(--t-small); }
-.tray-scroll { position: relative; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 16px 18px 12px; }
-.rest { display: flex; flex-direction: column; gap: 10px; }
+.tray {
+  /* At rest the tray is a slim strip hugging its content (prompt + stats);
+     it only takes the tall fixed height once a card is dealt (rule below). */
+  margin-inline: 8px;
+  overflow-y: auto;
+  background: var(--card);
+  border-radius: 26px;
+  padding: 18px 20px 16px;
+}
+.tray:has(> .nugget:not([hidden])) {
+  /* Dealt: grow to the card's full height — question, answer, why/source and
+     the action row all visible. The stage gives up the room (the wheel is
+     height-capped by the stage), and max-height + the tray's own scroll
+     remain as the safety net on very short screens. */
+  height: auto;
+  max-height: 52dvh;
+}
+.rest, .nugget {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 .rest-title {
-  margin: 0; font-family: var(--font-display); font-size: 1.75rem; font-weight: 800;
-  font-stretch: 85%; line-height: 1.1; text-wrap: balance;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--t-head);
+  font-weight: 800;
+  font-stretch: 85%;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+.rest-text { margin: 0; color: var(--ink-soft); max-width: 34em; }
+.text-btn {
+  align-self: flex-start;
+  border: 0;
+  background: transparent;
+  padding: 6px 0;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .stats {
-  margin: 0; padding-top: 10px; border-top: 2px solid var(--mat);
-  font-size: var(--t-note); color: var(--ink-soft); font-variant-numeric: tabular-nums;
+  margin: auto 0 0;
+  padding-top: 12px;
+  border-top: 2px solid var(--mat);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 16px;
+  font-size: var(--t-note);
+  font-variant-numeric: tabular-nums;
 }
-.q { display: flex; flex-direction: column; gap: 8px; }
-.q.arrive { animation: arrive 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
-@keyframes arrive { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-.q-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.stats span:last-child { color: var(--ink-soft); }
+
+.nugget { animation: arrive 0.28s cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes arrive {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+.nugget-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .chip {
-  padding: 3px 12px; border-radius: 999px; background: var(--chip, var(--line)); color: var(--on-color);
-  font-family: var(--font-display); font-size: var(--t-small); font-weight: 700; letter-spacing: 0.03em;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: var(--chip, var(--line));
+  color: var(--on-color);
+  font-family: var(--font-display);
+  font-size: var(--t-small);
+  font-weight: 700;
+  letter-spacing: 0.03em;
 }
-.keep-btn {
-  height: 40px; padding-inline: 12px; border: 2px solid var(--line); border-radius: 20px; background: transparent;
-  display: inline-flex; align-items: center; gap: 6px;
-  font-family: var(--font-display); font-weight: 700; font-size: var(--t-small);
+.learned-btn {
+  height: 36px;
+  padding-inline: 12px;
+  border: 2px solid var(--line);
+  border-radius: 18px;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--t-small);
 }
-.keep-btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
-.keep-btn[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--card); }
-.keep-btn[aria-pressed="true"] svg { fill: currentColor; }
+.learned-btn.done { background: var(--good); border-color: var(--good); color: var(--card); }
+.learned-btn[disabled] { cursor: default; }
+.nugget-title {
+  margin: 2px 0 0;
+  font-family: var(--font-display);
+  font-size: var(--t-head);
+  font-weight: 800;
+  font-stretch: 85%;
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+.nugget-title.long { font-size: 1.5rem; }
+.nugget-meaning { margin: 0; overflow-wrap: anywhere; }
+.nugget-extra { margin: 0; color: var(--ink-soft); font-size: var(--t-note); overflow-wrap: anywhere; }
+.nugget-actions { margin-top: auto; padding-top: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.act {
+  min-height: 46px;
+  padding-inline: 18px;
+  border-radius: 23px;
+  border: 2px solid var(--ink);
+  background: transparent;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+}
+.act.primary { background: var(--ink); color: var(--card); }
+
+/* Short phones: tighten the tray so the longest nugget still fits with its buttons. */
+@media (max-height: 740px) {
+  :root { --t-head: 1.5rem; --t-body: 1rem; --t-note: 0.875rem; }
+  .app { padding-block: 6px 10px; gap: 6px; }
+  .tray { padding: 14px 18px 12px; border-radius: 22px; }
+  .tray:has(> .nugget:not([hidden])) { height: auto; max-height: 58dvh; }
+  .rest, .nugget { gap: 6px; }
+  .nugget-title.long { font-size: 1.3125rem; }
+  .learned-btn { height: 32px; }
+  .nugget-actions .act { min-height: 42px; }
+  .nugget-actions { padding-top: 2px; }
+}
+
+/* Full-screen panels: Categories and the practice test */
+.panel {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  overflow-y: auto;
+  background: var(--mat);
+  padding: calc(env(safe-area-inset-top, 0px) + 10px) 16px calc(env(safe-area-inset-bottom, 0px) + 28px);
+}
+.panel.over { z-index: 11; }
+.panel-inner { max-width: 33rem; margin-inline: auto; display: flex; flex-direction: column; gap: 14px; }
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.panel-note { margin: 0; color: var(--ink-soft); }
+.msg { margin: 0; min-height: 1.4em; font-size: var(--t-note); font-weight: 700; color: var(--warn); }
+.msg.ok { color: var(--ink); }
+.msg:empty { display: none; }
+.dot { width: 14px; height: 14px; border-radius: 50%; background: var(--chip); flex: none; }
+.wide { width: 100%; }
+
+.stack { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.cat-row {
+  background: var(--card);
+  border-radius: 20px;
+  padding: 14px 16px;
+}
+.row-actions { display: flex; gap: 14px; }
+.link-btn {
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: var(--t-small);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  padding: 4px 0;
+}
+.empty { margin: 0; color: var(--ink-soft); }
+
+/* Categories list */
+.cat-row { display: flex; align-items: center; gap: 12px; }
+.reset-learned { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.cat-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cat-info strong { font-family: var(--font-display); font-weight: 800; font-stretch: 85%; font-size: 1.25rem; line-height: 1.15; overflow-wrap: anywhere; }
+.cat-info span { color: var(--ink-soft); font-size: var(--t-small); }
+.switch {
+  flex: none;
+  width: 54px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 16px;
+  background: var(--line);
+  position: relative;
+  transition: background 0.15s;
+}
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--card);
+  transition: transform 0.15s;
+}
+.switch[aria-checked="true"] { background: var(--ink); }
+.switch[aria-checked="true"]::after { transform: translateX(22px); }
+.switch:disabled { opacity: 0.45; cursor: default; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nugget { animation: none; }
+  .wedge, .wedge-label, .press-wrap, .shadow-wrap, .hub, .switch, .switch::after { transition: none; }
+}
+/* Practice test (carried over from Didja Spin 107) + test helpers */
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.test-btn { font-family: var(--font-display); font-weight: 800; font-size: var(--t-note); padding: 0 14px; }
+.fine { margin: 0; color: var(--ink-soft); font-size: var(--t-small); }
+.test-card { background: var(--card); border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.test-meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-variant-numeric: tabular-nums; font-size: var(--t-note); color: var(--ink-soft); }
+.test-meta strong { color: var(--ink); font-family: var(--font-display); }
+.bar { height: 6px; border-radius: 3px; background: var(--mat); overflow: hidden; }
+.bar span { display: block; height: 100%; width: 0; background: var(--ink); transition: width 0.25s; }
+.choice-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.score { margin: 0; font-family: var(--font-display); font-size: 3rem; font-weight: 800; font-stretch: 80%; line-height: 1; font-variant-numeric: tabular-nums; }
+.verdict { margin: 0; font-family: var(--font-display); font-size: 1.375rem; font-weight: 800; }
+.verdict.pass { color: var(--good); }
+.verdict.fail { color: var(--warn); }
+.topic-row { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: var(--t-note); font-variant-numeric: tabular-nums; }
 .q-text {
   margin: 2px 0 0; font-family: var(--font-display); font-size: var(--t-head); font-weight: 800;
   font-stretch: 88%; line-height: 1.14; text-wrap: balance; overflow-wrap: anywhere;
@@ -212,153 +499,67 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .why-box { display: flex; flex-direction: column; gap: 4px; padding: 2px 2px 0; }
 .why-text { margin: 0; font-size: var(--t-note); overflow-wrap: anywhere; }
 .src { margin: 0; font-size: var(--t-small); color: var(--ink-soft); overflow-wrap: anywhere; }
-.src a { color: var(--ink-soft); text-underline-offset: 3px; display: inline-block; padding: 6px 0; }
-.next-row { flex: none; padding: 10px 18px 14px; border-top: 2px solid var(--mat); background: var(--card); }
-.act {
-  min-height: 48px; width: 100%; padding-inline: 18px; border-radius: 24px; border: 2px solid var(--ink); background: transparent;
-  font-family: var(--font-display); font-weight: 700; font-size: 1rem;
-}
-.act.primary { background: var(--ink); color: var(--card); }
-@media (max-height: 700px) {
-  :root { --t-head: 1.2rem; --t-body: 1rem; --t-note: 0.875rem; }
-  .app { gap: 6px; }
-  .tray-scroll { padding: 12px 16px 10px; }
-  .q { gap: 6px; }
-  .opt { padding: 8px 12px; }
-  .next-row { padding: 8px 16px 10px; }
-}
-@media (max-width: 380px) { :root { --t-name: 1.3rem; } }
-
-/* Panels */
-.panel {
-  position: fixed; inset: 0; z-index: 10; overflow-y: auto; background: var(--mat);
-  padding: calc(env(safe-area-inset-top, 0px) + 10px) 16px calc(env(safe-area-inset-bottom, 0px) + 28px);
-}
-.panel-inner { max-width: 33rem; margin-inline: auto; display: flex; flex-direction: column; gap: 14px; }
-.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.panel-note { margin: 0; color: var(--ink-soft); }
-.msg { margin: 0; font-size: var(--t-note); font-weight: 700; color: var(--warn); }
-.msg:empty { display: none; }
-.dot { width: 14px; height: 14px; border-radius: 50%; background: var(--chip); flex: none; }
-.stack { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-.cat-row, .kept, .box { background: var(--card); border-radius: 20px; padding: 14px 16px; }
-.cat-row { display: flex; align-items: center; gap: 12px; }
-.cat-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.cat-info strong { font-family: var(--font-display); font-weight: 800; font-stretch: 85%; font-size: 1.2rem; line-height: 1.15; }
-.cat-info span { color: var(--ink-soft); font-size: var(--t-small); font-variant-numeric: tabular-nums; }
-.switch {
-  flex: none; width: 54px; height: 32px; padding: 0; border: 2px solid var(--ink-soft); border-radius: 16px;
-  background: transparent; position: relative; transition: background 0.15s;
-}
-.switch::before { content: ""; position: absolute; inset: -8px; }
-.switch::after {
-  content: ""; position: absolute; top: 4px; left: 4px; width: 20px; height: 20px; border-radius: 50%;
-  background: var(--ink-soft); transition: transform 0.15s;
-}
-.switch[aria-checked="true"] { background: var(--ink); border-color: var(--ink); }
-.switch[aria-checked="true"]::after { transform: translateX(22px); background: var(--card); }
-details.box summary {
-  cursor: pointer; font-family: var(--font-display); font-weight: 800; font-stretch: 85%; font-size: 1.2rem;
-  min-height: 32px; display: flex; align-items: center;
-}
-.kept-list { margin-top: 10px; }
-.kept { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; background: var(--mat); }
-.kept-title { margin: 0; font-family: var(--font-display); font-weight: 800; font-stretch: 88%; font-size: 1.05rem; line-height: 1.2; display: flex; gap: 8px; overflow-wrap: anywhere; }
-.kept-title .dot { transform: translateY(3px); }
-.kept p { margin: 0; grid-column: 1 / -1; overflow-wrap: anywhere; }
-.kept .ans { font-weight: 700; }
-.kept .why { color: var(--ink-soft); font-size: var(--t-note); }
-.link-btn {
-  border: 0; background: transparent; color: var(--ink-soft); font-size: var(--t-small); font-weight: 700;
-  text-decoration: underline; text-underline-offset: 3px; padding: 4px 0; min-height: 40px;
-}
-.empty { margin: 8px 0 0; color: var(--ink-soft); }
-.row-btns { display: flex; flex-wrap: wrap; gap: 8px 16px; }
-.danger { align-self: flex-start; border: 0; background: transparent; color: var(--warn); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; padding: 8px 0; min-height: 44px; }
-.fine { margin: 0; color: var(--ink-soft); font-size: var(--t-small); }
-
-/* Practice test */
-.test-card { background: var(--card); border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
-.test-meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-variant-numeric: tabular-nums; font-size: var(--t-note); color: var(--ink-soft); }
-.test-meta strong { color: var(--ink); font-family: var(--font-display); }
-.bar { height: 6px; border-radius: 3px; background: var(--mat); overflow: hidden; }
-.bar span { display: block; height: 100%; width: 0; background: var(--ink); transition: width 0.25s; }
-.choice-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.score { margin: 0; font-family: var(--font-display); font-size: 3rem; font-weight: 800; font-stretch: 80%; line-height: 1; font-variant-numeric: tabular-nums; }
-.verdict { margin: 0; font-family: var(--font-display); font-size: 1.375rem; font-weight: 800; }
-.verdict.pass { color: var(--good); }
-.verdict.fail { color: var(--warn); }
-.topic-row { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: var(--t-note); font-variant-numeric: tabular-nums; }
-
 .toast {
   position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 64px); z-index: 20;
   transform: translateX(-50%); max-width: calc(100% - 32px);
   padding: 10px 16px; border-radius: 999px; border: 0; background: var(--ink); color: var(--mat);
   font-size: var(--t-note); font-weight: 700; box-shadow: 0 4px 16px rgba(0,0,0,.18);
 }
-@media (prefers-reduced-motion: reduce) {
-  .q.arrive { animation: none; }
-  .wedge, .wedge-label, .press, .shadow-off, .hub, .switch, .switch::after { transition: none; }
-  .pulse .tipband { animation: none; }
-}
 </style>
 </head>
 <body>
-<div class="app" id="app">
+<div class="app">
   <header class="top">
-    <h1 class="name">Didja Spin <small>107</small></h1>
+    <h1 class="name">Didja Spin 107</h1>
     <div class="top-actions">
       <button id="testBtn" class="icon-btn test-btn" type="button">Test</button>
-      <button id="soundBtn" class="icon-btn" type="button" aria-pressed="false" aria-label="Sound">
-        <svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6"/><path d="M18.2 6.5a8 8 0 0 1 0 11"/></svg>
-        <svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z"/><path d="M16 9.5l5 5"/><path d="M21 9.5l-5 5"/></svg>
+      <button id="soundBtn" class="icon-btn" type="button" aria-pressed="true" aria-label="Sound">
+        <svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z"></path><path d="M15.5 9a4.2 4.2 0 0 1 0 6"></path><path d="M18.2 6.5a8 8 0 0 1 0 11"></path></svg>
+        <svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z"></path><path d="M16 9.5l5 5"></path><path d="M21 9.5l-5 5"></path></svg>
       </button>
-      <button id="catsBtn" class="icon-btn" type="button" aria-label="Topics and settings">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3"/><path d="M12 3.5V9"/><path d="M19.4 16.2l-4.8-2.7"/><path d="M4.6 16.2l4.8-2.7"/></svg>
+      <button id="catsBtn" class="icon-btn" type="button" aria-label="Categories">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><circle cx="12" cy="12" r="3"></circle><path d="M12 3.5V9"></path><path d="M19.4 16.2l-4.8-2.7"></path><path d="M4.6 16.2l4.8-2.7"></path></svg>
       </button>
+      <span id="learnedCount" class="learned-count">0 of 182 learned</span>
     </div>
   </header>
 
   <main class="stage">
     <div id="wheelBox" class="wheel-box">
-      <svg id="ring" class="ring" viewBox="-205 -205 410 410" role="group" aria-label="Topic wheel. Long-press a wedge to drill one topic."><defs id="ringDefs"></defs><g id="ringG"></g></svg>
-      <div class="shadow-off"><div id="shadowL" class="layer rot"></div></div>
-      <div class="press">
-        <div id="discL" class="layer fade"></div>
-        <div id="ringL" class="layer fade"></div>
-        <div id="propL" class="layer rot"></div>
-      </div>
-      <div class="layer drone-front"><img src="drone.png" alt="Quadcopter drone"></div>
-      <button id="hub" class="hub" type="button" aria-label="Spin">Spin</button>
+      <svg id="wheel" class="wheel" viewBox="-205 -205 410 410" aria-label="Spinner with a ring of categories around it">
+        <defs id="wheelDefs"></defs>
+        <g id="ring"></g>
+        <g class="shadow-wrap"><g id="shadowRot"></g></g>
+        <g class="press-wrap">
+          <g id="ghosts" display="none"></g>
+          <g id="spinner"><g id="spinBody"></g></g>
+        </g>
+      </svg>
+      <button id="hub" class="hub" type="button">Spin</button>
     </div>
   </main>
 
-  <section id="tray" class="tray">
-    <div id="trayScroll" class="tray-scroll">
-      <div id="rest" class="rest">
-        <h2 id="restTitle" class="rest-title">Flick the drone.</h2>
-        <p id="stats" class="stats"></p>
+  <section id="tray" class="tray" aria-live="polite">
+    <div id="rest" class="rest">
+      <h2 id="restTitle" class="rest-title">Flick the spinner.</h2>
+      <p id="restText" class="rest-text"></p>
+      <p class="stats"><span id="todayCount">0 spins today</span><span id="streak"></span></p>
+    </div>
+    <div id="nugget" class="nugget" hidden>
+      <div class="nugget-top">
+        <span id="nuggetCat" class="chip"></span>
+        <button id="learnedBtn" class="learned-btn" type="button" aria-pressed="false">
+          <span id="learnedLabel">Learned it</span>
+        </button>
       </div>
-      <div id="q" class="q" hidden>
-        <div class="q-top">
-          <span id="qCat" class="chip"></span>
-          <button id="keepBtn" class="keep-btn hit" type="button" aria-pressed="false">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9l-5.2 2.8 1-5.9L3.5 9.7l5.9-.8L12 3.5z"/></svg>
-            <span id="keepLabel">Keep</span>
-          </button>
-        </div>
-        <h2 id="qText" class="q-text"></h2>
-        <ul id="choices" class="opts"></ul>
-        <div id="whyBox" class="why-box" hidden>
-          <p id="whyText" class="why-text"></p>
-          <p class="src"><span id="srcText"></span> · <a id="reportLink" href="#">Report a problem</a></p>
-        </div>
+      <h2 id="nuggetTitle" class="nugget-title"></h2>
+      <p id="nuggetMeaning" class="nugget-meaning"></p>
+      <p id="nuggetExtra" class="nugget-extra"></p>
+      <div class="nugget-actions">
+        <button id="againBtn" class="act" type="button">Again later</button>
+        <button id="gotBtn" class="act primary" type="button">Got it</button>
       </div>
     </div>
-    <div id="nextRow" class="next-row" hidden>
-      <button id="nextBtn" class="act primary" type="button">Got it</button>
-    </div>
-    <p class="spin-hint">Flick the drone any time for the next one.</p>
   </section>
 </div>
 
@@ -405,37 +606,26 @@ details.box summary {
 <section id="cats" class="panel" role="dialog" aria-modal="true" aria-labelledby="catsTitle" hidden>
   <div class="panel-inner">
     <div class="panel-head">
-      <h2 id="catsTitle" class="name">Topics</h2>
+      <h2 id="catsTitle" class="name">Categories</h2>
       <button id="catsClose" class="pill-btn" type="button">Back to spinner</button>
     </div>
-    <p class="panel-note">Switch off what you've got down. Keep at least two on the wheel. Long-press a wedge to drill just that topic.</p>
+    <p class="panel-note">Switch on two to eight. Each one gets a wedge on the wheel.</p>
     <p id="catsMsg" class="msg" role="status"></p>
     <ul id="catsList" class="stack"></ul>
-    <div class="cat-row">
-      <div class="cat-info"><strong>Haptics</strong><span>A click on each wedge as it slows</span></div>
-      <button id="hapticsSw" class="switch" type="button" role="switch" aria-checked="true" aria-label="Haptics"></button>
+    <div class="reset-learned">
+      <p id="learnedSummary" class="panel-note"></p>
+      <button id="resetLearnedBtn" class="act" type="button">Reset learned</button>
     </div>
-    <details id="keptBox" class="box">
-      <summary>Kept cards (<span id="keptN">0</span>)</summary>
-      <p id="keptEmpty" class="empty">Nothing kept yet. Tap Keep on a question you want to review.</p>
-      <ul id="keptList" class="stack kept-list"></ul>
-    </details>
-    <div class="row-btns">
-      <button id="copyBtn" class="link-btn" type="button">Copy my progress</button>
-      <button id="pasteBtn" class="link-btn" type="button">Paste progress</button>
-    </div>
-    <button id="resetBtn" class="danger" type="button">Reset my progress</button>
-    <p class="fine">Content checked against FAA sources: Nov 2026. Study aid, not an official FAA test.</p>
-    <p class="fine">Version 3 · build 0e799c9df9</p>
   </div>
 </section>
+
 
 <button id="toast" class="toast" type="button" hidden></button>
 <p id="sr" class="sr" role="status" aria-live="polite"></p>
 
-<!-- DECK: swap this block to update questions. Rows: [id, q, correct, why, wrong1, wrong2, src] -->
+<!-- DECK (Part 107 material): swap this block to update questions. Rows: [id, q, correct, why, wrong1, wrong2, src] -->
 <script id="deck">
-const DECK = {
+const DECK107 = {
   rules: [
     ["r01","Max altitude under Part 107?","400 feet above ground level (AGL).","Exception: within 400 ft of a structure, you can fly up to 400 ft above its top.","500 feet above ground level (AGL).","400 feet above sea level (MSL).","14 CFR 107.51(b)"],
     ["r02","Top speed allowed?","100 mph groundspeed, which is 87 knots.","It's groundspeed, so a tailwind counts against you.","115 mph groundspeed, which is 100 knots.","87 mph groundspeed, which is 100 knots.","14 CFR 107.51(a)"],
@@ -446,7 +636,7 @@ const DECK = {
     ["r07","Minimum age for a remote pilot certificate?","16.","You also pass the knowledge test and a TSA security check.","18.","21.","14 CFR 107.61"],
     ["r08","How do you stay current?","Finish the free online recurrent training every 24 calendar months.","It's on the FAA Safety Team site. No retest at a testing center.","Retake the full knowledge test at a testing center every 24 calendar months.","Finish the free online recurrent training every 12 calendar months.","14 CFR 107.65"],
     ["r09","When must you report an accident to the FAA?","Within 10 days for serious injury, loss of consciousness, or over $500 damage.","The $500 is repair cost or fair market value, and it doesn't include the drone.","Within 30 days for serious injury, unconsciousness, or over $500 damage.","Within 10 days, but only for serious injury or over $5,000 in damage.","14 CFR 107.9"],
-    ["r10","Bottle to throttle?","At least 8 hours, and blood alcohol under 0.04%.","If you still feel it after 8 hours, you still don't fly.","At least 12 hours, and blood alcohol under 0.08%.","At least 8 hours, and blood alcohol under 0.08%.","14 CFR 91.17"],
+    ["r10","'Bottle to throttle': how long must you wait after drinking before flying, and what blood-alcohol level must you stay under?","At least 8 hours, and blood alcohol under 0.04%.","If you still feel it after 8 hours, you still don't fly.","At least 12 hours, and blood alcohol under 0.08%.","At least 8 hours, and blood alcohol under 0.08%.","14 CFR 91.17"],
     ["r11","Who can ask to see your certificate?","The FAA, NTSB, TSA, or any federal, state, or local law officer.","Keep it on you every time you fly.","The FAA, NTSB, or TSA, but not state or local law enforcement.","The FAA and NTSB, plus federal but not local law enforcement.","14 CFR 107.7(a)"],
     ["r12","You moved. When do you tell the FAA?","Within 30 days.","After 30 days without telling the FAA, you can't use your certificate. Update it online at faa.gov or by letter to the Airmen Certification Branch.","Within 60 days.","Within 10 days.","14 CFR 107.77"],
     ["r13","Your drone or a manned aircraft: who has right of way?","The manned aircraft, in every class of airspace.","Don't pass over, under, or ahead of it unless you're well clear.","Whoever spots the other aircraft first keeps the right of way.","The manned aircraft, but only inside controlled airspace.","14 CFR 107.37(a)"],
@@ -479,17 +669,17 @@ const DECK = {
     ["a08","Faded magenta shading on a chart means?","Class E begins 700 ft above ground there.","Below that it's Class G. Faded blue means Class E begins at 1,200 ft AGL.","Class E begins 1,200 ft above ground there.","Class E begins at the surface there.","FAA Chart User's Guide"],
     ["a09","In Class B, '70 over SFC' means?","That section runs from the surface up to 7,000 ft MSL.","Chart altitudes are in hundreds of feet above sea level.","The floor is 7,000 ft MSL and the ceiling is 10,000 ft MSL.","That section runs from the surface up to 700 ft MSL.","FAA Chart User's Guide"],
     ["a10","Where does Class A start?","18,000 ft MSL.","It runs up to Flight Level 600. No drone business up there.","14,500 ft MSL.","10,000 ft MSL.","AIM 3-2-2"],
-    ["a11","Standard stadium TFR?","3 NM radius, up to 3,000 ft AGL.","1 hour before to 1 hour after MLB, NFL, and NCAA Division I football games at stadiums seating 30,000 or more, plus major NASCAR and IndyCar races.","1 NM radius, up to 1,000 ft AGL.","5 NM radius, up to 5,000 ft AGL.","FDC NOTAM 4/3621"],
+    ["a11","What are the radius and ceiling of a standard stadium TFR?","3 NM radius, up to 3,000 ft AGL.","1 hour before to 1 hour after MLB, NFL, and NCAA Division I football games at stadiums seating 30,000 or more, plus major NASCAR and IndyCar races.","1 NM radius, up to 1,000 ft AGL.","5 NM radius, up to 5,000 ft AGL.","FDC NOTAM 4/3621"],
     ["a12","Where do you check for TFRs?","NOTAMs, the FAA TFR list, or your LAANC app.","TFRs pop up for VIP visits, wildfires, and disasters with little warning.","The airport's Chart Supplement entry and its remarks.","Only the sectional chart, since TFRs are printed on it.","14 CFR 107.49(a)"],
     ["a13","A 'P-' area on the chart means?","Prohibited airspace. No flying, period.","Example: P-56 over the White House and National Mall.","Private airspace. Fly only with the landowner's permission.","A parachute jump area. Use caution and monitor CTAF.","AIM 3-4-2"],
-    ["a14","An 'R-' area means?","Restricted airspace with hidden hazards like artillery fire.","Stay out when it's active unless the controlling agency OKs it.","Recreational airspace reserved for model aircraft clubs.","A radar coverage area where ATC vectors all traffic.","AIM 3-4-3"],
+    ["a14","An 'R-' area means?","Restricted airspace with hidden hazards like artillery fire.","Stay out when it's active unless the controlling agency OKs it.","A prohibited area that no aircraft may enter at any time.","A military operations area with training flights in progress.","AIM 3-4-3"],
     ["a15","What's a MOA?","A Military Operations Area for military training.","Drones may fly there, but fast jets fly low. Use extreme caution.","A Military Operations Area, and drones are prohibited inside it.","An area reserved for military drones only.","AIM 3-4-5"],
     ["a16","Military route with 4 digits, like IR1007?","Flown at or below 1,500 ft AGL.","3 digits, like VR123, means some legs go above 1,500 ft.","Flown at or below 500 ft AGL.","Flown above 1,500 ft AGL on every leg.","AIM 3-5-2"],
     ["a17","Tower shows 1549 and (1213). Meaning?","Top is 1,549 ft MSL. It stands 1,213 ft above the ground.","Bold is MSL. Parentheses are AGL.","Top is 1,213 ft MSL. It stands 1,549 ft above the ground.","Top is 1,549 ft AGL. It stands 1,213 ft above sea level.","FAA Chart User's Guide"],
     ["a18","The big number in each chart grid square?","Maximum Elevation Figure: the highest terrain or obstacle there, MSL.","A big 3 with a small 5 means 3,500 ft MSL.","The minimum en route altitude for that square, in AGL.","The height of the tallest tower in the square, above ground.","FAA Chart User's Guide"],
     ["a19","Blue vs magenta airport symbols?","Blue is towered. Magenta is non-towered.","Towered airports usually sit in Class B, C, or D.","Blue is non-towered. Magenta is towered.","Blue is a military field. Magenta is civilian.","FAA Chart User's Guide"],
     ["a20","1 nautical mile is how far?","About 1.15 statute miles.","Charts measure distance in nautical miles. Visibility uses statute miles.","About 0.87 statute miles.","About 1.5 statute miles.","PHAK ch. 16"],
-    ["a21","Latitude vs longitude?","Latitude lines run east-west and measure north-south position.","Latitude lines are the rungs of a ladder; longitude lines run north-south. Each degree is 60 minutes.","Latitude lines run north-south and measure east-west.","Latitude and longitude both measure north-south position.","PHAK ch. 16"],
+    ["a21","How do latitude lines run, and what position do they measure?","Latitude lines run east-west and measure north-south position.","Latitude lines are the rungs of a ladder; longitude lines run north-south. Each degree is 60 minutes.","Latitude lines run north-south and measure east-west.","Latitude and longitude both measure north-south position.","PHAK ch. 16"],
     ["a22","In an airport data block on a sectional, 'CT - 118.3' tells you what?","The control tower frequency is 118.3.","CT marks the tower's primary frequency. Pilots call the tower on it.","The CTAF is 118.3, but only at night.","The field elevation is 1,183 ft MSL.","FAA Chart User's Guide"],
     ["a23","A star symbol next to a frequency or service on the chart means?","It operates part-time only.","The airport's directory listing gives the hours. When a tower closes, its airspace may drop to Class E or G.","It is a military-only frequency.","It is monitored continuously by satellite.","FAA Chart User's Guide"],
     ["a24","What is a VFR checkpoint, the magenta flag symbol on a sectional?","A visible landmark pilots use to report position.","Flags sit near busy airspace so pilots can call out a fix everyone can find on the chart.","A mandatory ATC reporting point for all aircraft, drones included.","A ground marker showing the edge of Class B airspace.","FAA Chart User's Guide"],
@@ -506,7 +696,7 @@ const DECK = {
     ["w05","What makes a ceiling?","The lowest BKN or OVC layer, or vertical visibility (VV).","FEW and SCT don't count. BKN015 is a 1,500 ft ceiling. VV004 is a 400 ft ceiling.","The lowest layer of any kind, including FEW or SCT.","The highest BKN or OVC layer, or vertical visibility (VV).","14 CFR 1.1"],
     ["w06","Temperature and dew point close together?","Fog or low clouds are likely.","A small spread means the air is close to saturated, so fog or low clouds can form.","Strong, gusty surface winds are likely.","Clear skies and good visibility are likely.","PHAK ch. 12"],
     ["w07","Standard atmosphere at sea level?","15 °C and 29.92 inches of mercury.","Temperature drops about 2 °C per 1,000 ft.","0 °C and 29.92 inches of mercury.","15 °C and 28.92 inches of mercury.","PHAK ch. 4"],
-    ["w08","What is density altitude?","How high the air 'feels' to your aircraft.","Hot, high, and humid raise it. Higher density altitude means less lift.","The altitude your altimeter shows after landing.","Pressure altitude corrected for runway length.","PHAK ch. 4"],
+    ["w08","In plain language, density altitude is a measure of what?","How high the air 'feels' to your aircraft.","Hot, high, and humid raise it. Higher density altitude means less lift.","The altitude your altimeter shows after landing.","Pressure altitude corrected for runway length.","PHAK ch. 4"],
     ["w09","Three stages of a thunderstorm?","Cumulus, mature, dissipating.","Mature is the worst: strong updrafts, downdrafts, and rain at the surface.","Building, storming, and clearing.","Cumulus, towering, and dissipating.","PHAK ch. 12"],
     ["w10","What's a microburst?","A short, violent downdraft that spreads out when it hits the ground.","Downdrafts can hit 6,000 ft per minute. It's usually under 1 mile across, and its outflow spreads to about 2.5 miles across at the ground. Peak winds last 2 to 4 minutes, and the whole event seldom lasts over 15 minutes.","A short, violent updraft that forms ahead of a storm's gust front.","A rotating downdraft that dissipates before reaching the ground.","AIM 7-1-24"],
     ["w11","Signs of stable air?","Stratus clouds, smooth air, steady rain, poor visibility.","Unstable air brings cumulus clouds, turbulence, showers, and good visibility.","Cumulus clouds, bumpy air, passing showers, good visibility.","Stratus clouds, bumpy air, passing showers, good visibility.","PHAK ch. 12"],
@@ -559,7 +749,7 @@ const DECK = {
     ["p02","Standard traffic pattern turns?","Left turns.","Unless the chart or Chart Supplement shows right traffic.","Right turns.","Whichever direction turns into the wind.","AIM 4-3-3"],
     ["p03","Name the traffic pattern legs.","Upwind, crosswind, downwind, base, final.","Downwind runs parallel to the runway, often around 1,000 ft AGL.","Departure, arrival, holding, base, and final.","Upwind, downwind, overhead, base, and final.","AIM 4-3-3"],
     ["p04","What is CTAF?","Common Traffic Advisory Frequency.","Pilots at non-towered airports announce their positions on it.","Central Traffic Advisory Frequency.","Controlled Tower Approach Frequency.","AIM 4-1-9"],
-    ["p05","What is UNICOM?","A non-government radio station at an airport.","At many small fields it doubles as the CTAF.","A government-run tower frequency for emergencies.","A satellite link that works at any airport.","Pilot/Controller Glossary"],
+    ["p05","What is UNICOM?","A non-government radio station at an airport.","At many small fields it doubles as the CTAF.","The common traffic frequency pilots use to announce their positions.","An automated station that broadcasts local weather reports.","Pilot/Controller Glossary"],
     ["p06","Where do you look up airport details?","The Chart Supplement.","It used to be called the Airport/Facility Directory (A/FD).","The legend printed on the sectional chart.","The Pilot's Handbook of Aeronautical Knowledge.","PHAK ch. 14"],
     ["p07","Phonetic alphabet for N, F, V?","November, Foxtrot, Victor.","Know all 26. They show up on the test.","Nancy, Foxtrot, Victor.","November, Foxtrot, Venice.","AIM 4-2-7"],
     ["p08","Traffic at 2 o'clock. Where is it?","Ahead and to the right, about 60° off the nose.","12 o'clock is straight ahead. Each hour is 30°.","Behind and to the right, about 120° off the nose.","Ahead and to the left, about 60° off the nose.","AIM 4-1-15"],
@@ -597,7 +787,7 @@ const DECK = {
     ["h12","How long for full night vision?","About 30 minutes.","One bright light can reset it. Use dim red light on the ground.","About 5 minutes.","About 2 hours.","AIM 8-1-6"],
     ["h13","Over-the-counter meds and flying?","Many cause drowsiness or slow reactions. Read the label.","If it says don't drive or run machinery, don't fly.","They're fine once you've taken the first dose without trouble.","Only prescription medications can impair a pilot's reactions.","AIM 8-1-1"],
     ["h14","What is hyperventilation?","Breathing too fast, often from stress, lowering blood CO2.","Fix it by slowing your breathing or talking out loud.","Too little oxygen reaching the brain, from thin air.","Breathing too fast, which raises CO2 in the blood.","AIM 8-1-3"],
-    ["h15","What is a risk matrix?","A chart of likelihood against severity.","High likelihood plus high severity means don't fly as planned.","A chart that plots wind against temperature.","A printed list of emergency contacts.","Risk Mgmt Handbook"],
+    ["h15","What is a risk matrix?","A chart of likelihood against severity.","High likelihood plus high severity means don't fly as planned.","A checklist of pilot, aircraft, environment, and external pressures.","A scale that rates a flight only by how severe the outcome could be.","Risk Mgmt Handbook"],
     ["h16","Effects of dehydration?","Headache, fatigue, and slower thinking.","Long, hot field days need water breaks.","Mostly muscle cramps; thinking isn't affected.","Mainly thirst; symptoms start only after a full day.","PHAK ch. 17"],
     ["h17","What is situational awareness?","Knowing what's going on around you and the drone, now and next.","Fatigue, stress, and complacency wear it down first.","Watching the camera feed closely for the whole flight.","Knowing your drone's position and battery level throughout.","PHAK ch. 2"],
     ["h18","In the PAVE checklist, 'External pressures' includes things like?","A waiting client, a tight schedule, fear of letting people down.","Pressure to fly is a hazard in itself. Name it during the preflight, before it decides for you.","Weather, terrain, and obstacles at the site you're flying.","Your own fatigue, stress, illness, or medication that day.","PHAK ch. 2"],
@@ -634,109 +824,93 @@ const DECK = {
   ],
 };
 </script>
-
+<script>
+/* Combined build: the spinner's deck is generated from the Part 107 deck above,
+   so the study material lives in exactly one place. Spinner rows are
+   [id, question, correct answer, why + source]. The practice test further down
+   reads DECK107 directly, so it keeps each card's two wrong answers too. */
+const TOPICS107 = [
+  { key: 'rules', label: 'Rules', full: 'Regulations', color: 0 },
+  { key: 'airspace', label: 'Airspace', full: 'Airspace and charts', color: 1 },
+  { key: 'weather', label: 'Weather', full: 'Weather and reports', color: 2 },
+  { key: 'loading', label: 'Loading', full: 'Loading and performance', color: 3 },
+  { key: 'airports', label: 'Airports', full: 'Airports and radio', color: 4 },
+  { key: 'pilot', label: 'Pilot', full: 'Decision-making and physiology', color: 5 },
+  { key: 'ops', label: 'Ops', full: 'Preflight, maintenance, emergencies', color: 6 }
+];
+const DECK = {};
+TOPICS107.forEach((t) => {
+  DECK[t.key] = (DECK107[t.key] || []).map((r) => [r[0], r[1], r[2], r[3] + ' (' + r[6] + ')']);
+});
+</script>
 <script>
 (() => {
   'use strict';
-  const BUILD = '0e799c9df9';
-  const CATS = [
-    { key: 'rules', label: 'Rules', full: 'Regulations', color: 0 },
-    { key: 'airspace', label: 'Airspace', full: 'Airspace and charts', color: 1 },
-    { key: 'weather', label: 'Weather', full: 'Weather and reports', color: 2 },
-    { key: 'loading', label: 'Loading', full: 'Loading and performance', color: 3 },
-    { key: 'airports', label: 'Airports', full: 'Airports and radio', color: 4 },
-    { key: 'pilot', label: 'Pilot', full: 'Decision-making and physiology', color: 5 },
-    { key: 'ops', label: 'Ops', full: 'Preflight, maintenance, emergencies', color: 6 }
+
+  /* ---------- Categories ---------- */
+  /* The seven that ship with this app: the Part 107 topics, clockwise from the top. `color` is a palette slot (--p0 to --p7). */
+  const BUILTIN = [
+    { key: 'rules', label: 'Rules', color: 0 },
+    { key: 'airspace', label: 'Airspace', color: 1 },
+    { key: 'weather', label: 'Weather', color: 2 },
+    { key: 'loading', label: 'Loading', color: 3 },
+    { key: 'airports', label: 'Airports', color: 4 },
+    { key: 'pilot', label: 'Pilot', color: 5 },
+    { key: 'ops', label: 'Ops', color: 6 }
   ];
-  const CAT = {}, BY_ID = {};
-  let TOTAL = 0;
-  CATS.forEach((c) => {
-    CAT[c.key] = c;
-    c.cards = (typeof DECK !== 'undefined' && DECK[c.key]) || [];
-    c.cards.forEach((r) => { BY_ID[r[0]] = { id: r[0], cat: c.key, q: r[1], a: r[2], why: r[3] || '', d: [r[4] || '', r[5] || ''], src: r[6] || '' }; TOTAL++; });
-  });
+  const COLOR_NAMES = ['Blue', 'Amber', 'Violet', 'Red', 'Teal', 'Pink', 'Lime', 'Sky'];
+  const MIN_WEDGES = 2, MAX_WEDGES = 8;
+  const LIMITS = { title: 40, meaning: 140, extra: 160 };
 
   const $ = (id) => document.getElementById(id);
-  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-  const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const cleanStr = (v, max) => (typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, max) : '');
 
   /* ---------- Saved state (this device only) ---------- */
-  const KEY = 'didja-spin-107-v3', V2KEY = 'didja-spin-107-v2';
-  const defaults = () => ({ v: 3, n: 0, cards: {}, keep: [], days: {}, sound: false, vol: 0.5, sstyle: 'wheel', haptics: true, off: [], ans: {}, ok: {}, pulsed: false, toldSound: false });
-  const isObj = (o) => o && typeof o === 'object' && !Array.isArray(o);
-  function normalize(raw) {
-    const s = defaults();
-    if (!isObj(raw)) return s;
-    if (Number.isFinite(raw.n)) s.n = raw.n;
-    if (isObj(raw.cards)) for (const id in raw.cards) {
-      const c = raw.cards[id];
-      if (BY_ID[id] && isObj(c)) s.cards[id] = { c: Math.max(0, c.c | 0), t: Number.isFinite(c.t) ? c.t : 0, m: c.m ? 1 : 0 };
+  const STORE_KEY = 'didja-spin-107-combined-v1';
+  const S = { n: 0, cards: {}, learned: [], days: {}, lock: null, sound: true, off: [] };
+
+
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+    if (raw && typeof raw === 'object') {
+      if (Number.isFinite(raw.n)) S.n = raw.n;
+      if (raw.cards && typeof raw.cards === 'object') S.cards = raw.cards;
+      if (Array.isArray(raw.learned)) S.learned = raw.learned.filter((id) => typeof id === 'string');
+      if (raw.days && typeof raw.days === 'object') S.days = raw.days;
+      if (typeof raw.lock === 'string') S.lock = raw.lock;
+      if (raw.sound === false) S.sound = false;
+      if (Array.isArray(raw.off)) S.off = raw.off.filter((k) => typeof k === 'string');
     }
-    if (Array.isArray(raw.keep)) s.keep = raw.keep.filter((id) => BY_ID[id]);
-    if (isObj(raw.days)) s.days = raw.days;
-    if (raw.sound === true) s.sound = true;
-    if (raw.haptics === false) s.haptics = false;
-    if (Number.isFinite(raw.vol)) s.vol = clamp(raw.vol, 0, 1);
-    if (['wheel', 'slots', 'drone', 'bearing', 'arcade'].indexOf(raw.sstyle) >= 0) s.sstyle = raw.sstyle;
-    if (Array.isArray(raw.off)) s.off = raw.off.filter((k) => CAT[k]);
-    if (isObj(raw.ans)) s.ans = raw.ans;
-    if (isObj(raw.ok)) s.ok = raw.ok;
-    if (raw.pulsed) s.pulsed = true;
-    if (raw.toldSound) s.toldSound = true;
-    return s;
-  }
-  /* v2 kept {s:'g'|'a'|'n', t} per card. One right answer ('g') is c=1 under the v3 rule, not known yet. */
-  function fromV2(o) {
-    const s = normalize({ n: o.n, keep: o.keep, days: o.days, off: o.off, ans: o.ans, ok: o.ok });
-    if (isObj(o.cards)) for (const id in o.cards) {
-      const c = o.cards[id];
-      if (!BY_ID[id] || !isObj(c)) continue;
-      const t = Number.isFinite(c.t) ? c.t : 0;
-      if (c.s === 'g') s.cards[id] = { c: 1, t, m: 0 };
-      else if (c.s === 'a') s.cards[id] = { c: 0, t, m: 1 };
-    }
-    return s;
-  }
-  let S = defaults();
-  const lsGet = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
-  const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* full or blocked */ } };
-  const lsDel = (k) => { try { localStorage.removeItem(k); } catch (e) { /* ignore */ } };
-  function save() { lsSet(KEY, JSON.stringify(S)); }
-  (function load() {
-    const raw = lsGet(KEY);
-    if (raw != null) {
-      let parsed;
-      try { parsed = JSON.parse(raw); } catch (e) { parsed = undefined; }
-      if (isObj(parsed)) { S = normalize(parsed); return; }
-      lsSet(KEY + '-corrupt', raw);        /* keep the bad copy; never silently overwrite progress */
-      S = defaults();
-      return;
-    }
-    const v2 = lsGet(V2KEY);
-    if (v2) {
-      try {
-        S = fromV2(JSON.parse(v2));
-        const last = lsGet(V2KEY + '-last');
-        if (last) lsSet(KEY + '-last', last);
-        lsSet(V2KEY + '-migrated', new Date().toISOString());   /* v2 data is left in place */
-        save();
-      } catch (e) { S = defaults(); }
-    }
-  })();
-  let persistAsked = false;
-  function askPersist() {
-    if (persistAsked) return;
-    persistAsked = true;
-    try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); } catch (e) { /* ignore */ }
+  } catch (e) { /* storage unavailable: run without it */ }
+  function save() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch (e) { /* ignore */ }
   }
 
-  let lock = null;            /* topic lock: long-press a wedge. Not saved between sessions. */
-  let WHEEL = [];
+  /* Everything the wheel and the cards need, rebuilt whenever categories change. */
+  let ALL = [], WHEEL = [], CAT = {}, BY_ID = {};
   function refreshCats() {
-    WHEEL = CATS.filter((c) => S.off.indexOf(c.key) < 0);
-    if (WHEEL.length < 2) { S.off = []; WHEEL = CATS.slice(); }
-    if (lock && !WHEEL.some((c) => c.key === lock)) lock = null;
+    ALL = BUILTIN.map((b) => ({ key: b.key, label: b.label, color: b.color, cards: DECK[b.key] || [], builtin: true }));
+    CAT = {};
+    BY_ID = {};
+    ALL.forEach((c) => {
+      CAT[c.key] = c;
+      c.cards.forEach((r) => { BY_ID[r[0]] = { id: r[0], cat: c.key, title: r[1], meaning: r[2], extra: r[3] || '' }; });
+    });
+    S.off = S.off.filter((k) => CAT[k]);
+    const onWheel = () => ALL.filter((c) => c.cards.length > 0 && S.off.indexOf(c.key) < 0);
+    WHEEL = onWheel();
+    for (const c of ALL) {            /* never fewer than two */
+      if (WHEEL.length >= MIN_WEDGES) break;
+      if (c.cards.length > 0 && WHEEL.indexOf(c) < 0) {
+        S.off = S.off.filter((k) => k !== c.key);
+        WHEEL = onWheel();
+      }
+    }
+    while (WHEEL.length > MAX_WEDGES) S.off.push(WHEEL.pop().key);   /* never more than eight */
+    if (S.lock && !WHEEL.some((c) => c.key === S.lock)) S.lock = null;
+    S.learned = S.learned.filter((id) => BY_ID[id]);
   }
   const colorOf = (key) => 'var(--p' + CAT[key].color + ')';
   const stepDeg = () => 360 / WHEEL.length;
@@ -747,23 +921,18 @@ const DECK = {
     const p = (n) => String(n).padStart(2, '0');
     return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
   }
-  function streakFrom(offset) { let c = 0; while (S.days[dayKey(offset + c)]) c++; return c; }
-
-  /* ---------- Spaced repetition ----------
-     Known = 2 correct in a row, at least 10 spins apart. A miss resets it. */
-  const isKnown = (id) => S.cards[id] && S.cards[id].c >= 2;
-  function record(card, correct) {
-    const id = card.id, st = S.cards[id];
-    if (!correct) S.cards[id] = { c: 0, t: S.n, m: 1 };
-    else if (!st || st.c === 0) S.cards[id] = { c: 1, t: S.n, m: 0 };
-    else if (S.n - st.t >= 10) S.cards[id] = { c: st.c + 1, t: S.n, m: 0 };
-    else S.cards[id] = { c: st.c, t: st.t, m: 0 };    /* too soon to count; keep the clock */
-    S.ans[card.cat] = (S.ans[card.cat] || 0) + 1;
-    if (correct) S.ok[card.cat] = (S.ok[card.cat] || 0) + 1;
+  function streakFrom(offset) {
+    let count = 0;
+    while (S.days[dayKey(offset + count)]) count++;
+    return count;
   }
+
+  /* ---------- Choosing a nugget ---------- */
   let lastId = null;
+  const unlearnedIn = (key) => CAT[key].cards.some((row) => S.learned.indexOf(row[0]) < 0);
   function pick(catKey) {
-    const pool = CAT[catKey].cards;
+    /* Learned cards leave the rotation: spins only deal what is left to learn. */
+    const pool = CAT[catKey].cards.filter((row) => S.learned.indexOf(row[0]) < 0);
     let total = 0;
     const weights = pool.map((row) => {
       if (row[0] === lastId && pool.length > 1) return 0;
@@ -772,20 +941,22 @@ const DECK = {
       if (!st) w = 6;
       else {
         const since = S.n - st.t;
-        if (st.m) w = since >= 4 ? 9 : 0.3;               /* missed: comes back soon */
-        else if (st.c >= 2) w = since >= 40 ? 0.6 : 0.03;  /* known: mostly stays away */
-        else if (st.c === 1) w = since >= 10 ? 3 : 0.2;    /* one right: ask again after 10 spins */
-        else w = since >= 12 ? 2 : 0.2;
+        if (st.s === 'a') w = since >= 4 ? 9 : 0.3;          /* "Again later" comes back soon */
+        else if (st.s === 'g') w = since >= 40 ? 0.6 : 0.03;  /* "Got it" mostly stays away */
+        else w = since >= 12 ? 2 : 0.2;                       /* seen, not marked */
       }
       total += w;
       return w;
     });
     let r = Math.random() * total;
-    for (let i = 0; i < pool.length; i++) { r -= weights[i]; if (r <= 0 && weights[i] > 0) return BY_ID[pool[i][0]]; }
+    for (let i = 0; i < pool.length; i++) {
+      r -= weights[i];
+      if (r <= 0 && weights[i] > 0) return BY_ID[pool[i][0]];
+    }
     return BY_ID[pool[pool.length - 1][0]];
   }
 
-  /* ---------- Drawing ---------- */
+  /* ---------- Drawing the wheel ---------- */
   const NS = 'http://www.w3.org/2000/svg';
   function svg(name, attrs, parent) {
     const e = document.createElementNS(NS, name);
@@ -796,305 +967,191 @@ const DECK = {
   const rad = (deg) => (deg * Math.PI) / 180;
   const pt = (r, deg) => (r * Math.cos(rad(deg))).toFixed(2) + ' ' + (r * Math.sin(rad(deg))).toFixed(2);
 
-  const ringSvg = $('ring'), ringG = $('ringG'), ringDefs = $('ringDefs'), box = $('wheelBox');
+  const wheel = $('wheel');
+  const ring = $('ring');
+  const defs = $('wheelDefs');
+  const spinnerG = $('spinner');
+  const spinBody = $('spinBody');
+  const shadowRot = $('shadowRot');
+  const ghostsG = $('ghosts');
   let wedges = [], labels = [];
   const R_OUT = 200, R_IN = 152, GAP = 1.3;
+
   function buildRing() {
-    ringG.textContent = '';
-    ringDefs.textContent = '';
-    wedges = []; labels = [];
+    ring.textContent = '';
+    defs.textContent = '';
+    wedges = [];
+    labels = [];
     const step = stepDeg();
     WHEEL.forEach((c, i) => {
-      const shown = lock ? CAT[lock] : c;
+      const shown = S.lock ? CAT[S.lock] : c;
       const mid = -90 + step * i;
       const a0 = mid - step / 2 + GAP, a1 = mid + step / 2 - GAP;
       const wedge = svg('path', {
         class: 'wedge',
-        d: 'M' + pt(R_OUT, a0) + ' A' + R_OUT + ' ' + R_OUT + ' 0 0 1 ' + pt(R_OUT, a1) + ' L' + pt(R_IN, a1) + ' A' + R_IN + ' ' + R_IN + ' 0 0 0 ' + pt(R_IN, a0) + ' Z',
-        role: 'button', tabindex: '0', 'data-cat': c.key,
-        'aria-label': lock ? 'Only ' + CAT[lock].full + '. Press to bring all topics back' : c.full + '. Press to drill only this topic',
-        'aria-pressed': lock ? 'true' : 'false'
-      }, ringG);
+        d: 'M' + pt(R_OUT, a0) + ' A' + R_OUT + ' ' + R_OUT + ' 0 0 1 ' + pt(R_OUT, a1) +
+           ' L' + pt(R_IN, a1) + ' A' + R_IN + ' ' + R_IN + ' 0 0 0 ' + pt(R_IN, a0) + ' Z',
+        role: 'button',
+        tabindex: '0',
+        'data-cat': c.key,
+        'aria-label': S.lock ? 'Bring the other categories back' : 'Only ' + c.label,
+        'aria-pressed': S.lock ? 'true' : 'false'
+      }, ring);
       wedge.style.fill = colorOf(shown.key);
       wedges.push(wedge);
+
+      /* Labels on the lower half run the other way round so they read left to right. */
       const upper = Math.sin(rad(mid)) <= 0.01;
-      const r = upper ? 169 : 182;
+      const r = upper ? 169 : 183;
       const half = Math.min(step / 2 - 3, 80);
-      const from = upper ? mid - half : mid + half, to = upper ? mid + half : mid - half;
-      svg('path', { id: 'labelArc' + i, d: 'M' + pt(r, from) + ' A' + r + ' ' + r + ' 0 0 ' + (upper ? 1 : 0) + ' ' + pt(r, to) }, ringDefs);
+      const from = upper ? mid - half : mid + half;
+      const to = upper ? mid + half : mid - half;
+      svg('path', {
+        id: 'labelArc' + i,
+        d: 'M' + pt(r, from) + ' A' + r + ' ' + r + ' 0 0 ' + (upper ? 1 : 0) + ' ' + pt(r, to)
+      }, defs);
       const room = rad(half * 2) * 169;
-      const text = svg('text', { class: 'wedge-label' + (shown.label.length * 11 > room * 0.94 ? ' small' : ''), 'aria-hidden': 'true' }, ringG);
+      const text = svg('text', {
+        class: 'wedge-label' + (shown.label.length * 11.5 > room * 0.94 ? ' small' : ''),
+        'aria-hidden': 'true'
+      }, ring);
       const tp = svg('textPath', { href: '#labelArc' + i, startOffset: '50%', 'text-anchor': 'middle' }, text);
       tp.textContent = shown.label;
       labels.push(text);
     });
   }
 
-  /* The propeller: 3 blades seen from above. Blade 0 (pointing up at angle 0) is the pointer.
-     Leading edge on +x, since positive angles turn clockwise. */
-  const BLADE = 'M7 -18 C16 -30 16 -50 13 -75 C11 -95 8 -115 4 -126 Q0 -131 -5 -126 C-9 -118 -13 -100 -15 -80 C-17 -60 -16 -42 -7 -18 Z';
-  const LEAD = 'M7 -18 C16 -30 16 -50 13 -75 C11 -95 8 -115 4 -126';
-  const VB = 'viewBox="-205 -205 410 410" aria-hidden="true" focusable="false"';
-  function propSvg() {
-    return '<svg ' + VB + ' xmlns="' + NS + '"><defs><clipPath id="droneClip"><circle r="128"/></clipPath></defs>' +
-      '<circle r="131" fill="var(--drone-edge)"/>' +
-      '<image href="drone.png" x="-128" y="-128" width="256" height="256" preserveAspectRatio="xMidYMid slice" clip-path="url(#droneClip)"/>' +
-      '<path class="chev" d="M0 -168 L-11 -150 L0 -155 L11 -150 Z"/></svg>';
+  /* The spinner: three lobes on a hub. The lobe with the pointer is the one that counts. */
+  const LOBES = [-90, 30, 150], LOBE_D = 92, LOBE_R = 44, ARM_W = 60, HUB_R = 50;
+  function bodyLayer(cls, grow, parent) {
+    const g = svg('g', { class: cls }, parent);
+    LOBES.forEach((a) => {
+      const x = LOBE_D * Math.cos(rad(a)), y = LOBE_D * Math.sin(rad(a));
+      svg('line', { x1: 0, y1: 0, x2: x.toFixed(2), y2: y.toFixed(2), 'stroke-width': ARM_W + grow * 2, 'stroke-linecap': 'round' }, g);
+      svg('circle', { cx: x.toFixed(2), cy: y.toFixed(2), r: LOBE_R + grow }, g);
+    });
+    svg('circle', { cx: 0, cy: 0, r: HUB_R + grow }, g);
   }
-  function shadowSvg() {
-    return '<svg ' + VB + '><g class="shadow-shape"><circle r="128"/></g></svg>';
+  bodyLayer('body-shadow', 3, shadowRot);
+  const spinSil = svg('g', { id: 'spinSil' }, spinBody);
+  bodyLayer('body-edge', 3, spinSil);
+  bodyLayer('body-fill', 0, spinSil);
+  svg('polygon', { class: 'pointer', points: '0,-150 -11,-131 11,-131' }, spinBody);
+  LOBES.forEach((a, i) => {
+    const cx = LOBE_D * Math.cos(rad(a)), cy = LOBE_D * Math.sin(rad(a));
+    const marked = i === 0 ? ' marked' : '';
+    svg('circle', { class: 'race' + marked, cx: cx.toFixed(2), cy: cy.toFixed(2), r: 25 }, spinBody);
+    svg('circle', { class: 'ball' + marked, cx: cx.toFixed(2), cy: cy.toFixed(2), r: 9 }, spinBody);
+    /* a small highlight on each lobe so the turning reads at a glance */
+    const g0 = a - 62, g1 = a - 28, gr = 36;
+    svg('path', {
+      class: 'glint',
+      d: 'M' + (cx + gr * Math.cos(rad(g0))).toFixed(2) + ' ' + (cy + gr * Math.sin(rad(g0))).toFixed(2) +
+         ' A' + gr + ' ' + gr + ' 0 0 1 ' + (cx + gr * Math.cos(rad(g1))).toFixed(2) + ' ' + (cy + gr * Math.sin(rad(g1))).toFixed(2)
+    }, spinBody);
+  });
+  /* Motion blur, shown only at speed: faint trailing copies of the body, plus a
+     streak behind each bearing and behind the pointer. */
+  const GHOSTS = 8;
+  const ghosts = [];
+  for (let i = 0; i < GHOSTS; i++) ghosts.push(svg('use', { href: '#spinSil' }, ghostsG));
+  const streaksG = svg('g', { class: 'streaks', display: 'none' });
+  spinnerG.insertBefore(streaksG, spinBody);
+  const streaks = [];
+  LOBES.forEach((a, i) => {
+    [1, 0.5].forEach((part) => streaks.push({ a, r: LOBE_D, part, el: svg('path', { class: 'streak' + (i === 0 ? ' marked' : '') }, streaksG) }));
+  });
+  [1, 0.5].forEach((part) => streaks.push({ a: -90, r: 141, part, el: svg('path', { class: 'streak tip' }, streaksG) }));
+
+  /* ---------- Sound and buzz ---------- */
+  let ac = null, lastTick = 0;
+  function audio() {
+    if (!S.sound) return null;
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return null;
+      ac = ac || new Ctx();
+      if (ac.state === 'suspended') ac.resume();
+      return ac;
+    } catch (e) { return null; }
   }
-  const propL = $('propL'), shadowL = $('shadowL'), discL = $('discL'), ringL = $('ringL');
-  propL.innerHTML = propSvg();
-  shadowL.innerHTML = shadowSvg();
-  discL.innerHTML = '<svg ' + VB + '><defs><radialGradient id="discGrad" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="130">' +
-    '<stop offset="0.14" style="stop-color:var(--prop);stop-opacity:0"/><stop offset="0.5" style="stop-color:var(--prop);stop-opacity:0.25"/>' +
-    '<stop offset="0.93" style="stop-color:var(--prop);stop-opacity:0.55"/><stop offset="1" style="stop-color:var(--prop);stop-opacity:0.1"/></radialGradient></defs>' +
-    '<circle r="130" fill="url(#discGrad)"/></svg>';
-  ringL.innerHTML = '<svg ' + VB + '><circle class="tipring" r="115"/></svg>';
-
-  /* ---------- Sound ----------
-     A DJI-style quad, synthesized live. Tune it here. Shaft frequency (Hz) at full flick speed;
-     it idles at minFrac of that. Pitch and level follow rpm = |angular velocity| / VMAX. */
-  /* Five spin sounds, picked in Topics > Spin sound. Speeds are degrees per second. */
-  const STYLES = {
-    wheel:  { name: 'Prize Wheel',   note: 'Wooden clacks as it slows, like a game-show wheel', pegs: 1, bed: 'air' },
-    slots:  { name: 'Slot Machine',  note: 'Fast reel ticks and a ding-ding payout', pegs: 2, bed: 'reel' },
-    drone:  { name: 'Smooth Drone',  note: 'A soft, low quadcopter hum that spools up and down', pegs: 1, bed: 'drone' },
-    bearing:{ name: 'Fidget Spinner',note: 'A smooth ball-bearing whirr, no clicks', pegs: 1, bed: 'bearing' },
-    arcade: { name: 'Arcade',        note: 'Retro blips that climb a scale, coin sound on landing', pegs: 1, bed: null }
-  };
-  const STYLE_KEYS = Object.keys(STYLES);
-  const SOUND_PROFILE = {
-    refSpeed: 1700,
-    pegsPerWedge: 1
-  };
-  const ARCADE_SCALE = [523, 587, 659, 784, 880, 1047, 1175, 1319, 1568];
-  const Sound = {
-    ac: null, comp: null, master: null, noiseBuf: null, motor: null, sleepT: 0, lastSet: 0, lastClick: 0, step: 0,
-    style() { return 'drone'; },                     /* official sound: Smooth Drone (Nov 2026) */
-    ctx() {
-      if (!S.sound) return null;
-      try {
-        const Ctx = window.AudioContext || window.webkitAudioContext;
-        if (!Ctx) return null;
-        if (!this.ac) {
-          this.ac = new Ctx();
-          this.comp = this.ac.createDynamicsCompressor();
-          this.comp.threshold.value = -18; this.comp.ratio.value = 4;
-          this.comp.attack.value = 0.002; this.comp.release.value = 0.12;
-          this.master = this.ac.createGain();
-          this.comp.connect(this.master); this.master.connect(this.ac.destination);
-        }
-        this.master.gain.value = 0.85;
-        clearTimeout(this.sleepT);
-        if (this.ac.state === 'suspended') this.ac.resume().catch(() => {});
-        return this.ac;
-      } catch (e) { return null; }
-    },
-    noise() {
-      if (this.noiseBuf) return this.noiseBuf;
-      const len = this.ac.sampleRate * 2, buf = this.ac.createBuffer(1, len, this.ac.sampleRate), d = buf.getChannelData(0);
-      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
-      return (this.noiseBuf = buf);
-    },
-    /* small building blocks */
-    tone(type, f, t, len, vol, fEnd) {
-      const ac = this.ac, o = ac.createOscillator(), g = ac.createGain();
-      o.type = type; o.frequency.setValueAtTime(f, t);
-      if (fEnd) o.frequency.exponentialRampToValueAtTime(fEnd, t + len);
-      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.004);
-      g.gain.exponentialRampToValueAtTime(0.0001, t + len);
-      o.connect(g); g.connect(this.comp); o.start(t); o.stop(t + len + 0.03);
-    },
-    snap(t, freq, q, len, vol) {
-      const ac = this.ac, src = ac.createBufferSource(), bp = ac.createBiquadFilter(), g = ac.createGain();
-      src.buffer = this.noise(); bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = q;
-      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
-      src.connect(bp); bp.connect(g); g.connect(this.comp); src.start(t, Math.random() * 1.5, len + 0.01);
-    },
-    bell(f, t, len, vol) { this.tone('sine', f, t, len, vol); this.tone('sine', f * 2.76, t, len * 0.4, vol * 0.25); this.tone('sine', f * 5.4, t, len * 0.15, vol * 0.1); },
-    click(speed) {                                     /* called each time a peg passes the nose */
-      if (!this.ac || this.ac.state !== 'running') return;
-      const st = this.style(), now = performance.now(), t = this.ac.currentTime;
-      const gap = { wheel: 55, slots: 32, drone: 1e9, bearing: 1e9, arcade: 70 }[st];
-      if (now - this.lastClick < gap) return;
-      if (st === 'wheel') {
-        const fade = clamp((1100 - speed) / 600, 0, 1);
-        if (fade < 0.03) return;
-        this.lastClick = now;
-        const v = 0.45 * fade * (0.9 + Math.random() * 0.2);
-        this.snap(t, 1500 + Math.random() * 150, 2.2, 0.022, v);
-        this.tone('triangle', 320, t, 0.04, v * 0.5, 170);
-      } else if (st === 'slots') {
-        this.lastClick = now;
-        const v = 0.22 * (1 - 0.5 * clamp(speed / 2000, 0, 1));
-        this.snap(t, 3400, 6, 0.012, v);
-        this.tone('square', 1900, t, 0.014, v * 0.08);
-      } else if (st === 'arcade') {
-        this.lastClick = now;
-        const n = ARCADE_SCALE[this.step++ % ARCADE_SCALE.length];
-        this.tone('square', speed < 500 ? n / 2 : n, t, 0.05, 0.05);
-      }
-    },
-    start() {
-      if (this.motor || !this.ctx()) return;
-      this.step = 0;
-      const ac = this.ac, t = ac.currentTime, bed = STYLES[this.style()].bed;
-      if (!bed) return;
-      try {
-        const out = ac.createGain(); out.gain.value = 0; out.connect(this.comp);
-        const nodes = [], m = { nodes, buses: [out], out, bed, oscs: [] };
-        if (bed === 'drone') {
-          const lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 500; lp.Q.value = 0.5; lp.connect(out);
-          [-1.2, -0.4, 0.5, 1.3].forEach((d) => {
-            const o = ac.createOscillator(); o.type = 'triangle'; o.frequency.value = 80;
-            const g = ac.createGain(); g.gain.value = 0.25; o.connect(g); g.connect(lp); o.start(t);
-            nodes.push(o); m.oscs.push({ o, k: 1 + d / 100 });
-          });
-          const src = ac.createBufferSource(); src.buffer = this.noise(); src.loop = true;
-          const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 400; bp.Q.value = 0.6;
-          const ng = ac.createGain(); ng.gain.value = 0.35; src.connect(bp); bp.connect(ng); ng.connect(lp); src.start(t);
-          nodes.push(src); m.lp = lp;
-        } else {
-          const src = ac.createBufferSource(); src.buffer = this.noise(); src.loop = true;
-          const bp = ac.createBiquadFilter(); bp.type = 'bandpass';
-          bp.frequency.value = bed === 'bearing' ? 1800 : bed === 'reel' ? 900 : 260;
-          bp.Q.value = bed === 'bearing' ? 1.4 : 0.9;
-          src.connect(bp); bp.connect(out); src.start(t); nodes.push(src); m.bp = bp;
-          if (bed === 'bearing') {                       /* the hum under the hiss */
-            const o = ac.createOscillator(); o.type = 'sine'; o.frequency.value = 140;
-            const g = ac.createGain(); g.gain.value = 0.5; o.connect(g); g.connect(out); o.start(t);
-            nodes.push(o); m.oscs.push({ o, k: 1 });
-          }
-          const lfo = ac.createOscillator(); lfo.frequency.value = 4;
-          const lg = ac.createGain(); lg.gain.value = 0; lfo.connect(lg); lg.connect(out.gain); lfo.start(t);
-          nodes.push(lfo); m.lfo = lfo; m.lg = lg;
-        }
-        this.motor = m;
-      } catch (e) { this.motor = null; }
-    },
-    set(r) {
-      const m = this.motor;
-      if (!m) return;
-      const now = performance.now();
-      if (now - this.lastSet < 30) return;
-      this.lastSet = now;
-      const t = this.ac.currentTime;
-      r = clamp(r, 0, 1.2);
-      const env = Math.min(1, Math.pow(r, 1.3));
-      if (m.bed === 'drone') {
-        const f = 70 + 85 * Math.sqrt(r);              /* low and gentle: 70 to ~165 Hz */
-        m.oscs.forEach((x) => x.o.frequency.setTargetAtTime(f * x.k, t, 0.08));
-        m.lp.frequency.setTargetAtTime(380 + 500 * r, t, 0.1);
-        m.out.gain.setTargetAtTime(0.34 * env, t, 0.1);
-      } else {
-        const g = { air: 0.05, reel: 0.03, bearing: 0.035 }[m.bed] * env;
-        if (m.bed === 'air') m.bp.frequency.setTargetAtTime(220 + 380 * r, t, 0.08);
-        if (m.bed === 'reel') m.bp.frequency.setTargetAtTime(700 + 500 * r, t, 0.08);
-        if (m.bed === 'bearing') { m.bp.frequency.setTargetAtTime(1300 + 1500 * r, t, 0.08); m.oscs[0].o.frequency.setTargetAtTime(110 + 130 * r, t, 0.08); }
-        m.out.gain.setTargetAtTime(g, t, 0.08);
-        m.lg.gain.setTargetAtTime(g * (m.bed === 'reel' ? 0.6 : 0.3), t, 0.08);
-        m.lfo.frequency.setTargetAtTime(clamp(r * 1700 / 360 * 3, 1, m.bed === 'reel' ? 16 : 8), t, 0.08);
-      }
-    },
-    stop() {
-      const m = this.motor;
-      if (!m) { this.sleepSoon(); return; }
-      this.motor = null;
-      const t = this.ac.currentTime;
-      m.buses.forEach((g) => { g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0, t, 0.07); });
-      setTimeout(() => { m.nodes.forEach((n) => { try { n.stop(); } catch (e) { /* already stopped */ } }); m.buses.forEach((g) => g.disconnect()); }, 450);
-      this.sleepSoon();
-    },
-    kill() {                                         /* app hidden: stop everything right now */
-      const m = this.motor;
-      this.motor = null;
-      if (m) { m.nodes.forEach((n) => { try { n.stop(); } catch (e) { /* ignore */ } }); m.buses.forEach((g) => g.disconnect()); }
-      clearTimeout(this.sleepT);
-      if (this.ac && this.ac.state === 'running') this.ac.suspend().catch(() => {});
-    },
-    sleepSoon() {
-      clearTimeout(this.sleepT);
-      this.sleepT = setTimeout(() => { if (this.ac && this.ac.state === 'running' && !this.motor) this.ac.suspend().catch(() => {}); }, 3000);
-    },
-    chime() {                                          /* landing */
-      if (!this.ctx()) return;
-      const t = this.ac.currentTime + 0.01, st = this.style();
-      if (st === 'wheel') { this.bell(784, t, 0.35, 0.06); this.bell(1175, t + 0.07, 0.4, 0.05); }
-      else if (st === 'slots') { [1568, 1568, 2093].forEach((f, i) => this.bell(f, t + i * 0.11, 0.35, 0.05)); }
-      else if (st === 'drone') { this.tone('sine', 880, t, 0.09, 0.1); this.tone('sine', 1320, t + 0.1, 0.14, 0.1); }
-      else if (st === 'bearing') { this.snap(t, 900, 3, 0.03, 0.2); this.bell(1047, t + 0.02, 0.5, 0.04); }
-      else if (st === 'arcade') { this.tone('square', 988, t, 0.07, 0.04); this.tone('square', 1319, t + 0.07, 0.25, 0.04); }
-      this.sleepSoon();
-    },
-    correct() {
-      if (!this.ctx()) return;
-      const t = this.ac.currentTime + 0.01, st = this.style();
-      if (st === 'arcade') [523, 659, 784, 1047].forEach((f, i) => this.tone('square', f, t + i * 0.06, 0.08, 0.035));
-      else if (st === 'slots') [2093, 2637, 3136, 2637, 3136].forEach((f, i) => this.bell(f, t + i * 0.05, 0.2, 0.025));
-      else [1047, 1319, 1568].forEach((f, i) => this.bell(f, t + i * 0.06, 0.3, 0.07));
-      this.sleepSoon();
-    },
-    demo() {                                           /* a pretend 2.5-second spin for the picker */
-      if (!this.ctx()) return;
-      this.stop(); this.motor = null; this.start();
-      clearInterval(this.demoT);
-      let v = 1900, ang = 0, peg = 0, last = performance.now();
-      const per = 360 / 7 / SOUND_PROFILE.pegsPerWedge;
-      this.demoT = setInterval(() => {
-        const now = performance.now(), dt = (now - last) / 1000; last = now;
-        v = Math.max(0, v - (1.25 * v + 95) * dt * 1.6);
-        ang += v * dt;
-        const p = Math.floor(ang / per);
-        if (p !== peg) { peg = p; this.click(v); }
-        this.lastSet = 0; this.set(v / SOUND_PROFILE.refSpeed);
-        if (v <= 30) { clearInterval(this.demoT); this.stop(); this.chime(); }
-      }, 16);
-    }
-  };
-
-  /* ---------- Haptics ---------- */
-  let lastBuzz = 0;
-  function buzz(p) { if (!S.haptics) return; try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) { /* ignore */ } }
+  function blip(freq, at, length, peak, type) {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type;
+    o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, at);
+    g.gain.exponentialRampToValueAtTime(peak, at + 0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + length);
+    o.connect(g);
+    g.connect(ac.destination);
+    o.start(at);
+    o.stop(at + length + 0.02);
+  }
   function tick(speed) {
-    if (speed > 900) return;                        /* detent clicks fade in as it slows */
     const now = performance.now();
-    if (now - lastBuzz < 40) return;
-    lastBuzz = now;
-    buzz(5);
+    if (now - lastTick < 30) return;
+    lastTick = now;
+    if (!audio() || ac.state !== 'running') return;
+    /* faster spin, higher and lighter tick */
+    const k = clamp(speed / 2400, 0, 1);
+    blip(950 + 800 * k + Math.random() * 120, ac.currentTime, 0.04 - 0.012 * k, 0.1 - 0.03 * k, 'triangle');
+  }
+  function chime() {
+    if (audio() && ac.state === 'running') {
+      blip(660, ac.currentTime, 0.22, 0.12, 'sine');
+      blip(990, ac.currentTime + 0.09, 0.3, 0.1, 'sine');
+    }
+    try { if (navigator.vibrate) navigator.vibrate(12); } catch (e) { /* ignore */ }
   }
 
   /* ---------- Spinning ---------- */
-  const VMAX = 2800, DRAG = 0.5, NOTCH_SPEED = 140, SPRING = 220, DAMP = 16.3, MAGNET = 1.6, MAGNET_DEG = 4;
-  let RUB = 38;          /* friction gets the randomness, not the release speed */
-  let pegSlot = 0, angle = 0, vel = 0, mode = 'idle', notchAt = 0, glide = null, deal = false, tickSlot = 0, raf = 0, lastFrame = 0, drag = null, dragSpeed = 0;
-  const last = { rot: '', p: -1, d: -1, r: -1, sh: -1 };
+  /* Free spin: the spinner coasts and friction slows it. Once it is slow enough it
+     drops into the nearest wedge like a ball into a notch, with a small bounce. */
+  const DRAG = 1.0;         /* air drag, per second */
+  const RUB = 90;           /* bearing friction, degrees per second squared */
+  const NOTCH_SPEED = 140;  /* below this it falls into a wedge */
+  const SPRING = 220, DAMP = 16.3;
 
-  function blurFor(speed) {
-    if (reducedMotion.matches || speed < 300) return { p: 1, d: 0, r: 0 };
-    if (speed < 900) { const k = (speed - 300) / 600; return { p: 1 - 0.45 * k, d: 0.35 * k, r: clamp((speed - 700) / 400, 0, 1) * 0.5 }; }
-    const k = clamp((speed - 900) / 600, 0, 1);
-    return { p: 0.55 - 0.4 * k, d: 0.35 + 0.05 * k, r: 0.5 * clamp((speed - 700) / 400, 0, 1) };
-  }
-  function setOp(el, key, v) { v = Math.round(v * 100) / 100; if (last[key] !== v) { last[key] = v; el.style.opacity = v; } }
+  const box = $('wheelBox');
+  let angle = 0;          /* degrees, clockwise; 0 means the pointer is straight up */
+  let vel = 0;            /* degrees per second */
+  let mode = 'idle';      /* idle | drag | free | notch | glide */
+  let notchAt = 0;
+  let glide = null;
+  let deal = false;       /* does this spin end with a card? */
+  let tickSlot = 0;
+  let raf = 0, lastFrame = 0;
+  let drag = null;
+
   function render() {
-    const rot = 'rotate(' + angle.toFixed(2) + 'deg)';
-    if (rot !== last.rot) { last.rot = rot; propL.style.transform = rot; shadowL.style.transform = rot; }
-    const speed = mode === 'drag' ? dragSpeed : Math.abs(vel);
-    const b = blurFor(speed);
-    setOp(propL, 'p', b.p); setOp(discL, 'd', b.d); setOp(ringL, 'r', b.r); setOp(shadowL, 'sh', 1 - 0.6 * (1 - b.p));
+    const rot = 'rotate(' + angle.toFixed(2) + ')';
+    spinnerG.setAttribute('transform', rot);
+    shadowRot.setAttribute('transform', rot);
+    const speed = Math.abs(vel);
+    if (mode === 'free' && speed > 220) {
+      const dir = vel < 0 ? -1 : 1;
+      const amount = Math.min(1, (speed - 220) / 1500);
+      const spread = Math.min(13, speed * 0.0062);
+      for (let i = 0; i < GHOSTS; i++) {
+        ghosts[i].setAttribute('transform', 'rotate(' + (angle - dir * (i + 1) * spread).toFixed(2) + ')');
+        ghosts[i].setAttribute('opacity', (amount * 0.3 * (1 - i / GHOSTS)).toFixed(3));
+      }
+      const trail = Math.min(95, speed * 0.045);
+      streaks.forEach((s) => {
+        s.el.setAttribute('d', 'M' + pt(s.r, s.a) + ' A' + s.r + ' ' + s.r + ' 0 0 ' + (dir > 0 ? 0 : 1) + ' ' + pt(s.r, s.a - dir * trail * s.part));
+      });
+      streaksG.setAttribute('opacity', (amount * 0.3).toFixed(3));
+      ghostsG.removeAttribute('display');
+      streaksG.removeAttribute('display');
+    } else if (!ghostsG.hasAttribute('display')) {
+      ghostsG.setAttribute('display', 'none');
+      streaksG.setAttribute('display', 'none');
+    }
     const step = stepDeg();
     const slot = Math.floor((angle + step / 2) / step);
     if (slot !== tickSlot) { tickSlot = slot; tick(speed); }
-    const peg = Math.floor(angle / (step / SOUND_PROFILE.pegsPerWedge));
-    if (peg !== pegSlot) { pegSlot = peg; if (S.sound && mode !== 'idle') Sound.click(speed); }
-    if (Sound.motor) Sound.set(speed / SOUND_PROFILE.refSpeed);
   }
-  function nearBoundary(a) {
-    const step = stepDeg(), m = ((a % step) + step) % step;
-    return Math.abs(m - step / 2) < MAGNET_DEG;
-  }
+
   function frame(now) {
     const dt = clamp((now - lastFrame) / 1000, 0, 0.05);
     lastFrame = now;
@@ -1103,83 +1160,99 @@ const DECK = {
       angle = glide.from + (glide.to - glide.from) * (1 - Math.pow(1 - p, 3));
       if (p >= 1) { angle = glide.to; vel = 0; mode = 'idle'; }
     } else {
-      const parts = Math.max(1, Math.ceil(dt / 0.006)), h = dt / parts;
+      const parts = Math.max(1, Math.ceil(dt / 0.006));
+      const h = dt / parts;
       for (let i = 0; i < parts && mode !== 'idle'; i++) {
         if (mode === 'free') {
           const s = vel < 0 ? -1 : 1;
-          const rub = RUB * (nearBoundary(angle) ? MAGNET : 1);   /* a little magnetic catch at each wedge edge */
-          vel -= (DRAG * vel + rub * s) * h;
+          vel -= (DRAG * vel + RUB * s) * h;
           if ((vel < 0 ? -1 : 1) !== s) vel = 0;
           angle += vel * h;
-          if (Math.abs(vel) < NOTCH_SPEED) { const st = stepDeg(); notchAt = Math.round((angle + vel * 0.22) / st) * st; mode = 'notch'; }
+          if (Math.abs(vel) < NOTCH_SPEED) {
+            const step = stepDeg();
+            notchAt = Math.round((angle + vel * 0.22) / step) * step;
+            mode = 'notch';
+          }
         } else if (mode === 'notch') {
           vel += (-SPRING * (angle - notchAt) - DAMP * vel) * h;
           angle += vel * h;
-          if (Math.abs(vel) < 4 && Math.abs(angle - notchAt) < 0.3) { angle = notchAt; vel = 0; mode = 'idle'; }
+          if (Math.abs(vel) < 4 && Math.abs(angle - notchAt) < 0.3) {
+            angle = notchAt;
+            vel = 0;
+            mode = 'idle';
+          }
         }
       }
     }
     render();
     if (mode === 'idle') {
       raf = 0;
-      Sound.stop();
-      normalizeAngle();
       if (deal) { deal = false; land(); }
-    } else raf = requestAnimationFrame(frame);
+    } else {
+      raf = requestAnimationFrame(frame);
+    }
   }
-  function normalizeAngle() {
-    angle = ((angle % 360) + 360) % 360;
+  function run() {
+    if (raf) return;
+    lastFrame = performance.now();
+    raf = requestAnimationFrame(frame);
+  }
+  function halt() {           /* stop where it is, squared up in a wedge, no card */
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }
     const step = stepDeg();
-    tickSlot = Math.floor((angle + step / 2) / step);
-  }
-  function run() { if (raf) return; lastFrame = performance.now(); raf = requestAnimationFrame(frame); }
-  function stopLoop() { if (raf) { cancelAnimationFrame(raf); raf = 0; } }
-  function halt() {               /* stop without dealing (opening a panel) */
-    stopLoop();
-    if (mode !== 'idle' || drag) { const st = stepDeg(); angle = Math.round(angle / st) * st; }
-    vel = 0; mode = 'idle'; deal = false; drag = null; box.classList.remove('pressed');
-    Sound.stop();
-    normalizeAngle();
+    angle = Math.round(angle / step) * step;
+    vel = 0;
+    mode = 'idle';
+    deal = false;
     render();
   }
-  function settle(withDeal) {     /* let it click into the nearest notch */
-    const st = stepDeg();
-    notchAt = Math.round(angle / st) * st;
-    vel = 0;
-    mode = reducedMotion.matches ? 'idle' : 'notch';
-    if (mode === 'idle') angle = notchAt;
-    deal = !!withDeal;
-    if (mode === 'idle') { render(); normalizeAngle(); if (deal) { deal = false; land(); } }
-    else run();
+
+  function clearLanding() {
+    wheel.classList.remove('landed');
+    wedges.forEach((w) => w.classList.remove('lit'));
+    labels.forEach((l) => l.classList.remove('lit'));
+    wheel.style.removeProperty('--mark');
+    showRest();
   }
-  function launch(v) {
+
+  function launch(velocity) {
     clearLanding();
     deal = true;
-    askPersist();
-    if (!S.sound && !S.toldSound) { S.toldSound = true; save(); toast('Sound is off. Tap the speaker for spin sound.'); }
-    const dir = v < 0 ? -1 : 1;
+    const dir = velocity < 0 ? -1 : 1;
     if (reducedMotion.matches) {
-      const st = stepDeg(), hops = 1 + Math.floor(Math.random() * WHEEL.length);
-      glide = { from: angle, to: (Math.round(angle / st) + dir * hops) * st, t0: performance.now(), ms: 450 };
-      vel = 0; mode = 'glide';
+      const step = stepDeg();
+      const hops = 1 + Math.floor(Math.random() * WHEEL.length);
+      glide = { from: angle, to: (Math.round(angle / step) + dir * hops) * step, t0: performance.now(), ms: 450 };
+      vel = 0;
+      mode = 'glide';
     } else {
-      vel = clamp(v, -VMAX, VMAX);                  /* 1:1 with the flick */
-      RUB = 32 + Math.random() * 14;
+      /* a little luck in every flick, so nobody can aim it */
+      vel = dir * clamp(Math.abs(velocity) * (0.86 + Math.random() * 0.28), 380, 2800);
       mode = 'free';
-      if (S.sound) Sound.start();
     }
     run();
   }
-  function spinDefault() { launch(1500 + Math.random() * 700); }
+  function spinDefault() {
+    launch(1450 + Math.random() * 750);
+  }
 
   function land() {
     const n = WHEEL.length;
     const idx = ((Math.round(angle / stepDeg()) % n) + n) % n;
-    const catKey = lock || WHEEL[idx].key;
-    ringSvg.classList.add('landed');
-    wedges[idx].classList.add('lit');
-    labels[idx].classList.add('lit');
-    box.style.setProperty('--mark', colorOf(catKey));
+    let catKey = S.lock || WHEEL[idx].key;
+    if (!unlearnedIn(catKey)) {
+      /* The wheel stopped on a finished topic: deal from one still in progress.
+         Stuck on one topic, there is nowhere else to deal from. */
+      const open = S.lock ? null : WHEEL.find((c) => unlearnedIn(c.key));
+      if (!open) { showAllLearned(); return; }
+      catKey = open.key;
+    }
+    const litIdx = WHEEL.findIndex((c) => c.key === catKey);
+    wheel.classList.add('landed');
+    wedges[litIdx].classList.add('lit');
+    labels[litIdx].classList.add('lit');
+    wheel.style.setProperty('--mark', colorOf(catKey));
+
     const card = pick(catKey);
     lastId = card.id;
     S.n += 1;
@@ -1187,212 +1260,331 @@ const DECK = {
     S.days[today] = (S.days[today] || 0) + 1;
     const keys = Object.keys(S.days).sort();
     while (keys.length > 400) delete S.days[keys.shift()];
+    const prev = S.cards[card.id];
+    S.cards[card.id] = { s: prev ? prev.s : 'n', t: S.n };
     save();
-    buzz(20);
-    if (S.sound) Sound.chime();
-    clearTimeout(dealT);
-    dealT = setTimeout(() => showCard(card), reducedMotion.matches ? 0 : 120);   /* eye goes to the wedge first */
-  }
-  let dealT = 0;
-  function clearLanding() {
-    clearTimeout(dealT);
-    ringSvg.classList.remove('landed');
-    wedges.forEach((w) => w.classList.remove('lit'));
-    labels.forEach((l) => l.classList.remove('lit'));
-    box.style.removeProperty('--mark');
-    showRest();
+
+    showNugget(card);
+    paintStats();
+    chime();
   }
 
-  /* ---------- Touch ---------- */
-  let center = { x: 0, y: 0 };
-  const angleAt = (x, y) => (Math.atan2(y - center.y, x - center.x) * 180) / Math.PI;
-  const questionOpen = () => !!current && !answered;
+  /* Flick handling: the spinner follows the finger, then keeps going. */
+  function pointerAngle(e) {
+    const r = box.getBoundingClientRect();
+    return (Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2)) * 180) / Math.PI;
+  }
   box.addEventListener('pointerdown', (e) => {
-    if (e.button || drag) return;
-    const r = box.getBoundingClientRect();            /* cached for the whole gesture */
-    center = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
-    const wedgeEl = e.target.closest ? e.target.closest('[data-cat]') : null;
-    const spinning = mode !== 'idle';
-    const caught = spinning && (mode !== 'notch' || deal);   /* the startup wiggle isn't a spin */
-    if (spinning) { stopLoop(); vel = 0; deal = false; Sound.stop(); }
+    if (e.button || e.target.closest('#hub')) return;
+    const wedge = e.target.closest ? e.target.closest('[data-cat]') : null;
+    const wasSpinning = mode !== 'idle';
+    if (raf) { cancelAnimationFrame(raf); raf = 0; }   /* catch it mid-spin */
     mode = 'drag';
-    dragSpeed = 0;
-    drag = { id: e.pointerId, x: e.clientX, y: e.clientY, last: angleAt(e.clientX, e.clientY), live: false, caught, long: false, samples: [{ t: e.timeStamp, a: angle }], lp: 0 };
-    if (!caught && wedgeEl && !questionOpen()) {
-      const key = wedgeEl.getAttribute('data-cat');
-      drag.lp = setTimeout(() => { if (drag && !drag.live) { drag.long = true; buzz(20); toggleLock(key); } }, 500);
-    }
-    if (S.sound) Sound.ctx();
-    box.classList.add('pressed');
+    vel = 0;
+    deal = false;
+    render();
+    drag = {
+      id: e.pointerId,
+      wedge: wedge ? wedge.getAttribute('data-cat') : null,
+      caught: wasSpinning,
+      x: e.clientX, y: e.clientY,
+      last: pointerAngle(e),
+      live: false,
+      samples: [{ t: performance.now(), a: angle }]
+    };
+    if (!wedge) box.classList.add('pressed');
     try { box.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
-    if (e.target.closest && e.target.closest('#hub')) e.preventDefault();
   });
   box.addEventListener('pointermove', (e) => {
-    if (!drag || e.pointerId !== drag.id || drag.long) return;
-    const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
-    const list = evs.length ? evs : [e];
+    if (!drag || e.pointerId !== drag.id) return;
+    const a = pointerAngle(e);
+    let d = a - drag.last;
+    if (d > 180) d -= 360;
+    if (d < -180) d += 360;
+    drag.last = a;
     if (!drag.live) {
-      const lastEv = list[list.length - 1];
-      if (Math.hypot(lastEv.clientX - drag.x, lastEv.clientY - drag.y) < 8) return;
+      if (Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 8) return;
       drag.live = true;
-      clearTimeout(drag.lp);
-      if (questionOpen()) sr('Skipped.');           /* a flick skips; the card isn't counted */
+      box.classList.add('pressed');
       clearLanding();
-      drag.last = angleAt(lastEv.clientX, lastEv.clientY);
-      drag.samples = [{ t: lastEv.timeStamp, a: angle }];
-      return;
+      d = 0;
     }
-    for (const ev of list) {
-      let d = angleAt(ev.clientX, ev.clientY) - drag.last;
-      if (d > 180) d -= 360;
-      if (d < -180) d += 360;
-      drag.last += d;
-      angle += d;
-      drag.samples.push({ t: ev.timeStamp, a: angle });
-    }
-    while (drag.samples.length > 2 && drag.samples[0].t < e.timeStamp - 150) drag.samples.shift();
-    const s = drag.samples, a = s[Math.max(0, s.length - 4)], z = s[s.length - 1];
-    dragSpeed = z.t > a.t ? Math.abs((z.a - a.a) / (z.t - a.t)) * 1000 : 0;
+    angle += d;
     render();
+    drag.samples.push({ t: performance.now(), a: angle });
+    if (drag.samples.length > 12) drag.samples.shift();
   });
-  function releaseVelocity(tUp) {
-    const s = drag.samples, z = s[s.length - 1];
-    if (tUp - z.t > 60) return 0;                     /* finger stopped before letting go */
-    let a = s[0];
-    for (let i = s.length - 1; i >= 0; i--) { if (z.t - s[i].t >= 70) { a = s[i]; break; } a = s[i]; }
-    const dt = (z.t - a.t) / 1000;
-    return dt > 0.008 ? (z.a - a.a) / dt : 0;
-  }
   function endDrag(e, cancelled) {
     if (!drag || e.pointerId !== drag.id) return;
     const d = drag;
-    clearTimeout(d.lp);
-    box.classList.remove('pressed');
-    if (d.long) { drag = null; mode = 'idle'; return; }
-    if (!d.live) {
-      drag = null;
-      mode = 'idle';
-      if (d.caught) { settle(true); return; }          /* caught mid-spin: it stops and clicks in */
-      if (cancelled) { render(); return; }
-      if (questionOpen()) sr('Skipped.');             /* tap the prop any time to skip and spin again */
-      spinDefault();
-      return;
-    }
-    const v = cancelled ? 0 : releaseVelocity(e.timeStamp);
     drag = null;
     mode = 'idle';
-    if (Math.abs(v) < 120) { settle(true); return; }   /* placed it: let it click in */
+    box.classList.remove('pressed');
+    audio();
+    if (!d.live) {
+      if (d.wedge && !d.caught && !cancelled) toggleLock(d.wedge);
+      else spinDefault();
+      return;
+    }
+    const now = performance.now();
+    const ref = d.samples.find((s) => now - s.t <= 110) || d.samples[d.samples.length - 1];
+    const dt = (now - ref.t) / 1000;
+    let v = dt > 0.012 ? (angle - ref.a) / dt : 0;
+    if (Math.abs(v) < 60) v = (angle - d.samples[0].a) >= 0 ? 450 : -450;
     launch(v);
   }
   box.addEventListener('pointerup', (e) => endDrag(e, false));
   box.addEventListener('pointercancel', (e) => endDrag(e, true));
-  box.addEventListener('contextmenu', (e) => e.preventDefault());
-  $('hub').addEventListener('click', (e) => {           /* keyboard only; pointer taps are handled above */
-    if (e.detail !== 0) return;
-    Sound.ctx(); spinDefault();
-  });
-  ringG.addEventListener('keydown', (e) => {
+
+  $('hub').addEventListener('click', () => { audio(); spinDefault(); });
+  ring.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter' && e.key !== ' ') return;
     const cat = e.target.getAttribute && e.target.getAttribute('data-cat');
     if (!cat) return;
     e.preventDefault();
     toggleLock(cat);
-    const again = ringG.querySelector('[data-cat="' + cat + '"]');
+    const again = ring.querySelector('[data-cat="' + cat + '"]');
     if (again) again.focus();
   });
-  function toggleLock(key) {
+
+  /* ---------- Sticking to one category ---------- */
+  function toggleLock(catKey) {
     halt();
-    lock = lock ? null : key;
+    S.lock = S.lock ? null : catKey;
+    save();
     buildRing();
     clearLanding();
-    sr(lock ? 'Only ' + CAT[lock].full + '.' : 'All topics back on the wheel.');
   }
 
   /* ---------- Tray ---------- */
-  const app = $('app'), rest = $('rest'), qBox = $('q'), trayScroll = $('trayScroll');
-  let current = null, answered = false, spunThisVisit = false;
+  const rest = $('rest'), nugget = $('nugget');
+  let current = null;
+  let spunThisVisit = false;
+  let learnTimer = 0;
+
   function showRest() {
-    current = null; answered = false;
-    qBox.hidden = true; $('whyBox').hidden = true; $('nextRow').hidden = true;
+    current = null;
+    nugget.hidden = true;
     rest.hidden = false;
-    app.classList.remove('dealt');
-    $('restTitle').textContent = lock ? 'Only ' + CAT[lock].label + '. Flick it.' : (spunThisVisit ? 'Flick again.' : 'Flick the prop.');
-    $('hub').removeAttribute('aria-disabled');
+    $('restTitle').textContent = spunThisVisit ? 'Flick again.' : 'Flick the spinner.';
+    $('restText').textContent = S.lock
+      ? 'Only ' + CAT[S.lock].label + ' for now. Tap the ring to bring the others back.'
+      : (spunThisVisit
+        ? 'Tap a wedge to stick with one category.'
+        : 'It stops on a category and hands you one thing worth knowing. Tap a wedge to stick with that category.');
+  }
+  function showAllLearned() {
+    current = null;
+    nugget.hidden = true;
+    rest.hidden = false;
+    $('restTitle').textContent = S.lock ? 'All of ' + CAT[S.lock].label + ' is learned.' : 'All learned.';
+    $('restText').textContent = 'Every card in the switched-on topics is marked learned. Open Categories and tap Reset learned to spin them again.';
     paintStats();
   }
-  function showCard(card) {
-    current = card; answered = false; spunThisVisit = true;
-    $('qCat').textContent = CAT[card.cat].full;
-    qBox.style.setProperty('--chip', colorOf(card.cat));
-    $('qText').textContent = card.q;
-    $('whyBox').hidden = true;
-    $('nextRow').hidden = true;
-    paintKeepButton();
-    const list = $('choices');
-    list.textContent = '';
-    shuffle([card.a].concat(card.d)).forEach((text, i) => {
-      const li = el('li');
-      const b = button('opt', '', () => answerSpin(b, text));
-      b.dataset.text = text;
-      b.append(el('b', '', 'ABC'[i]), el('span', '', text));
-      li.appendChild(b);
-      list.appendChild(li);
-    });
+  function showNugget(card) {
+    current = card;
+    spunThisVisit = true;
+    const chip = $('nuggetCat');
+    chip.textContent = CAT[card.cat].label;
+    chip.style.setProperty('--chip', colorOf(card.cat));
+    const title = $('nuggetTitle');
+    title.textContent = card.title;
+    title.classList.toggle('long', card.title.length > 20);
+    $('nuggetMeaning').textContent = card.meaning;
+    $('nuggetExtra').textContent = card.extra;
+    $('nuggetExtra').hidden = !card.extra;
+    paintLearnedButton();
     rest.hidden = true;
-    app.classList.add('dealt');
-    qBox.hidden = false;
-    qBox.classList.remove('arrive'); void qBox.offsetWidth; qBox.classList.add('arrive');
-    trayScroll.scrollTop = 0;
-    sr(CAT[card.cat].label + '. Question: ' + card.q);
+    nugget.hidden = true;        /* restart the arrival animation */
+    void nugget.offsetWidth;
+    nugget.hidden = false;
+    $('tray').scrollTop = 0;
   }
-  function answerSpin(btn, text) {
-    if (!current || answered) return;
-    answered = true;
-    const correct = text === current.a;
-    $('choices').querySelectorAll('button').forEach((b) => {
-      b.disabled = true;
-      if (b.dataset.text === current.a) b.classList.add('right');
-      else if (b === btn) b.classList.add('wrong');
-      else b.parentNode.classList.add('gone');          /* collapse the unpicked wrong option */
-    });
-    record(current, correct);
+  function mark(status) {
+    if (!current) return;
+    clearTimeout(learnTimer);
+    S.cards[current.id] = { s: status, t: S.n };
     save();
-    $('whyText').textContent = current.why;
-    $('srcText').textContent = 'Source: ' + current.src + ' · card ' + current.id;
-    $('reportLink').href = 'mailto:jukes31ryan@gmail.com?subject=' + encodeURIComponent('Didja Spin 107 card ' + current.id) +
-      '&body=' + encodeURIComponent('Card ' + current.id + ': ' + current.q + '\n\nWhat looks wrong:\n');
-    $('whyBox').hidden = false;
-    /* no "Got it" step: just flick again */
-    $('hub').removeAttribute('aria-disabled');
-    sr(correct ? 'Correct. ' + current.why : 'Not quite. Answer: ' + current.a + '. ' + current.why);
-    if (correct) { buzz([10, 40, 10]); if (S.sound) Sound.correct(); }
-    paintStats();
-    requestAnimationFrame(revealWhy);
+    wheel.classList.remove('landed');
+    showRest();
     $('hub').focus({ preventScroll: true });
   }
-  function revealWhy() {
-    const w = $('whyBox');
-    const top = w.offsetTop, bottom = top + w.offsetHeight, view = trayScroll.clientHeight;
-    let target = trayScroll.scrollTop;
-    if (bottom > target + view) target = bottom - view + 4;
-    if (top < target) target = Math.max(0, top - 8);
-    if (target !== trayScroll.scrollTop) trayScroll.scrollTo({ top: target, behavior: reducedMotion.matches ? 'auto' : 'smooth' });
-  }
-  $('nextBtn').addEventListener('click', () => { clearLanding(); $('hub').focus({ preventScroll: true }); });   /* back to the full-size prop; you spin it yourself */
+  $('gotBtn').addEventListener('click', () => mark('g'));
+  $('againBtn').addEventListener('click', () => mark('a'));
 
-  function knownCount(key) { return (key ? CAT[key].cards : Object.values(DECK).flat()).filter((r) => isKnown(r[0])).length; }
   function paintStats() {
     const today = S.days[dayKey(0)] || 0;
-    const run = today ? streakFrom(0) : streakFrom(1);
-    let line = knownCount() + ' of ' + TOTAL + ' known';
-    if (run >= 2) line += ' · ' + run + '-day streak';
-    $('stats').textContent = line;
+    $('todayCount').textContent = today + (today === 1 ? ' spin today' : ' spins today');
+    let line = '';
+    if (today) {
+      const run = streakFrom(0);
+      line = run >= 2 ? run + '-day streak' : 'Day 1 of a new streak';
+    } else {
+      const run = streakFrom(1);
+      if (run >= 1) line = 'Spin to keep your ' + run + '-day streak';
+    }
+    $('streak').textContent = line;
   }
 
-  /* ---------- Small helpers ---------- */
-  function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
-  function button(cls, text, onClick, label) { const b = el('button', cls, text); b.type = 'button'; if (label) b.setAttribute('aria-label', label); b.addEventListener('click', onClick); return b; }
-  function dotFor(key) { const d = el('span', 'dot'); d.style.setProperty('--chip', colorOf(key)); return d; }
+  /* ---------- Small builders for the panels ---------- */
+  function el(tag, cls, text) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function button(cls, text, onClick, label) {
+    const b = el('button', cls, text);
+    b.type = 'button';
+    if (label) b.setAttribute('aria-label', label);
+    b.addEventListener('click', onClick);
+    return b;
+  }
+  function dotFor(key) {
+    const d = el('span', 'dot');
+    d.style.setProperty('--chip', colorOf(key));
+    return d;
+  }
+  function say(node, text, ok) {
+    node.textContent = text || '';
+    node.classList.toggle('ok', !!ok);
+  }
+  function show(panel, focusEl) {
+    panel.hidden = false;
+    panel.scrollTop = 0;
+    if (focusEl) focusEl.focus({ preventScroll: true });
+  }
+
+  /* ---------- Learned ---------- */
+  const totalCards = () => Object.keys(BY_ID).length;
+  function learnedCount() { return S.learned.filter((id) => BY_ID[id]).length; }
+  function paintLearnedCount() {
+    const n = learnedCount(), total = totalCards();
+    $('learnedCount').textContent = n + ' of ' + total + ' learned';
+    $('learnedSummary').textContent = n + ' of ' + total + ' cards learned.';
+  }
+  function paintLearnedButton() {
+    const b = $('learnedBtn');
+    b.disabled = false;
+    b.classList.remove('done');
+    b.setAttribute('aria-pressed', 'false');
+    $('learnedLabel').textContent = 'Learned it';
+  }
+  $('learnedBtn').addEventListener('click', () => {
+    if (!current) return;
+    const card = current;
+    if (S.learned.indexOf(card.id) < 0) S.learned.push(card.id);
+    save();
+    paintLearnedCount();
+    const b = $('learnedBtn');
+    b.disabled = true;
+    b.classList.add('done');
+    b.setAttribute('aria-pressed', 'true');
+    $('learnedLabel').textContent = 'Learned ✓';
+    sr('Learned. ' + learnedCount() + ' of ' + totalCards() + ' learned.');
+    clearTimeout(learnTimer);
+    learnTimer = setTimeout(() => {
+      if (current !== card) return;   /* another mark or a new card got there first */
+      wheel.classList.remove('landed');
+      showRest();
+      $('hub').focus({ preventScroll: true });
+    }, 700);
+  });
+  $('resetLearnedBtn').addEventListener('click', () => {
+    if (!S.learned.length) { say($('catsMsg'), 'No learned marks to clear yet.'); return; }
+    S.learned = [];
+    save();
+    paintLearnedCount();
+    say($('catsMsg'), 'Learned marks cleared. Every card is back on the spinner.', true);
+  });
+
+  /* ---------- Categories ---------- */
+  const catsPanel = $('cats');
+  function applyCats() {          /* after any change to categories */
+    refreshCats();
+    save();
+    halt();
+    angle = 0;
+    tickSlot = 0;
+    buildRing();
+    render();
+    clearLanding();
+    paintLearnedCount();
+  }
+  function paintCats(focusKey) {
+    const list = $('catsList');
+    list.textContent = '';
+    ALL.forEach((c) => {
+      const li = el('li', 'cat-row');
+      const info = el('div', 'cat-info');
+      const n = c.cards.length;
+      info.append(
+        el('strong', '', c.label),
+        el('span', '', n === 0 ? 'No cards yet. Add one to use it.'
+          : n + (n === 1 ? ' card' : ' cards') + (c.builtin ? '' : ', made by you'))
+      );
+      li.append(dotFor(c.key), info);
+      const sw = button('switch', '', () => toggleCat(c.key), c.label + ' on the wheel');
+      sw.setAttribute('role', 'switch');
+      sw.setAttribute('aria-checked', WHEEL.indexOf(c) >= 0 ? 'true' : 'false');
+      sw.setAttribute('data-switch', c.key);
+      sw.disabled = n === 0;
+      li.append(sw);
+      list.appendChild(li);
+    });
+    if (focusKey) {
+      const f = list.querySelector('[data-switch="' + focusKey + '"]');
+      if (f) f.focus({ preventScroll: true });
+    }
+  }
+  function toggleCat(key) {
+    const on = WHEEL.some((c) => c.key === key);
+    if (on && WHEEL.length <= MIN_WEDGES) {
+      say($('catsMsg'), 'Keep at least two on the wheel.');
+    } else if (!on && WHEEL.length >= MAX_WEDGES) {
+      say($('catsMsg'), 'The wheel holds eight. Switch one off first.');
+    } else {
+      if (on) S.off.push(key);
+      else S.off = S.off.filter((k) => k !== key);
+      say($('catsMsg'), '');
+      applyCats();
+    }
+    paintCats(key);
+  }
+  function openCats() {
+    halt();
+    say($('catsMsg'), '');
+    paintCats();
+    paintLearnedCount();
+    show(catsPanel, $('catsClose'));
+  }
+  function closeCats() {
+    catsPanel.hidden = true;
+    $('catsBtn').focus({ preventScroll: true });
+  }
+  $('catsBtn').addEventListener('click', openCats);
+  $('catsClose').addEventListener('click', closeCats);
+  /* ---------- Practice test (carried over from Didja Spin 107) ----------
+     Same pool, same rules: the card's own 3 options, shuffled. Quick 20 has
+     no clock; Full 60 gives you 2 hours and needs 70% to pass. Answers feed
+     the spinner through its own marks: a miss is "Again later" (weighted to
+     come back soon), a hit is "Got it". */
+  const TBY_ID = {};
+  Object.keys(DECK107).forEach((k) => {
+    (DECK107[k] || []).forEach((r) => {
+      TBY_ID[r[0]] = { id: r[0], cat: k, q: r[1], a: r[2], why: r[3], d: [r[4], r[5]], src: r[6] };
+    });
+  });
+  const TFULL = {};
+  TOPICS107.forEach((t) => { TFULL[t.key] = t.full; });
+  const testPanel = $('test');
+  let T = null, clockTimer = 0;
+  const TKEY = STORE_KEY + '-test';
+  const lsGet = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* ignore */ } };
+  const lsDel = (k) => { try { localStorage.removeItem(k); } catch (e) { /* ignore */ } };
+  const isObjT = (o) => o && typeof o === 'object' && !Array.isArray(o);
+  const shuffleT = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const tmp = a[i]; a[i] = a[j]; a[j] = tmp; } return a; };
   const srEl = $('sr');
   function sr(text) { srEl.textContent = ''; setTimeout(() => { srEl.textContent = text; }, 30); }
   const toastEl = $('toast');
@@ -1405,154 +1597,17 @@ const DECK = {
     toastT = setTimeout(() => { toastEl.hidden = true; }, ms || (onTap ? 8000 : 2600));
   }
   toastEl.addEventListener('click', () => { toastEl.hidden = true; if (toastTap) toastTap(); });
-
-  /* ---------- Keep ---------- */
-  function paintKeepButton() {
-    const kept = current && S.keep.indexOf(current.id) >= 0;
-    $('keepBtn').setAttribute('aria-pressed', kept ? 'true' : 'false');
-    $('keepLabel').textContent = kept ? 'Kept' : 'Keep';
-  }
-  $('keepBtn').addEventListener('click', () => {
-    if (!current) return;
-    const i = S.keep.indexOf(current.id);
-    if (i >= 0) S.keep.splice(i, 1); else S.keep.push(current.id);
-    save();
-    paintKeepButton();
-  });
-
-  /* ---------- Panels: Back closes them, and the app behind goes inert ---------- */
-  let openP = null, openerBtn = null;
-  function openPanel(panel, focusEl, opener) {
-    if (openP) return;
-    halt();
-    clearLanding();
-    panel.hidden = false;
-    panel.scrollTop = 0;
-    app.inert = true;
-    openP = panel; openerBtn = opener;
-    history.pushState({ panel: panel.id }, '');
-    if (focusEl) focusEl.focus({ preventScroll: true });
-  }
-  function hidePanel() {
-    if (!openP) return;
-    openP.hidden = true;
-    app.inert = false;
-    openP = null;
-    if (openerBtn) openerBtn.focus({ preventScroll: true });
-  }
-  function closePanel() {
-    if (!openP) return;
-    if (history.state && history.state.panel) history.back();   /* popstate does the hiding */
-    else hidePanel();
-  }
-  addEventListener('popstate', () => { if (openP) hidePanel(); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePanel(); });
-
-  /* ---------- Topics panel ---------- */
-  const catsPanel = $('cats');
-  function paintCats(focusKey) {
-    const list = $('catsList');
-    list.textContent = '';
-    CATS.forEach((c) => {
-      const li = el('li', 'cat-row');
-      const info = el('div', 'cat-info');
-      const tries = S.ans[c.key] || 0, hits = S.ok[c.key] || 0;
-      const acc = tries ? Math.round(hits / tries * 100) + '% right (' + hits + '/' + tries + ')' : 'not tried yet';
-      info.append(el('strong', '', c.full), el('span', '', c.cards.length + ' questions · ' + knownCount(c.key) + ' known · ' + acc));
-      const sw = button('switch', '', () => toggleCat(c.key), c.full + ' on the wheel');
-      sw.setAttribute('role', 'switch');
-      sw.setAttribute('aria-checked', WHEEL.indexOf(c) >= 0 ? 'true' : 'false');
-      sw.setAttribute('data-switch', c.key);
-      li.append(dotFor(c.key), info, sw);
-      list.appendChild(li);
-    });
-    $('hapticsSw').setAttribute('aria-checked', S.haptics ? 'true' : 'false');
-    paintKept();
-    if (focusKey) { const f = list.querySelector('[data-switch="' + focusKey + '"]'); if (f) f.focus({ preventScroll: true }); }
-  }
-  function paintKept() {
-    const list = $('keptList');
-    list.textContent = '';
-    $('keptN').textContent = S.keep.length;
-    $('keptEmpty').hidden = S.keep.length > 0;
-    S.keep.slice().reverse().forEach((id) => {
-      const card = BY_ID[id];
-      if (!card) return;
-      const li = el('li', 'kept');
-      const h = el('h3', 'kept-title');
-      h.append(dotFor(card.cat), document.createTextNode(card.q));
-      const rm = button('link-btn', 'Remove', () => { S.keep = S.keep.filter((k) => k !== id); save(); paintKept(); paintKeepButton(); $('keptBox').focus(); }, 'Remove from kept cards');
-      li.append(h, rm, el('p', 'ans', card.a));
-      if (card.why) li.append(el('p', 'why', card.why));
-      list.appendChild(li);
-    });
-  }
-  function toggleCat(key) {
-    const on = WHEEL.some((c) => c.key === key);
-    if (on && WHEEL.length <= 2) $('catsMsg').textContent = 'Keep at least two on the wheel.';
-    else {
-      if (on) S.off.push(key); else S.off = S.off.filter((k) => k !== key);
-      $('catsMsg').textContent = '';
-      refreshCats(); save(); halt(); angle = 0; tickSlot = 0; buildRing(); render(); clearLanding();
-    }
-    paintCats(key);
-  }
-  $('hapticsSw').addEventListener('click', () => { S.haptics = !S.haptics; save(); paintCats(); if (S.haptics) buzz(20); $('hapticsSw').focus(); });
-  let resetArmed = 0;
-  $('resetBtn').addEventListener('click', () => {
-    const now = Date.now();
-    if (now - resetArmed > 5000) { resetArmed = now; $('resetBtn').textContent = 'Tap again to clear all progress and kept cards'; return; }
-    resetArmed = 0;
-    const keepPrefs = { sound: S.sound, vol: S.vol, sstyle: S.sstyle, haptics: S.haptics, off: S.off, pulsed: true, toldSound: S.toldSound };
-    S = Object.assign(defaults(), keepPrefs);
-    save();
-    lsDel(KEY + '-last'); lsDel(KEY + '-test'); T = null;
-    $('resetBtn').textContent = 'Reset my progress';
-    paintCats(); paintStats(); paintKeepButton();
-    $('catsMsg').textContent = 'Progress cleared.';
-  });
-  const encode = (o) => btoa(unescape(encodeURIComponent(JSON.stringify(o))));
-  const decode = (s) => JSON.parse(decodeURIComponent(escape(atob(s.trim()))));
-  $('copyBtn').addEventListener('click', async () => {
-    const code = encode(S);
-    try { await navigator.clipboard.writeText(code); $('catsMsg').textContent = 'Progress copied. Paste it somewhere safe.'; }
-    catch (e) { prompt('Copy this progress code:', code); }
-  });
-  $('pasteBtn').addEventListener('click', () => {
-    const code = prompt('Paste your progress code:');
-    if (!code) return;
-    try {
-      const o = decode(code);
-      if (!isObj(o) || !isObj(o.cards)) throw new Error('bad');
-      lsSet(KEY + '-backup', JSON.stringify(S));
-      S = normalize(o); save(); refreshCats(); buildRing(); paintCats(); paintStats();
-      $('catsMsg').textContent = 'Progress restored.';
-    } catch (e) { $('catsMsg').textContent = "That code didn't work. Nothing was changed."; }
-  });
-  $('catsBtn').addEventListener('click', () => {
-    $('catsMsg').textContent = '';
-    $('resetBtn').textContent = 'Reset my progress';
-    resetArmed = 0;
-    paintCats();
-    openPanel(catsPanel, $('catsClose'), $('catsBtn'));
-  });
-  $('catsClose').addEventListener('click', closePanel);
-
-  /* ---------- Practice test: the card's own 3 options, shuffled ---------- */
-  const testPanel = $('test');
-  let T = null, clockTimer = 0;
-  const TKEY = KEY + '-test';
   function saveTest() { if (T) lsSet(TKEY, JSON.stringify(T)); else lsDel(TKEY); }
   function loadTest() {
     try {
       const o = JSON.parse(lsGet(TKEY) || 'null');
-      if (isObj(o) && Array.isArray(o.ids) && o.ids.every((id) => BY_ID[id]) && Array.isArray(o.opts) && Array.isArray(o.picks)) return o;
+      if (isObjT(o) && Array.isArray(o.ids) && o.ids.every((id) => TBY_ID[id]) && Array.isArray(o.opts) && Array.isArray(o.picks)) return o;
     } catch (e) { /* ignore */ }
     return null;
   }
   function buildTest(count) {
-    const ids = shuffle(Object.keys(BY_ID)).slice(0, count);
-    return { ids, opts: ids.map((id) => shuffle([BY_ID[id].a].concat(BY_ID[id].d))), picks: ids.map(() => -1), i: 0, ends: count >= 60 ? Date.now() + 120 * 60000 : 0 };
+    const ids = shuffleT(Object.keys(TBY_ID)).slice(0, count);
+    return { ids, opts: ids.map((id) => shuffleT([TBY_ID[id].a].concat(TBY_ID[id].d))), picks: ids.map(() => -1), i: 0, ends: count >= 60 ? Date.now() + 120 * 60000 : 0 };
   }
   function fmtClock(ms) {
     const s = Math.max(0, Math.round(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
@@ -1570,7 +1625,7 @@ const DECK = {
   }
   function testView(which) { $('testStart').hidden = which !== 'start'; $('testRun').hidden = which !== 'run'; $('testDone').hidden = which !== 'done'; }
   function openTest() {
-    const lastScore = lsGet(KEY + '-last') || '';
+    const lastScore = lsGet(STORE_KEY + '-last') || '';
     $('lastScore').textContent = lastScore ? 'Last test: ' + lastScore : '';
     let focus = $('testClose');
     if (T) testView('run');
@@ -1580,7 +1635,11 @@ const DECK = {
       $('resumeBtn').hidden = !saved;
       if (saved) $('resumeBtn').textContent = 'Resume test (' + (saved.i + 1) + ' of ' + saved.ids.length + ')';
     }
-    openPanel(testPanel, focus, $('testBtn'));
+    show(testPanel, focus);
+  }
+  function closeTest() {
+    testPanel.hidden = true;
+    $('testBtn').focus({ preventScroll: true });
   }
   function beginTest(t) {
     T = t;
@@ -1591,10 +1650,10 @@ const DECK = {
     paintQ();
   }
   function paintQ() {
-    const id = T.ids[T.i], card = BY_ID[id], opts = T.opts[T.i], pickI = T.picks[T.i];
+    const id = T.ids[T.i], card = TBY_ID[id], opts = T.opts[T.i], pickI = T.picks[T.i];
     $('tNum').textContent = (T.i + 1) + ' of ' + T.ids.length;
     $('tBar').style.width = (T.i / T.ids.length * 100) + '%';
-    $('tCat').textContent = CAT[card.cat].full;
+    $('tCat').textContent = TFULL[card.cat];
     $('tCat').style.setProperty('--chip', colorOf(card.cat));
     $('tQ').textContent = card.q;
     $('tWhyBox').hidden = true;
@@ -1615,7 +1674,7 @@ const DECK = {
     if (first) first.focus({ preventScroll: true });
   }
   function showPick(i, fresh) {
-    const card = BY_ID[T.ids[T.i]], opts = T.opts[T.i], right = opts.indexOf(card.a);
+    const card = TBY_ID[T.ids[T.i]], opts = T.opts[T.i], right = opts.indexOf(card.a);
     $('tOpts').querySelectorAll('button').forEach((b, k) => {
       b.disabled = true;
       if (k === right) b.classList.add('right'); else if (k === i) b.classList.add('wrong');
@@ -1630,8 +1689,8 @@ const DECK = {
   function choose(i) {
     if (!T || T.picks[T.i] >= 0) return;
     T.picks[T.i] = i;
-    const card = BY_ID[T.ids[T.i]];
-    record(card, T.opts[T.i][i] === card.a);
+    const card = TBY_ID[T.ids[T.i]];
+    S.cards[card.id] = { s: T.opts[T.i][i] === card.a ? 'g' : 'a', t: S.n };
     save(); saveTest();
     showPick(i, true);
   }
@@ -1641,7 +1700,7 @@ const DECK = {
     clearInterval(clockTimer);
     const total = T.ids.length;
     let right = 0, done = 0;
-    T.ids.forEach((id, k) => { if (T.picks[k] >= 0) { done++; if (T.opts[k][T.picks[k]] === BY_ID[id].a) right++; } });
+    T.ids.forEach((id, k) => { if (T.picks[k] >= 0) { done++; if (T.opts[k][T.picks[k]] === TBY_ID[id].a) right++; } });
     const pct = Math.round(right / total * 100), pass = pct >= 70;
     $('tScore').textContent = pct + '%';
     $('tVerdict').textContent = pass ? 'Passing score' : 'Not passing yet';
@@ -1649,15 +1708,15 @@ const DECK = {
     $('tSub').textContent = right + ' of ' + total + ' correct' + (done < total ? ' (' + (total - done) + ' left blank count as wrong)' : '') + '. You need ' + Math.ceil(total * 0.7) + ' to pass.';
     const list = $('tTopics');
     list.textContent = '';
-    CATS.forEach((c) => {
-      const ks = T.ids.map((id, k) => k).filter((k) => BY_ID[T.ids[k]].cat === c.key);
+    TOPICS107.forEach((c) => {
+      const ks = T.ids.map((id, k) => k).filter((k) => TBY_ID[T.ids[k]].cat === c.key);
       if (!ks.length) return;
-      const ok = ks.filter((k) => T.picks[k] >= 0 && T.opts[k][T.picks[k]] === BY_ID[T.ids[k]].a).length;
+      const ok = ks.filter((k) => T.picks[k] >= 0 && T.opts[k][T.picks[k]] === TBY_ID[T.ids[k]].a).length;
       const li = el('li', 'topic-row');
-      li.append(dotFor(c.key), el('span', '', c.full), el('strong', '', ok + '/' + ks.length));
+      li.append(dotFor(c.key), el('span', '', TFULL[c.key]), el('strong', '', ok + '/' + ks.length));
       list.appendChild(li);
     });
-    lsSet(KEY + '-last', pct + '% (' + right + '/' + total + ') on ' + new Date().toLocaleDateString());
+    lsSet(STORE_KEY + '-last', pct + '% (' + right + '/' + total + ') on ' + new Date().toLocaleDateString());
     T = null;
     saveTest();
     testView('done');
@@ -1669,80 +1728,52 @@ const DECK = {
   $('start60').addEventListener('click', () => beginTest(buildTest(60)));
   $('resumeBtn').addEventListener('click', () => { const t = loadTest(); if (t) beginTest(t); });
   $('tAgain').addEventListener('click', () => { testView('start'); $('resumeBtn').hidden = true; $('start60').focus({ preventScroll: true }); });
-  $('tDone').addEventListener('click', () => { testView('start'); $('resumeBtn').hidden = true; closePanel(); });
-  $('testClose').addEventListener('click', closePanel);
+  $('tDone').addEventListener('click', () => { testView('start'); $('resumeBtn').hidden = true; closeTest(); });
+  $('testClose').addEventListener('click', closeTest);
   $('testBtn').addEventListener('click', openTest);
 
-  /* ---------- Sound toggle ---------- */
+  /* ---------- Escape closes any open panel, same as its Back button ---------- */
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (!catsPanel.hidden) closeCats();
+    else if (!testPanel.hidden) closeTest();
+  });
+
+  /* ---------- Sound switch ---------- */
   const soundBtn = $('soundBtn');
-  function paintSound() { soundBtn.setAttribute('aria-pressed', S.sound ? 'true' : 'false'); }
+  function paintSound() {
+    soundBtn.setAttribute('aria-pressed', S.sound ? 'true' : 'false');
+    soundBtn.setAttribute('aria-label', S.sound ? 'Sound is on. Turn sound off' : 'Sound is off. Turn sound on');
+  }
   soundBtn.addEventListener('click', () => {
     S.sound = !S.sound;
     save();
     paintSound();
-    if (S.sound) { if (Sound.ctx()) Sound.chime(); } else Sound.kill();
+    if (S.sound && audio()) blip(990, ac.currentTime, 0.12, 0.1, 'sine');
   });
-
-  /* ---------- Going to the background: no sound, no stray spin ---------- */
-  function onHide() {
-    if (drag) { clearTimeout(drag.lp); drag = null; box.classList.remove('pressed'); }
-    if (mode !== 'idle') {
-      const wasDeal = deal;
-      stopLoop();
-      const st = stepDeg();
-      angle = Math.round(angle / st) * st; vel = 0; mode = 'idle'; deal = false;
-      render(); normalizeAngle();
-      if (wasDeal) land();
-    }
-    Sound.kill();
-  }
-  document.addEventListener('visibilitychange', () => { if (document.hidden) onHide(); });
-  addEventListener('pagehide', onHide);
 
   /* ---------- Start ---------- */
   refreshCats();
   buildRing();
   paintSound();
+  paintLearnedCount();
+  paintStats();
   showRest();
+  tickSlot = 0;
   render();
-  if (!S.pulsed) {
-    S.pulsed = true; save();
-    propL.classList.add('pulse');
-    setTimeout(() => propL.classList.remove('pulse'), 1400);
-  }
   if (!reducedMotion.matches) {
+    /* one small wobble on arrival, so it reads as something you can flick */
     angle = -stepDeg() * 0.3;
     tickSlot = Math.floor((angle + stepDeg() / 2) / stepDeg());
     notchAt = 0;
     mode = 'notch';
     run();
   }
-
-  /* Read-only hooks for automated checks. */
-  window.__toast = toast;
-  window.__didja = {
-    build: BUILD,
-    state: () => ({ mode, angle, vel, current: current && current.id, answer: current && current.a, answered, lock, known: knownCount(), panel: openP && openP.id }),
-    audio: () => (Sound.ac ? Sound.ac.state : 'none'),
-    motor: () => !!Sound.motor,
-    profile: SOUND_PROFILE,
-    deal: (id) => { if (!BY_ID[id] || openP) return false; halt(); clearLanding(); showCard(BY_ID[id]); return true; }
-  };
 })();
 </script>
-
 <script>
-/* Offline support and content-update notices. */
 if ('serviceWorker' in navigator) {
-  addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((reg) => {
-      document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
-    }).catch(() => { /* offline support unavailable */ });
-  });
-  navigator.serviceWorker.addEventListener('message', (e) => {
-    if (!e.data || e.data.type !== 'content-updated') return;
-    if (window.__toast) window.__toast('Questions updated. Tap to reload.', () => location.reload(), 10000);
-  });
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
 }
 </script>
 </body>
