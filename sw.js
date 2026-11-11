@@ -1,5 +1,5 @@
 // Didja Spin service worker. Bump VERSION on every release so phones pick up the update.
-const VERSION = 'didja-spin-v2';
+const VERSION = 'didja-spin-v3';
 const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './icon-maskable-512.png'];
 
 self.addEventListener('install', (e) => {
