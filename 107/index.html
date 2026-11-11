@@ -219,16 +219,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
   opacity: var(--shadow-strength);
   transition: transform 0.16s ease-out;
 }
-.body-shadow line { stroke: var(--shadow); }
-.body-shadow circle { fill: var(--shadow); }
+.body-shadow path, .body-shadow circle { fill: var(--shadow); stroke: var(--shadow); }
 .press-wrap { transition: transform 0.2s cubic-bezier(0.3, 1.8, 0.5, 1); }
 .pressed .shadow-wrap { transform: translate(0, 3px); }
 .pressed .press-wrap { transform: scale(0.965); }
 
-.body-edge line { stroke: var(--spinner-edge); }
-.body-edge circle { fill: var(--spinner-edge); }
-.body-fill line { stroke: var(--spinner); }
-.body-fill circle { fill: var(--spinner); }
+.body-edge path, .body-edge circle { fill: var(--spinner-edge); stroke: var(--spinner-edge); }
+.body-fill path, .body-fill circle { fill: var(--spinner); stroke: none; }
 .race { fill: var(--mat); stroke: var(--bearing); stroke-width: 5; }
 .ball { fill: var(--bearing); }
 .glint { fill: none; stroke: var(--spinner-edge); stroke-width: 2.5; stroke-linecap: round; opacity: 0.7; }
@@ -1024,15 +1021,15 @@ TOPICS107.forEach((t) => {
   }
 
   /* The spinner: three lobes on a hub. The lobe with the pointer is the one that counts. */
-  const LOBES = [-90, 30, 150], LOBE_D = 92, LOBE_R = 44, ARM_W = 60, HUB_R = 50;
+  const LOBES = [-90, 30, 150], LOBE_D = 100, LOBE_R = 44, ARM_W = 60, HUB_R = 50;
+  /* Each blade is drawn pointing right, then turned to its angle: a swept, tapered prop blade. */
+  const BLADE = 'M14 -20 C50 -48 108 -52 138 -32 C152 -22 150 -4 136 6 C104 28 50 30 14 22 Z';
   function bodyLayer(cls, grow, parent) {
     const g = svg('g', { class: cls }, parent);
     LOBES.forEach((a) => {
-      const x = LOBE_D * Math.cos(rad(a)), y = LOBE_D * Math.sin(rad(a));
-      svg('line', { x1: 0, y1: 0, x2: x.toFixed(2), y2: y.toFixed(2), 'stroke-width': ARM_W + grow * 2, 'stroke-linecap': 'round' }, g);
-      svg('circle', { cx: x.toFixed(2), cy: y.toFixed(2), r: LOBE_R + grow }, g);
+      svg('path', { d: BLADE, transform: 'rotate(' + a + ') scale(0.95)', 'stroke-width': grow * 2 / 0.95, 'stroke-linejoin': 'round' }, g);
     });
-    svg('circle', { cx: 0, cy: 0, r: HUB_R + grow }, g);
+    svg('circle', { cx: 0, cy: 0, r: 33 + grow }, g);
   }
   bodyLayer('body-shadow', 3, shadowRot);
   const spinSil = svg('g', { id: 'spinSil' }, spinBody);
@@ -1040,17 +1037,12 @@ TOPICS107.forEach((t) => {
   bodyLayer('body-fill', 0, spinSil);
   svg('polygon', { class: 'pointer', points: '0,-150 -11,-131 11,-131' }, spinBody);
   LOBES.forEach((a, i) => {
-    const cx = LOBE_D * Math.cos(rad(a)), cy = LOBE_D * Math.sin(rad(a));
     const marked = i === 0 ? ' marked' : '';
-    svg('circle', { class: 'race' + marked, cx: cx.toFixed(2), cy: cy.toFixed(2), r: 25 }, spinBody);
-    svg('circle', { class: 'ball' + marked, cx: cx.toFixed(2), cy: cy.toFixed(2), r: 9 }, spinBody);
-    /* a small highlight on each lobe so the turning reads at a glance */
-    const g0 = a - 62, g1 = a - 28, gr = 36;
-    svg('path', {
-      class: 'glint',
-      d: 'M' + (cx + gr * Math.cos(rad(g0))).toFixed(2) + ' ' + (cy + gr * Math.sin(rad(g0))).toFixed(2) +
-         ' A' + gr + ' ' + gr + ' 0 0 1 ' + (cx + gr * Math.cos(rad(g1))).toFixed(2) + ' ' + (cy + gr * Math.sin(rad(g1))).toFixed(2)
-    }, spinBody);
+    const mx = (LOBE_D + 4) * Math.cos(rad(a)) - 4 * Math.sin(rad(a)), my = (LOBE_D + 4) * Math.sin(rad(a)) + 4 * Math.cos(rad(a));
+    svg('circle', { class: 'race' + marked, cx: mx.toFixed(2), cy: my.toFixed(2), r: 15 }, spinBody);
+    svg('circle', { class: 'ball' + marked, cx: mx.toFixed(2), cy: my.toFixed(2), r: 6 }, spinBody);
+    /* a highlight along each blade's leading edge so the turning reads at a glance */
+    svg('path', { class: 'glint', d: 'M40 -24 C66 -32 96 -34 118 -28', transform: 'rotate(' + a + ') scale(0.95)' }, spinBody);
   });
   /* Motion blur, shown only at speed: faint trailing copies of the body, plus a
      streak behind each bearing and behind the pointer. */
