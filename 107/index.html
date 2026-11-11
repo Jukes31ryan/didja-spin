@@ -192,26 +192,41 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .wheel-box.pressed { cursor: grabbing; }
 .wheel { display: block; width: 100%; height: 100%; overflow: visible; }
 
-.wedge {
+.topic-chip {
   cursor: pointer;
   outline: none;
-  transition: opacity 0.25s, transform 0.3s cubic-bezier(0.3, 1.7, 0.5, 1);
+  transition: opacity 0.25s;
 }
-.wedge:focus-visible { stroke: var(--ink); stroke-width: 5; }
-.landed .wedge { opacity: 0.38; }
-.landed .wedge.lit { opacity: 1; transform: scale(1.035); }
-.wedge-label {
+.topic-chip-bg {
+  stroke: rgba(20, 26, 51, 0.28);
+  stroke-width: 1.5;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.3s cubic-bezier(0.3, 1.7, 0.5, 1), stroke 0.2s, stroke-width 0.2s;
+}
+.topic-label {
   font-family: var(--font-display);
-  font-size: 19px;
+  font-size: 16.5px;
   font-weight: 700;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
   fill: var(--on-color);
   pointer-events: none;
-  transition: opacity 0.25s, transform 0.3s cubic-bezier(0.3, 1.7, 0.5, 1);
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.3s cubic-bezier(0.3, 1.7, 0.5, 1);
 }
-.wedge-label.small { font-size: 15.5px; letter-spacing: 0.01em; }
-.landed .wedge-label { opacity: 0.45; }
-.landed .wedge-label.lit { opacity: 1; transform: scale(1.035); }
+.topic-chip.off { opacity: 0.34; pointer-events: none; cursor: default; }
+.topic-chip.off .topic-label { fill: var(--ink-soft); }
+.topic-chip.locked-out { opacity: 0.38; }
+.topic-chip:focus-visible .topic-chip-bg { stroke: var(--ink); stroke-width: 3.5; }
+.landed .topic-chip { opacity: 0.32; }
+.landed .topic-chip.lit { opacity: 1; }
+.landed .topic-chip.lit .topic-chip-bg {
+  transform: scale(1.14);
+  stroke: var(--ink);
+  stroke-width: 3.5;
+}
+.landed .topic-chip.lit .topic-label { transform: scale(1.14); }
 
 /* The spinner sits a little above the mat, and sinks when a finger holds it. */
 .shadow-wrap {
@@ -219,35 +234,59 @@ button { font: inherit; color: inherit; cursor: pointer; }
   opacity: var(--shadow-strength);
   transition: transform 0.16s ease-out;
 }
-.body-shadow path, .body-shadow circle { fill: var(--shadow); stroke: var(--shadow); }
+.body-shadow line { stroke: var(--shadow); }
+.body-shadow circle { fill: var(--shadow); }
 .press-wrap { transition: transform 0.2s cubic-bezier(0.3, 1.8, 0.5, 1); }
 .pressed .shadow-wrap { transform: translate(0, 3px); }
 .pressed .press-wrap { transform: scale(0.965); }
 
-.body-edge path, .body-edge circle { fill: var(--spinner-edge); stroke: var(--spinner-edge); }
-.body-fill path, .body-fill circle { fill: var(--spinner); stroke: none; }
-.race { fill: var(--mat); stroke: var(--bearing); stroke-width: 5; }
-.ball { fill: var(--bearing); }
-.glint { fill: none; stroke: var(--spinner-edge); stroke-width: 2.5; stroke-linecap: round; opacity: 0.7; }
-.streak { fill: none; stroke: var(--bearing); stroke-width: 42; stroke-linecap: round; }
-.streak.marked { stroke: var(--ink); }
-.streak.tip { stroke: var(--ink); stroke-width: 15; }
-.race.marked { fill: var(--mark, var(--mat)); stroke: var(--ink); }
-.ball.marked { fill: var(--ink); }
-.pointer { fill: var(--ink); }
+.body-edge line { stroke: var(--spinner-edge); }
+.body-edge circle { fill: var(--spinner-edge); }
+.body-fill line { stroke: var(--spinner); }
+.body-fill circle { fill: var(--spinner); }
+
+/* Drone propeller: broad charcoal blades, red tips, plain hub. */
+.body-shadow .prop-blade,
+.body-shadow .prop-tip,
+.body-shadow .prop-mount { fill: var(--shadow); stroke: none; }
+.body-shadow .prop-sheen { fill: transparent; stroke: none; }
+.body-shadow .prop-hub-outer,
+.body-shadow .prop-hub-cap,
+.body-shadow .prop-hub-dot { fill: var(--shadow); stroke: none; }
+.body-edge .prop-blade,
+.body-edge .prop-tip,
+.body-edge .prop-mount,
+.body-edge .prop-hub-outer,
+.body-edge .prop-hub-cap,
+.body-edge .prop-hub-dot { fill: var(--spinner-edge); stroke: none; }
+.body-edge .prop-sheen { fill: transparent; stroke: none; }
+.body-fill .prop-blade { fill: #2b3037; stroke: #12151a; stroke-width: 1.6; }
+.body-fill .prop-tip { fill: #e23a2e; stroke: #8f1d16; stroke-width: 1; }
+.body-fill .prop-sheen { fill: rgba(255, 255, 255, 0.15); stroke: none; }
+.body-fill .prop-mount { fill: #20242a; stroke: #5c646d; stroke-width: 1; }
+.body-fill .prop-hub-outer { fill: #2e343b; stroke: #7a838d; stroke-width: 2; }
+.body-fill .prop-hub-cap { fill: #59636d; stroke: #22262b; stroke-width: 1.5; }
+.body-fill .prop-hub-dot { fill: #171a1e; stroke: none; }
+
+.streak { fill: none; stroke-linecap: round; }
+.streak.body { stroke: #252a30; stroke-width: 54; }
+.streak.tip { stroke: #d9362b; stroke-width: 15; }
 
 .hub {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 20%;
+  width: 15.5%;
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
   padding: 0;
-  border: 0;
+  border: 2px solid #78818b;
   border-radius: 50%;
-  background: var(--ink);
-  color: var(--mat);
+  background: radial-gradient(circle at 35% 30%, #626b74, #30363d 58%, #20242a);
+  box-shadow: inset 0 2px 5px rgba(255, 255, 255, 0.25), inset 0 -3px 6px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.25);
+  /* The cap itself is plain, like the prop in the photo; the button's
+     "Spin" text stays available to assistive tech but is not printed on it. */
+  color: transparent;
   font-family: var(--font-display);
   font-weight: 800;
   font-size: max(0.875rem, 5cqw);
@@ -456,7 +495,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 @media (prefers-reduced-motion: reduce) {
   .nugget { animation: none; }
-  .wedge, .wedge-label, .press-wrap, .shadow-wrap, .hub, .switch, .switch::after { transition: none; }
+  .topic-chip-bg, .topic-label, .press-wrap, .shadow-wrap, .hub, .switch, .switch::after { transition: none; }
 }
 /* Practice test (carried over from Didja Spin 107) + test helpers */
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -524,7 +563,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
   <main class="stage">
     <div id="wheelBox" class="wheel-box">
-      <svg id="wheel" class="wheel" viewBox="-205 -205 410 410" aria-label="Spinner with a ring of categories around it">
+      <svg id="wheel" class="wheel" viewBox="-205 -205 410 410" aria-label="Drone propeller spinner with category labels around it">
         <defs id="wheelDefs"></defs>
         <g id="ring"></g>
         <g class="shadow-wrap"><g id="shadowRot"></g></g>
@@ -608,7 +647,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
       <h2 id="catsTitle" class="name">Categories</h2>
       <button id="catsClose" class="pill-btn" type="button">Back to spinner</button>
     </div>
-    <p class="panel-note">Switch on two to eight. Each one gets a wedge on the wheel.</p>
+    <p class="panel-note">Switch on two to eight. Each one gets a label around the prop.</p>
     <p id="catsMsg" class="msg" role="status"></p>
     <ul id="catsList" class="stack"></ul>
     <div class="reset-learned">
@@ -973,89 +1012,108 @@ TOPICS107.forEach((t) => {
   const spinBody = $('spinBody');
   const shadowRot = $('shadowRot');
   const ghostsG = $('ghosts');
-  let wedges = [], labels = [];
-  const R_OUT = 200, R_IN = 152, GAP = 1.3;
+  let wedges = [], labels = [], labelGroups = {};
 
+  /* The seven topic labels sit at fixed points around the prop, clockwise
+     from the top. The prop itself carries no markings: when a spin lands,
+     the winning topic's chip lights up here on the perimeter. Topics that
+     are switched off keep their place but stay dimmed. */
   function buildRing() {
     ring.textContent = '';
     defs.textContent = '';
     wedges = [];
     labels = [];
-    const step = stepDeg();
-    WHEEL.forEach((c, i) => {
-      const shown = S.lock ? CAT[S.lock] : c;
-      const mid = -90 + step * i;
-      const a0 = mid - step / 2 + GAP, a1 = mid + step / 2 - GAP;
-      const wedge = svg('path', {
-        class: 'wedge',
-        d: 'M' + pt(R_OUT, a0) + ' A' + R_OUT + ' ' + R_OUT + ' 0 0 1 ' + pt(R_OUT, a1) +
-           ' L' + pt(R_IN, a1) + ' A' + R_IN + ' ' + R_IN + ' 0 0 0 ' + pt(R_IN, a0) + ' Z',
-        role: 'button',
-        tabindex: '0',
-        'data-cat': c.key,
-        'aria-label': S.lock ? 'Bring the other categories back' : 'Only ' + c.label,
-        'aria-pressed': S.lock ? 'true' : 'false'
+    labelGroups = {};
+    const slotStep = 360 / ALL.length;
+    ALL.forEach((c, i) => {
+      const mid = -90 + slotStep * i;
+      const isOff = S.off.indexOf(c.key) >= 0;
+      const lockedOut = !!S.lock && S.lock !== c.key;
+      const g = svg('g', {
+        class: 'topic-chip' + (isOff ? ' off' : '') + (lockedOut ? ' locked-out' : ''),
+        'data-key': c.key
       }, ring);
-      wedge.style.fill = colorOf(shown.key);
-      wedges.push(wedge);
-
-      /* Labels on the lower half run the other way round so they read left to right. */
-      const upper = Math.sin(rad(mid)) <= 0.01;
-      const r = upper ? 169 : 183;
-      const half = Math.min(step / 2 - 3, 80);
-      const from = upper ? mid - half : mid + half;
-      const to = upper ? mid + half : mid - half;
-      svg('path', {
-        id: 'labelArc' + i,
-        d: 'M' + pt(r, from) + ' A' + r + ' ' + r + ' 0 0 ' + (upper ? 1 : 0) + ' ' + pt(r, to)
-      }, defs);
-      const room = rad(half * 2) * 169;
+      const w = 28 + c.label.length * 9.8;
+      const bg = svg('rect', {
+        class: 'topic-chip-bg',
+        x: (-w / 2).toFixed(1), y: -16, width: w.toFixed(1), height: 32, rx: 16
+      }, g);
+      bg.style.fill = isOff ? 'var(--line)' : colorOf(c.key);
       const text = svg('text', {
-        class: 'wedge-label' + (shown.label.length * 11.5 > room * 0.94 ? ' small' : ''),
+        class: 'topic-label',
+        'text-anchor': 'middle',
+        'dominant-baseline': 'central',
+        y: 1,
         'aria-hidden': 'true'
-      }, ring);
-      const tp = svg('textPath', { href: '#labelArc' + i, startOffset: '50%', 'text-anchor': 'middle' }, text);
-      tp.textContent = shown.label;
-      labels.push(text);
+      }, g);
+      text.textContent = c.label;
+      /* Chips follow the tangent; lower-half chips turn the other way so
+         every label still reads left to right. */
+      const upper = Math.sin(rad(mid)) <= 0.01;
+      const rot = upper ? mid + 90 : mid - 90;
+      g.setAttribute('transform', 'translate(' + pt(179, mid) + ') rotate(' + rot.toFixed(2) + ')');
+      if (!isOff) {
+        g.setAttribute('role', 'button');
+        g.setAttribute('tabindex', '0');
+        g.setAttribute('data-cat', c.key);
+        g.setAttribute('aria-label', S.lock ? 'Bring the other categories back' : 'Only ' + c.label);
+        g.setAttribute('aria-pressed', S.lock ? 'true' : 'false');
+      }
+      labelGroups[c.key] = g;
+    });
+    /* The landing code lights by position in the active wheel; point those
+       slots at the active topics' chips. */
+    WHEEL.forEach((c) => {
+      wedges.push(labelGroups[c.key]);
+      labels.push(labelGroups[c.key]);
     });
   }
 
-  /* The spinner: three lobes on a hub. The lobe with the pointer is the one that counts. */
-  const LOBES = [-79, 41, 161], MARK = -10.9, LOBE_D = 100, LOBE_R = 44, ARM_W = 60, HUB_R = 50;
-  /* Each blade is drawn pointing right, then turned to its angle: a swept, tapered prop blade. */
-  const BLADE = 'M12 -9 C40 -14 70 -28 100 -44 C118 -52 140 -50 146 -38 C150 -26 128 -8 112 8 C90 28 50 24 12 12 Z';
+  /* The spinner: a three-blade drone propeller, drawn from directly above
+     to match the owner's photo — broad, slightly twisted charcoal blades
+     with red tips on a plain dark hub. One blade shape, drawn pointing up
+     and rotated into the three blade positions. Selection still works the
+     way it always did (the settled angle picks the topic, whose perimeter
+     chip lights); the prop itself needs no pointer or markings. */
+  const LOBES = [-90, 30, 150], LOBE_D = 104;
+  const BLADE_D = 'M -13 -22 C -17 -48 -27 -74 -29 -101 C -30 -124 -24 -143 -12 -152 ' +
+    'C -4 -158 6 -157 12 -149 C 20 -138 24 -112 22 -82 C 20 -55 15 -34 11 -22 ' +
+    'C 4 -16 -7 -16 -13 -22 Z';
+  const TIP_D = 'M -28.5 -112 C -30 -126 -25 -143 -12 -152 C -4 -158 6 -157 12 -149 ' +
+    'C 17 -142 21 -132 22.5 -121 C 8 -129 -12 -126 -28.5 -112 Z';
+  const SHEEN_D = 'M -15 -40 C -19 -72 -21 -106 -16 -138 C -9 -106 -7 -72 -5 -42 ' +
+    'C -8 -35 -13 -34 -15 -40 Z';
   function bodyLayer(cls, grow, parent) {
     const g = svg('g', { class: cls }, parent);
+    if (grow) g.setAttribute('transform', 'scale(' + (1 + grow / 250).toFixed(4) + ')');
     LOBES.forEach((a) => {
-      svg('path', { d: BLADE, transform: 'rotate(' + a + ') scale(0.95)', 'stroke-width': grow * 2 / 0.95, 'stroke-linejoin': 'round' }, g);
+      const b = svg('g', { transform: 'rotate(' + (a + 90) + ')' }, g);
+      svg('path', { class: 'prop-blade', d: BLADE_D }, b);
+      svg('path', { class: 'prop-tip', d: TIP_D }, b);
+      svg('path', { class: 'prop-sheen', d: SHEEN_D }, b);
+      svg('rect', { class: 'prop-mount', x: -10, y: -39, width: 20, height: 17, rx: 5 }, b);
     });
-    svg('circle', { cx: 0, cy: 0, r: 33 + grow }, g);
+    svg('circle', { class: 'prop-hub-outer', cx: 0, cy: 0, r: 31 }, g);
+    svg('circle', { class: 'prop-hub-cap', cx: 0, cy: 0, r: 14 }, g);
+    svg('circle', { class: 'prop-hub-dot', cx: 0, cy: 0, r: 4.5 }, g);
   }
   bodyLayer('body-shadow', 3, shadowRot);
   const spinSil = svg('g', { id: 'spinSil' }, spinBody);
   bodyLayer('body-edge', 3, spinSil);
   bodyLayer('body-fill', 0, spinSil);
-  svg('polygon', { class: 'pointer', points: '0,-150 -11,-131 11,-131' }, spinBody);
-  LOBES.forEach((a, i) => {
-    const marked = i === 0 ? ' marked' : '';
-    const ma = rad(a + MARK), mx = LOBE_D * Math.cos(ma), my = LOBE_D * Math.sin(ma);
-    svg('circle', { class: 'race' + marked, cx: mx.toFixed(2), cy: my.toFixed(2), r: 15 }, spinBody);
-    svg('circle', { class: 'ball' + marked, cx: mx.toFixed(2), cy: my.toFixed(2), r: 6 }, spinBody);
-    /* a highlight along each blade's leading edge so the turning reads at a glance */
-    svg('path', { class: 'glint', d: 'M44 -6 C72 -14 94 -28 114 -38', transform: 'rotate(' + a + ') scale(0.95)' }, spinBody);
-  });
-  /* Motion blur, shown only at speed: faint trailing copies of the body, plus a
-     streak behind each bearing and behind the pointer. */
+  /* Motion blur, shown only at speed: faint trailing copies of the prop,
+     plus a charcoal streak behind each blade and a red streak behind each
+     tip, so a fast spin spools like a real prop. */
   const GHOSTS = 8;
   const ghosts = [];
   for (let i = 0; i < GHOSTS; i++) ghosts.push(svg('use', { href: '#spinSil' }, ghostsG));
   const streaksG = svg('g', { class: 'streaks', display: 'none' });
   spinnerG.insertBefore(streaksG, spinBody);
   const streaks = [];
-  LOBES.forEach((a, i) => {
-    [1, 0.5].forEach((part) => streaks.push({ a: a + MARK, r: LOBE_D, part, el: svg('path', { class: 'streak' + (i === 0 ? ' marked' : '') }, streaksG) }));
+  LOBES.forEach((a) => {
+    [1, 0.5].forEach((part) => streaks.push({ a, r: LOBE_D, part, el: svg('path', { class: 'streak body' }, streaksG) }));
+    [1, 0.5].forEach((part) => streaks.push({ a, r: 149, part, el: svg('path', { class: 'streak tip' }, streaksG) }));
   });
-  [1, 0.5].forEach((part) => streaks.push({ a: -90, r: 141, part, el: svg('path', { class: 'streak tip' }, streaksG) }));
 
   /* ---------- Sound ----------
      Ported from the drone build: a DJI-style quad, synthesized live. Shaft frequency (Hz)
@@ -1525,10 +1583,10 @@ TOPICS107.forEach((t) => {
     rest.hidden = false;
     $('restTitle').textContent = spunThisVisit ? 'Flick again.' : 'Flick the spinner.';
     $('restText').textContent = S.lock
-      ? 'Only ' + CAT[S.lock].label + ' for now. Tap the ring to bring the others back.'
+      ? 'Only ' + CAT[S.lock].label + ' for now. Tap any label to bring the others back.'
       : (spunThisVisit
-        ? 'Tap a wedge to stick with one category.'
-        : 'It stops on a category and hands you one thing worth knowing. Tap a wedge to stick with that category.');
+        ? 'Tap a label to stick with one category.'
+        : 'It stops on a category and hands you one thing worth knowing. Tap a label to stick with that category.');
   }
   function showAllLearned() {
     current = null;
@@ -1704,7 +1762,7 @@ TOPICS107.forEach((t) => {
           : n + (n === 1 ? ' card' : ' cards') + (c.builtin ? '' : ', made by you'))
       );
       li.append(dotFor(c.key), info);
-      const sw = button('switch', '', () => toggleCat(c.key), c.label + ' on the wheel');
+      const sw = button('switch', '', () => toggleCat(c.key), c.label + ' around the prop');
       sw.setAttribute('role', 'switch');
       sw.setAttribute('aria-checked', WHEEL.indexOf(c) >= 0 ? 'true' : 'false');
       sw.setAttribute('data-switch', c.key);
@@ -1720,9 +1778,9 @@ TOPICS107.forEach((t) => {
   function toggleCat(key) {
     const on = WHEEL.some((c) => c.key === key);
     if (on && WHEEL.length <= MIN_WEDGES) {
-      say($('catsMsg'), 'Keep at least two on the wheel.');
+      say($('catsMsg'), 'Keep at least two around the prop.');
     } else if (!on && WHEEL.length >= MAX_WEDGES) {
-      say($('catsMsg'), 'The wheel holds eight. Switch one off first.');
+      say($('catsMsg'), 'The prop holds eight. Switch one off first.');
     } else {
       if (on) S.off.push(key);
       else S.off = S.off.filter((k) => k !== key);
