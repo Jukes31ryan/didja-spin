@@ -358,6 +358,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   overflow-wrap: anywhere;
 }
 .nugget-title.long { font-size: 1.5rem; }
+.reveal-btn { margin-top: 6px; width: 100%; }
 .nugget-meaning { margin: 0; overflow-wrap: anywhere; }
 .nugget-extra { margin: 0; color: var(--ink-soft); font-size: var(--t-note); overflow-wrap: anywhere; }
 .nugget-actions { margin-top: auto; padding-top: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -553,9 +554,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
         </button>
       </div>
       <h2 id="nuggetTitle" class="nugget-title"></h2>
+      <button id="revealBtn" class="act primary reveal-btn" type="button">Show Answer</button>
       <p id="nuggetMeaning" class="nugget-meaning"></p>
       <p id="nuggetExtra" class="nugget-extra"></p>
-      <div class="nugget-actions">
+      <div id="nuggetActions" class="nugget-actions">
         <button id="againBtn" class="act" type="button">Again later</button>
         <button id="gotBtn" class="act primary" type="button">Got it</button>
       </div>
@@ -1520,11 +1522,13 @@ TOPICS107.forEach((t) => {
   /* ---------- Tray ---------- */
   const rest = $('rest'), nugget = $('nugget');
   let current = null;
+  let revealed = false;
   let spunThisVisit = false;
   let learnTimer = 0;
 
   function showRest() {
     current = null;
+    revealed = false;
     nugget.hidden = true;
     rest.hidden = false;
     $('restTitle').textContent = spunThisVisit ? 'Flick again.' : 'Flick the spinner.';
@@ -1536,6 +1540,7 @@ TOPICS107.forEach((t) => {
   }
   function showAllLearned() {
     current = null;
+    revealed = false;
     nugget.hidden = true;
     rest.hidden = false;
     $('restTitle').textContent = S.lock ? 'All of ' + CAT[S.lock].label + ' is learned.' : 'All learned.';
@@ -1544,6 +1549,7 @@ TOPICS107.forEach((t) => {
   }
   function showNugget(card) {
     current = card;
+    revealed = false;
     spunThisVisit = true;
     const chip = $('nuggetCat');
     chip.textContent = CAT[card.cat].label;
@@ -1551,9 +1557,17 @@ TOPICS107.forEach((t) => {
     const title = $('nuggetTitle');
     title.textContent = card.title;
     title.classList.toggle('long', card.title.length > 20);
-    $('nuggetMeaning').textContent = card.meaning;
-    $('nuggetExtra').textContent = card.extra;
-    $('nuggetExtra').hidden = !card.extra;
+    /* The answer stays hidden until "Show Answer" is pressed — the meaning
+       and why/source text are not written into the tray at all yet, and the
+       mark buttons (Learned it / Got it / Again later) stay hidden too, so
+       a student can only mark after checking themselves. */
+    $('nuggetMeaning').textContent = '';
+    $('nuggetExtra').textContent = '';
+    $('nuggetMeaning').hidden = true;
+    $('nuggetExtra').hidden = true;
+    $('revealBtn').hidden = false;
+    $('nuggetActions').hidden = true;
+    $('learnedBtn').hidden = true;
     paintLearnedButton();
     rest.hidden = true;
     nugget.hidden = true;        /* restart the arrival animation */
@@ -1561,8 +1575,21 @@ TOPICS107.forEach((t) => {
     nugget.hidden = false;
     $('tray').scrollTop = 0;
   }
+  function revealAnswer() {
+    if (!current || revealed) return;
+    revealed = true;
+    $('nuggetMeaning').textContent = current.meaning;
+    $('nuggetExtra').textContent = current.extra;
+    $('nuggetExtra').hidden = !current.extra;
+    $('nuggetMeaning').hidden = false;
+    $('revealBtn').hidden = true;
+    $('nuggetActions').hidden = false;
+    $('learnedBtn').hidden = false;
+    $('tray').scrollTop = 0;
+  }
+  $('revealBtn').addEventListener('click', revealAnswer);
   function mark(status) {
-    if (!current) return;
+    if (!current || !revealed) return;
     clearTimeout(learnTimer);
     S.cards[current.id] = { s: status, t: S.n };
     save();
@@ -1632,7 +1659,7 @@ TOPICS107.forEach((t) => {
     $('learnedLabel').textContent = 'Learned it';
   }
   $('learnedBtn').addEventListener('click', () => {
-    if (!current) return;
+    if (!current || !revealed) return;
     const card = current;
     if (S.learned.indexOf(card.id) < 0) S.learned.push(card.id);
     save();
