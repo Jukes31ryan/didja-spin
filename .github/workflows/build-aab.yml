@@ -20,16 +20,30 @@ jobs:
         run: |
           yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
           "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0"
-      - name: Unzip Android project
-        run: unzip -q didja-twa.zip -d android-project
-      - name: Build unsigned release bundle
-        working-directory: android-project/didja-twa
+      - name: Decrypt upload key
+        env:
+          UPLOAD_KEY_PASSWORD: ${{ secrets.UPLOAD_KEY_PASSWORD }}
+        run: |
+          if [ -z "$UPLOAD_KEY_PASSWORD" ]; then
+            echo "::error::Add the UPLOAD_KEY_PASSWORD secret (Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 \
+            -in android/upload-keystore.p12.enc -out "$RUNNER_TEMP/upload.p12" \
+            -pass env:UPLOAD_KEY_PASSWORD
+      - name: Build signed release bundle
+        working-directory: android
+        env:
+          UPLOAD_KEYSTORE: ${{ runner.temp }}/upload.p12
+          UPLOAD_KEY_PASSWORD: ${{ secrets.UPLOAD_KEY_PASSWORD }}
         run: |
           chmod +x gradlew
           ./gradlew bundleRelease --console=plain
+          "$JAVA_HOME/bin/jarsigner" -verify app/build/outputs/bundle/release/app-release.aab | tail -1
+          cp app/build/outputs/bundle/release/app-release.aab "$GITHUB_WORKSPACE/didja-spin-107.aab"
       - name: Publish bundle to a GitHub release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: aab-build-${{ github.run_number }}
           name: AAB build ${{ github.run_number }}
-          files: android-project/didja-twa/app/build/outputs/bundle/release/*.aab
+          files: didja-spin-107.aab
