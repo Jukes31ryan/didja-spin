@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Spin 107</title>
-<meta name="description" content="Flick the spinner, study the FAA Part 107 test. 182 questions across seven topics, plus a practice test: Quick 20 or a full timed 60.">
+<meta name="description" content="The digital fidget spinner built for drone pilots. Every flick of the prop deals a Part 107 question, whether you're studying for the test or keeping your certificate sharp. Plus a practice test: Quick 20 or a full timed 60.">
 <meta name="theme-color" content="#E6E9F7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#12162B" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
@@ -16,7 +16,13 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0;padding:0}[hidden]{display:none!important}</style>
 
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400..800&display=swap">
+<!-- Fonts ship with the app (SIL Open Font License, see fonts/): no calls to Google, works offline. -->
+<link rel="preload" href="fonts/bricolage-grotesque.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face { font-family: "Bricolage Grotesque"; font-style: normal; font-display: swap; font-weight: 200 800; font-stretch: 75% 100%; src: url(fonts/bricolage-grotesque.woff2) format("woff2"); }
+@font-face { font-family: "Atkinson Hyperlegible"; font-style: normal; font-display: swap; font-weight: 400; src: url(fonts/atkinson-400.woff2) format("woff2"); }
+@font-face { font-family: "Atkinson Hyperlegible"; font-style: normal; font-display: swap; font-weight: 700; src: url(fonts/atkinson-700.woff2) format("woff2"); }
+</style>
 <style>
 /* Layout: one screen. The spinner fills the middle, the name sits top-left,
    and a tray under the spinner holds the nugget it lands on. */
@@ -397,10 +403,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
   overflow-wrap: anywhere;
 }
 .nugget-title.long { font-size: 1.5rem; }
-.reveal-btn { margin-top: 6px; width: 100%; }
 .nugget-meaning { margin: 0; overflow-wrap: anywhere; }
 .nugget-extra { margin: 0; color: var(--ink-soft); font-size: var(--t-note); overflow-wrap: anywhere; }
 .nugget-actions { margin-top: auto; padding-top: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.act.learned-act.done { background: var(--good); border-color: var(--good); color: var(--card); }
 .act {
   min-height: 46px;
   padding-inline: 18px;
@@ -500,8 +506,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .nugget { animation: none; }
   .topic-chip-bg, .topic-label, .press-wrap, .shadow-wrap, .hub, .switch, .switch::after { transition: none; }
 }
-/* Practice test (carried over from Spin 107) + test helpers */
-.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* Practice test (carried over from the original build) + test helpers */
+.sr { position: absolute; top: 0; left: 0; margin: 0; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .test-btn { font-family: var(--font-display); font-weight: 800; font-size: var(--t-note); padding: 0 14px; }
 .fine { margin: 0; color: var(--ink-soft); font-size: var(--t-small); }
 .test-card { background: var(--card); border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
@@ -560,7 +566,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
       <button id="catsBtn" class="icon-btn" type="button" aria-label="Categories">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><circle cx="12" cy="12" r="3"></circle><path d="M12 3.5V9"></path><path d="M19.4 16.2l-4.8-2.7"></path><path d="M4.6 16.2l4.8-2.7"></path></svg>
       </button>
-      <span id="learnedCount" class="learned-count">0 of 182 learned</span>
+      <span id="learnedCount" class="learned-count">0 of 194 learned</span>
     </div>
   </header>
 
@@ -588,17 +594,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
     <div id="nugget" class="nugget" hidden>
       <div class="nugget-top">
         <span id="nuggetCat" class="chip"></span>
-        <button id="learnedBtn" class="learned-btn" type="button" aria-pressed="false">
-          <span id="learnedLabel">Learned it</span>
-        </button>
       </div>
       <h2 id="nuggetTitle" class="nugget-title"></h2>
-      <button id="revealBtn" class="act primary reveal-btn" type="button">Show Answer</button>
+      <ul id="nuggetOpts" class="opts"></ul>
       <p id="nuggetMeaning" class="nugget-meaning"></p>
       <p id="nuggetExtra" class="nugget-extra"></p>
       <div id="nuggetActions" class="nugget-actions">
-        <button id="againBtn" class="act" type="button">Again later</button>
-        <button id="gotBtn" class="act primary" type="button">Got it</button>
+        <button id="learnedBtn" class="act learned-act" type="button" aria-pressed="false"><span id="learnedLabel">Learned it</span></button>
+        <button id="nextBtn" class="act primary" type="button">Next</button>
       </div>
     </div>
   </section>
@@ -617,7 +620,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
         <button id="start20" class="act" type="button">Quick 20</button>
         <button id="start60" class="act primary" type="button">Full 60</button>
       </div>
-      <p class="fine">Quick 20 has no clock. Full 60 gives you 2 hours, like the real test.</p>
+      <p class="fine">Quick 20 has no clock. Full 60 gives you 2 hours, like the real test; the clock pauses when you leave the app. The real test also shows sectional chart images; practice those with the FAA's testing supplement.</p>
       <p id="lastScore" class="fine"></p>
     </div>
     <div id="testRun" class="test-card" hidden>
@@ -650,13 +653,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
       <h2 id="catsTitle" class="name">Categories</h2>
       <button id="catsClose" class="pill-btn" type="button">Back to spinner</button>
     </div>
-    <p class="panel-note">Switch on two to eight. Each one gets a label around the prop.</p>
+    <p class="panel-note">Switch on two to seven. Each one gets a label around the prop.</p>
     <p id="catsMsg" class="msg" role="status"></p>
     <ul id="catsList" class="stack"></ul>
     <div class="reset-learned">
       <p id="learnedSummary" class="panel-note"></p>
       <button id="resetLearnedBtn" class="act" type="button">Reset learned</button>
     </div>
+    <p class="fine">Study aid only. Not affiliated with or endorsed by the FAA. Questions are drawn from FAA sources (14 CFR Parts 48, 89 and 107, the AIM, the Pilot's Handbook of Aeronautical Knowledge and AC 107-2A). Check current rules at <a href="https://www.faa.gov/uas" target="_blank" rel="noopener">faa.gov/uas</a>.</p>
   </div>
 </section>
 
@@ -677,11 +681,11 @@ const DECK107 = {
     ["r07","Minimum age for a remote pilot certificate?","16.","You also pass the knowledge test and a TSA security check.","18.","21.","14 CFR 107.61"],
     ["r08","How do you stay current?","Finish the free online recurrent training every 24 calendar months.","It's on the FAA Safety Team site. No retest at a testing center.","Retake the full knowledge test at a testing center every 24 calendar months.","Finish the free online recurrent training every 12 calendar months.","14 CFR 107.65"],
     ["r09","When must you report an accident to the FAA?","Within 10 days for serious injury, loss of consciousness, or over $500 damage.","The $500 is repair cost or fair market value, and it doesn't include the drone.","Within 30 days for serious injury, unconsciousness, or over $500 damage.","Within 10 days, but only for serious injury or over $5,000 in damage.","14 CFR 107.9"],
-    ["r10","'Bottle to throttle': how long must you wait after drinking before flying, and what blood-alcohol level must you stay under?","At least 8 hours, and blood alcohol under 0.04%.","If you still feel it after 8 hours, you still don't fly.","At least 12 hours, and blood alcohol under 0.08%.","At least 8 hours, and blood alcohol under 0.08%.","14 CFR 91.17"],
+    ["r10","'Bottle to throttle': how long must you wait after drinking before flying, and what blood-alcohol level must you stay under?","At least 8 hours, and blood alcohol under 0.04%.","If you still feel it after 8 hours, you still don't fly.","At least 12 hours, and blood alcohol under 0.08%.","At least 8 hours, and blood alcohol under 0.08%.","14 CFR 107.27; 91.17"],
     ["r11","Who can ask to see your certificate?","The FAA, NTSB, TSA, or any federal, state, or local law officer.","Keep it on you every time you fly.","The FAA, NTSB, or TSA, but not state or local law enforcement.","The FAA and NTSB, plus federal but not local law enforcement.","14 CFR 107.7(a)"],
     ["r12","You moved. When do you tell the FAA?","Within 30 days.","After 30 days without telling the FAA, you can't use your certificate. Update it online at faa.gov or by letter to the Airmen Certification Branch.","Within 60 days.","Within 10 days.","14 CFR 107.77"],
     ["r13","Your drone or a manned aircraft: who has right of way?","The manned aircraft, in every class of airspace.","Don't pass over, under, or ahead of it unless you're well clear.","Whoever spots the other aircraft first keeps the right of way.","The manned aircraft, but only inside controlled airspace.","14 CFR 107.37(a)"],
-    ["r14","Can you fly at night?","Yes, with a test or training dated after April 6, 2021, plus lights.","The anti-collision lights must flash, and you can dim them but not turn them off. Any current pilot meets the training part.","Yes, but only with a night waiver issued through FAA DroneZone.","Yes, with anti-collision lights visible for 1 statute mile.","14 CFR 107.29(a)"],
+    ["r14","Can you fly at night?","Yes, with training dated after April 6, 2021 and lights visible for 3 statute miles.","The anti-collision lights must flash, and you can dim them but not turn them off. Any current pilot meets the training part.","Yes, but only with a night waiver from FAA DroneZone and a visual observer helping.","Yes, with any current certificate and anti-collision lights visible for 1 statute mile.","14 CFR 107.29(a)"],
     ["r15","What lighting is required to fly during civil twilight?","Anti-collision lights visible for 3 statute miles are required.","Civil twilight runs 30 minutes before sunrise and after sunset in most of the U.S.","Anti-collision lights visible for 1 statute mile are required.","No lights are required until it is fully dark.","14 CFR 107.29(b)"],
     ["r16","Can you fly from a moving vehicle?","Only over a sparsely populated area.","And not while carrying someone else's property for pay.","Anywhere, as long as you keep the drone in sight.","Only over a densely populated area, with a waiver.","14 CFR 107.25"],
     ["r17","How many drones can one RPIC fly at once?","One.","Flying more than one takes a waiver.","Up to two.","Up to three, if a visual observer is helping.","14 CFR 107.35"],
@@ -697,16 +701,22 @@ const DECK107 = {
     ["r27","The FAA asks to inspect your drone and your required records. What must you do?","Allow any test or inspection and make required records available.","§107.7 covers the drone, the RPIC, the person on the controls, and any visual observer.","Allow it only if the FAA first shows a warrant or subpoena.","Allow it only if the drone was involved in a reported accident.","14 CFR 107.7(a)(3), (b)"],
     ["r28","Under Part 107, which drones must be registered with the FAA?","All of them, no matter the weight.","The 0.55 lb registration threshold applies to recreational flyers. Every Part 107 drone gets registered.","Only drones weighing more than 0.55 lb at takeoff.","Only drones weighing more than 55 lb at takeoff.","14 CFR 48.15"],
     ["r29","Before your first Part 107 flight with a newly bought drone, you must?","Register it and mark the number on an outside surface.","Part 48 requires the number on an external surface of the drone. Inside a battery bay or on the case doesn't count.","Have it inspected and signed off by an FAA-certified mechanic.","Register it and keep the number on the controller or case.","14 CFR 48.205(c)"],
-    ["r30","When is sustained flight over people not involved in the operation allowed?","With a Category 1, 2, or 4 drone, or if they're under cover or in a stationary vehicle.","Category 3 allows sustained flight over people only at a closed or restricted-access site with everyone on notice.","Only with a waiver, even for Category 1 drones, unless people are under cover.","With any category drone, as long as it has prop guards and stays above 100 ft AGL.","14 CFR 107.39"]
+    ["r30","When is sustained flight over people not involved in the operation allowed?","With a Category 1, 2, or 4 drone, or if they're under cover or in a stationary vehicle.","Category 3 allows sustained flight over people only at a closed or restricted-access site with everyone on notice.","Only with a waiver, even for Category 1 drones, unless people are under cover.","With any category drone, as long as it has prop guards and stays above 100 ft AGL.","14 CFR 107.39"],
+    ["r31","You know you have a medical condition that would interfere with safe flying. Can you fly?","No. You may not fly or act as RPIC with that condition.","Part 107 needs no FAA medical certificate, so the fitness call is yours, and the rule says you stay on the ground.","Yes, because Part 107 requires no medical certificate.","Yes, as long as a visual observer is helping you.","14 CFR 107.17"],
+    ["r32","Besides being at least 16, what language skill does a remote pilot certificate require?","Able to read, speak, write, and understand English.","The FAA can make an exception for a medical reason, with limits placed on the certificate.","Able to read English; speaking it isn't required.","None; the test is offered in several languages.","14 CFR 107.61"],
+    ["r33","You fail the Part 107 knowledge test. How soon can you retake it?","After 14 days.","The waiting period gives you time to study the areas your test report says you missed.","After 30 days.","The next day.","14 CFR 107.71"],
+    ["r34","When may a Category 1, 2, or 3 drone fly over people inside moving vehicles?","At a closed site with them on notice, or passing over without sustained flight.","Category 1, 2, and 3 drones may not hover over or follow moving vehicles on open roads.","Anytime, as long as the drone stays at least 100 ft above the vehicles.","Only with an FAA waiver, no matter which category the drone is in.","14 CFR 107.145(b)"],
+    ["r35","What does a Category 4 drone need to fly over people in moving vehicles?","An airworthiness certificate whose limits don't forbid it.","Category 4 is the only category built on a part 21 airworthiness certificate.","A maker's declaration of compliance, like Category 2.","Only Remote ID and anti-collision lights turned on.","14 CFR 107.145(c)"],
+    ["r36","When must a Standard Remote ID drone broadcast its Remote ID?","From takeoff to shutdown.","If the broadcast fails before takeoff, the drone must not take off. If it fails in flight, land as soon as practicable.","Only inside controlled airspace.","Only above 200 ft AGL.","14 CFR 89.110"]
   ],
   airspace: [
     ["a01","Which airspace needs no ATC authorization?","Class G.","It's uncontrolled. Every other Part 107 rule still applies.","Class A.","Class D.","14 CFR 107.41"],
     ["a02","Which airspace needs ATC authorization?","Class B, C, D, and surface-area Class E.","Get it through LAANC or FAA DroneZone before you take off.","Class B, C, D, and all Class E from 700 ft AGL up.","Class B, C, and D, but not surface-area Class E.","14 CFR 107.41"],
     ["a03","What is LAANC?","Low Altitude Authorization and Notification Capability.","Approved apps give near-instant approval up to the altitude on the facility map.","Low Altitude Airspace Notification and Control Center.","Local Area Authorization and Notification Capability.","FAA LAANC webpage"],
-    ["a04","How is Class B drawn on a sectional?","Solid blue lines.","It surrounds the busiest airports. B for busy, B for blue.","Solid magenta lines.","Dashed blue lines.","FAA Chart User's Guide"],
-    ["a05","How is Class C drawn?","Solid magenta lines.","Usually an inner 5 NM core and an outer shelf out to 10 NM.","Dashed magenta lines.","Solid blue lines.","Chart User's Guide; AIM 3-2-4"],
-    ["a06","How is Class D drawn?","Dashed blue lines.","The ceiling is a boxed number in hundreds of feet MSL. [25] means 2,500 ft.","Solid blue lines.","Dashed magenta lines.","FAA Chart User's Guide"],
-    ["a07","How is surface Class E drawn?","Dashed magenta lines.","You still need ATC authorization there, same as Class D.","Solid magenta lines.","Dashed blue lines.","FAA Chart User's Guide"],
+    ["a04","What color lines mark Class B airspace on a sectional chart?","Solid blue lines.","It surrounds the busiest airports. B for busy, B for blue.","Solid magenta lines.","Dashed blue lines.","FAA Chart User's Guide"],
+    ["a05","What color lines mark Class C airspace on a sectional chart?","Solid magenta lines.","Usually an inner 5 NM core and an outer shelf out to 10 NM.","Dashed magenta lines.","Solid blue lines.","Chart User's Guide; AIM 3-2-4"],
+    ["a06","What color lines mark Class D airspace on a sectional chart?","Dashed blue lines.","The ceiling is a boxed number in hundreds of feet MSL. [25] means 2,500 ft.","Solid blue lines.","Dashed magenta lines.","FAA Chart User's Guide"],
+    ["a07","What color lines mark surface Class E airspace on a sectional chart?","Dashed magenta lines.","You still need ATC authorization there, same as Class D.","Solid magenta lines.","Dashed blue lines.","FAA Chart User's Guide"],
     ["a08","Faded magenta shading on a chart means?","Class E begins 700 ft above ground there.","Below that it's Class G. Faded blue means Class E begins at 1,200 ft AGL.","Class E begins 1,200 ft above ground there.","Class E begins at the surface there.","FAA Chart User's Guide"],
     ["a09","In Class B, '70 over SFC' means?","That section runs from the surface up to 7,000 ft MSL.","Chart altitudes are in hundreds of feet above sea level.","The floor is 7,000 ft MSL and the ceiling is 10,000 ft MSL.","That section runs from the surface up to 700 ft MSL.","FAA Chart User's Guide"],
     ["a10","Where does Class A start?","18,000 ft MSL.","It runs up to Flight Level 600. No drone business up there.","14,500 ft MSL.","10,000 ft MSL.","AIM 3-2-2"],
@@ -717,14 +727,14 @@ const DECK107 = {
     ["a15","What's a MOA?","A Military Operations Area for military training.","Drones may fly there, but fast jets fly low. Use extreme caution.","A Military Operations Area, and drones are prohibited inside it.","An area reserved for military drones only.","AIM 3-4-5"],
     ["a16","What does a 4-digit military route number, like IR1007, tell you about the route's altitude?","Flown at or below 1,500 ft AGL.","3 digits, like VR123, means some legs go above 1,500 ft.","Flown at or below 500 ft AGL.","Flown above 1,500 ft AGL on every leg.","AIM 3-5-2"],
     ["a17","Tower shows 1549 and (1213). Meaning?","Top is 1,549 ft MSL. It stands 1,213 ft above the ground.","Bold is MSL. Parentheses are AGL.","Top is 1,213 ft MSL. It stands 1,549 ft above the ground.","Top is 1,549 ft AGL. It stands 1,213 ft above sea level.","FAA Chart User's Guide"],
-    ["a18","What is the big number in each grid square on a sectional chart?","Maximum Elevation Figure: the highest terrain or obstacle there, MSL.","A big 3 with a small 5 means 3,500 ft MSL.","The minimum en route altitude for that square, in AGL.","The height of the tallest tower in the square, above ground.","FAA Chart User's Guide"],
+    ["a18","What is the big number in each grid square on a sectional chart?","Maximum Elevation Figure: the highest terrain or obstacle there, MSL.","A big 3 with a small 5 means 3,500 ft MSL.","The minimum en route altitude for that square, measured in feet AGL.","The height above ground of the tallest tower anywhere in that square.","FAA Chart User's Guide"],
     ["a19","What's the difference between blue and magenta airport symbols on a sectional?","Blue is towered. Magenta is non-towered.","Towered airports usually sit in Class B, C, or D.","Blue is non-towered. Magenta is towered.","Blue is a military field. Magenta is civilian.","FAA Chart User's Guide"],
     ["a20","1 nautical mile is how far?","About 1.15 statute miles.","Charts measure distance in nautical miles. Visibility uses statute miles.","About 0.87 statute miles.","About 1.5 statute miles.","PHAK ch. 16"],
     ["a21","How do latitude lines run, and what position do they measure?","Latitude lines run east-west and measure north-south position.","Latitude lines are the rungs of a ladder; longitude lines run north-south. Each degree is 60 minutes.","Latitude lines run north-south and measure east-west.","Latitude and longitude both measure north-south position.","PHAK ch. 16"],
     ["a22","In an airport data block on a sectional, 'CT - 118.3' tells you what?","The control tower frequency is 118.3.","CT marks the tower's primary frequency. Pilots call the tower on it.","The CTAF is 118.3, but only at night.","The field elevation is 1,183 ft MSL.","FAA Chart User's Guide"],
     ["a23","A star symbol next to a frequency or service on the chart means?","It operates part-time only.","The airport's directory listing gives the hours. When a tower closes, its airspace may drop to Class E or G.","It is a military-only frequency.","It is monitored continuously by satellite.","FAA Chart User's Guide"],
     ["a24","What is a VFR checkpoint, the magenta flag symbol on a sectional?","A visible landmark pilots use to report position.","Flags sit near busy airspace so pilots can call out a fix everyone can find on the chart.","A mandatory ATC reporting point for all aircraft, drones included.","A ground marker showing the edge of Class B airspace.","FAA Chart User's Guide"],
-    ["a25","An alert area (marked A-xxx) on the chart means?","A high volume of pilot training or unusual aerial activity.","Alert areas don't bar entry. Everyone inside shares the job of seeing and avoiding.","Hazards like artillery fire; entry needs permission.","Military low-level training; drones must stay out.","AIM 3-4-6"],
+    ["a25","An alert area (marked A-xxx) on the chart means?","A high volume of pilot training or unusual aerial activity.","Alert areas don't bar entry. Everyone inside shares the job of seeing and avoiding.","Hazards like artillery fire, so entry needs the using agency's OK.","Military low-level training routes where drones must always stay out.","AIM 3-4-6"],
     ["a26","Where do you find Class G airspace?","Wherever no other class applies, often below 700 or 1,200 ft AGL.","Class G fills the gaps under the Class E floor. Near many airports that floor is 700 ft AGL.","Only outside the 30 NM Mode C veil around Class B airports.","From 700 or 1,200 ft AGL up to 18,000 ft MSL.","AIM 3-3-1"],
     ["a27","On a sectional, Class C numbers '41/SFC' for one sector mean?","Ceiling 4,100 ft MSL, and that sector starts at the surface.","Chart numbers are in hundreds of feet MSL: top number is the ceiling, the bottom is the floor.","Ceiling 4,100 ft AGL; that sector starts at the surface.","Ceiling 410 ft MSL, and that sector starts at the surface.","FAA Chart User's Guide"],
     ["a28","Why do wildfire TFRs ground every unauthorized drone?","A drone sighting can force firefighting aircraft to stop flying.","'If you fly, we can't.' One drone in the area can shut down the whole air attack.","Drone radio links can jam the fire crews' handheld radios.","Fire TFRs are national-security TFRs under 14 CFR 99.7.","14 CFR 91.137; NIFC guidance"]
@@ -737,7 +747,7 @@ const DECK107 = {
     ["w05","What makes a ceiling?","The lowest BKN or OVC layer, or vertical visibility (VV).","FEW and SCT don't count. BKN015 is a 1,500 ft ceiling. VV004 is a 400 ft ceiling.","The lowest layer of any kind, including FEW or SCT.","The highest BKN or OVC layer, or vertical visibility (VV).","14 CFR 1.1"],
     ["w06","What does it mean when the temperature and dew point are close together?","Fog or low clouds are likely.","A small spread means the air is close to saturated, so fog or low clouds can form.","Strong, gusty surface winds are likely.","Clear skies and good visibility are likely.","PHAK ch. 12"],
     ["w07","What are the standard temperature and pressure at sea level?","15 °C and 29.92 inches of mercury.","Temperature drops about 2 °C per 1,000 ft.","0 °C and 29.92 inches of mercury.","15 °C and 28.92 inches of mercury.","PHAK ch. 4"],
-    ["w08","In plain language, density altitude is a measure of what?","How high the air 'feels' to your aircraft.","Hot, high, and humid raise it. Higher density altitude means less lift.","The altitude your altimeter shows after landing.","Pressure altitude corrected for runway length.","PHAK ch. 4"],
+    ["w08","In plain language, density altitude is a measure of what?","How high the air 'feels' to your aircraft.","Formally: pressure altitude corrected for nonstandard temperature. Hot, high, and humid raise it. Higher density altitude means less lift.","The altitude your altimeter shows after landing.","Pressure altitude corrected for runway length.","PHAK ch. 4"],
     ["w09","What are the three stages of a thunderstorm?","Cumulus, mature, dissipating.","Mature is the worst: strong updrafts, downdrafts, and rain at the surface.","Building, storming, and clearing.","Cumulus, towering, and dissipating.","PHAK ch. 12"],
     ["w10","What's a microburst?","A short, violent downdraft that spreads out when it hits the ground.","Downdrafts can hit 6,000 ft per minute. It's usually under 1 mile across, and its outflow spreads to about 2.5 miles across at the ground. Peak winds last 2 to 4 minutes, and the whole event seldom lasts over 15 minutes.","A short, violent updraft that forms ahead of a storm's gust front.","A rotating downdraft that dissipates before reaching the ground.","AIM 7-1-24"],
     ["w11","What are the signs of stable air?","Stratus clouds, smooth air, steady rain, poor visibility.","Unstable air brings cumulus clouds, turbulence, showers, and good visibility.","Cumulus clouds, bumpy air, passing showers, good visibility.","Stratus clouds, bumpy air, passing showers, good visibility.","PHAK ch. 12"],
@@ -745,7 +755,7 @@ const DECK107 = {
     ["w13","'+TSRA' in a METAR?","Thunderstorm with heavy rain.","The sign rates the rain, not the storm: + is heavy, - is light, no sign is moderate.","Thunderstorm with light rain.","Thunderstorm with moderate hail.","Aviation Weather Handbook"],
     ["w14","What kind of turbulence should you expect on the downwind side of buildings and ridges?","Mechanical turbulence on the downwind side.","Expect sudden gusts crossing rooftops and tree lines.","Smooth, rising air on the downwind side.","Turbulence, but only above 3,000 ft AGL.","PHAK ch. 12"],
     ["w15","Which way does a sea breeze blow?","From the water onto land, during the day.","At night it flips: a land breeze blows out to sea.","From the land onto the water, during the day.","From the water onto the land, at night.","PHAK ch. 12"],
-    ["w16","How do you get an official weather briefing?","Flight Service: 1-800-WX-BRIEF or 1800wxbrief.com.","Briefing types: standard, abbreviated, and outlook.","The airport manager at your departure field.","A TV weather station's local office.","PHAK ch. 13"],
+    ["w16","How do you get an official weather briefing?","Flight Service: 1-800-WX-BRIEF or 1800wxbrief.com.","Briefing types: standard, abbreviated, and outlook.","The airport manager's office at your departure field.","A TV station's local weather office or its website.","PHAK ch. 13"],
     ["w17","'VRB' in a wind report?","Variable direction.","Usually shows up with light winds.","Veering: the wind is shifting clockwise.","Visibility reduced by blowing debris.","Aviation Weather Handbook"],
     ["w18","What must you do about frost on the drone before launch?","Remove all of it before takeoff.","Even thin frost disrupts airflow and cuts lift.","Only the frost on the camera lens has to come off.","A thin layer of frost is fine once the props spin up.","PHAK ch. 12"],
     ["w19","In a METAR, 'OVC008' means what?","An overcast ceiling at 800 ft AGL.","Cloud heights in a METAR are in hundreds of feet above the airport. 008 = 800 ft.","An overcast ceiling at 8,000 ft AGL.","Overcast clouds covering 8% of the sky.","Aviation Weather Handbook"],
@@ -757,7 +767,13 @@ const DECK107 = {
     ["w25","What do AIRMETs warn about?","Moderate hazards: IFR (Sierra), turbulence (Tango), icing (Zulu).","AIRMETs are the moderate tier, issued for large areas. SIGMETs cover the severe hazards.","Severe hazards: thunderstorms, tornadoes, and large hail.","Moderate hazards: icing (Sierra), turbulence (Tango), IFR (Zulu).","Aviation Weather Handbook"],
     ["w26","A SIGMET warns of?","Severe icing, severe or extreme turbulence, dust or sandstorms, or volcanic ash.","Dust or sandstorms count when they drop visibility below 3 miles. Convective SIGMETs cover thunderstorm hazards: severe turbulence, icing, and low-level wind shear.","Moderate icing, moderate turbulence, 30-knot surface winds, or IFR.","Severe icing, moderate turbulence, widespread haze, or mountain obscuration.","Aviation Weather Handbook"],
     ["w27","What does high density altitude do to your drone?","Less lift, a weaker climb, and harder-working motors.","Heat, altitude, and humidity all raise density altitude and thin the air your props bite into.","More lift, because thin air means less drag on the props.","Only a lower top speed; hover and climb are unchanged.","PHAK ch. 11"],
-    ["w28","What's the main risk of flying a typical consumer drone in rain?","Water can short the electronics and motors.","Most small drones carry no rain rating. The RPIC must judge whether it's in condition for safe flight.","Mostly a camera issue: raindrops blur the lens.","GPS loss, because rain blocks satellite signals.","14 CFR 107.15"]
+    ["w28","What's the main risk of flying a typical consumer drone in rain?","Water can short the electronics and motors.","Most small drones carry no rain rating. The RPIC must judge whether it's in condition for safe flight.","Mostly a camera issue: raindrops blur the lens.","GPS loss, because rain blocks satellite signals.","14 CFR 107.15"],
+    ["w29","Fog that forms on clear, calm nights as the ground cools is called?","Radiation fog.","It collects in low spots and usually burns off within a few hours after sunrise.","Advection fog.","Upslope fog.","PHAK ch. 12"],
+    ["w30","Moist air moving over a colder surface, like along a coast, forms what?","Advection fog.","Unlike radiation fog, it needs wind, can cover wide areas, and can hang on for days.","Radiation fog.","Steam fog.","PHAK ch. 12"],
+    ["w31","What usually happens as a cold front passes?","The wind shifts, temperature drops, and pressure rises.","Behind a cold front, skies often clear and visibility improves, but gusts can stay strong.","The wind stays steady, temperature rises, and pressure falls.","The wind goes calm, temperature rises, and pressure holds steady.","PHAK ch. 12"],
+    ["w32","A fast-moving cold front often brings what?","A narrow band of thunderstorms with gusty, turbulent wind.","Warm fronts are the slow ones, with wide areas of low clouds, steady rain, and fog.","Wide areas of steady drizzle and fog lasting for days.","Calm, smooth air and clear skies right along the front.","PHAK ch. 12"],
+    ["w33","What two things does structural icing need?","Visible moisture and a surface at or below freezing.","Ice on props and frame adds weight, kills lift, and can unbalance a drone's props.","Clear, dry air and a temperature below -20 °C.","Visible moisture and a temperature above 10 °C.","PHAK ch. 12"],
+    ["w34","What is a PIREP?","A pilot's report of weather actually met in flight.","It is the only report of conditions between the ground and the clouds. UUA marks an urgent one.","A pilot's request for a briefing from Flight Service.","A forecast issued by the airport's weather station.","Aviation Weather Handbook"]
   ],
   loading: [
     ["l01","What are the four forces acting on an aircraft?","Lift, weight, thrust, and drag.","In a steady hover, upward thrust equals weight.","Lift, weight, thrust, and torque.","Lift, weight, thrust, and friction.","PHAK ch. 5"],
@@ -781,7 +797,7 @@ const DECK107 = {
     ["l19","Angle of attack is the angle between what?","The wing's chord line and the relative wind.","Exceed the critical angle of attack and the wing stalls, at any airspeed, in any attitude.","The wing's chord line and the natural horizon.","The propeller's arc and the relative wind.","PHAK ch. 5"],
     ["l20","The maker doesn't say where to mount a payload. Best spot?","As close to the CG as possible, secured so it can't shift.","Centered, fixed weight keeps the balance and handling predictable.","As far forward as possible, to keep the nose stable.","On a short swinging tether below, to lower the CG.","PHAK ch. 10"],
     ["l21","You find a nick or a crack in a propeller. What do you do?","Replace the prop before flying.","A weakened prop can shed a blade at full RPM. Props are cheap; the alternative isn't.","Fly anyway if the drone still hovers smoothly.","Sand the other blade to rebalance it, then fly.","AC 107-2A ch. 7"],
-    ["l22","Flying at a density altitude of 8,000 ft instead of sea level, expect?","A noticeably weaker climb and shorter endurance.","Thin air gives the props less bite, and the motors get less cooling margin.","Better performance than at sea level.","Shorter endurance, but climb is unchanged.","PHAK ch. 11"],
+    ["l22","Flying at a density altitude of 8,000 ft instead of sea level, expect?","A noticeably weaker climb and shorter endurance.","Thin air gives the props less bite, and the motors get less cooling margin.","Better climb and endurance than you'd get at sea level.","Shorter endurance, but the climb rate stays the same.","PHAK ch. 11"],
     ["l23","What happens to load factor when you pull up hard out of a dive?","It spikes above 1 G, just like a steep turn does.","Any strong pitch-up or bank loads the airframe beyond straight-and-level flight.","It drops below 1 G, like at the top of a climb.","It stays at 1 G as long as the wings are level.","PHAK ch. 5"],
     ["l24","Why land with a battery reserve instead of flying to 0%?","Voltage sags near empty and can cut power with little warning.","A reserve covers headwinds, a go-around, and other surprises. Part 107 requires enough power for the intended operational time.","Part 107 requires a 30-minute power reserve, like manned VFR flights.","LiPos last longer when landed at 0% and fully recharged.","§107.49(d); AC 107-2A 5.11.1"]
   ],
@@ -790,7 +806,7 @@ const DECK107 = {
     ["p02","Standard traffic pattern turns?","Left turns.","Unless the chart or Chart Supplement shows right traffic.","Right turns.","Whichever direction turns into the wind.","AIM 4-3-3"],
     ["p03","Name the traffic pattern legs.","Upwind, crosswind, downwind, base, final.","Downwind runs parallel to the runway, often around 1,000 ft AGL.","Departure, arrival, holding, base, and final.","Upwind, downwind, overhead, base, and final.","AIM 4-3-3"],
     ["p04","What is CTAF?","Common Traffic Advisory Frequency.","Pilots at non-towered airports announce their positions on it.","Central Traffic Advisory Frequency.","Controlled Tower Approach Frequency.","AIM 4-1-9"],
-    ["p05","What is UNICOM?","A non-government radio station at an airport.","At many small fields it doubles as the CTAF.","The common traffic frequency pilots use to announce their positions.","An automated station that broadcasts local weather reports.","Pilot/Controller Glossary"],
+    ["p05","What is UNICOM?","A non-government radio station at an airport.","At many small fields it doubles as the CTAF.","An FAA flight service station that gives weather briefings.","An automated station that broadcasts local weather reports.","Pilot/Controller Glossary"],
     ["p06","Where do you look up airport details?","The Chart Supplement.","It used to be called the Airport/Facility Directory (A/FD).","The legend printed on the sectional chart.","The Pilot's Handbook of Aeronautical Knowledge.","PHAK ch. 14"],
     ["p07","Phonetic alphabet for N, F, V?","November, Foxtrot, Victor.","Know all 26. They show up on the test.","Nancy, Foxtrot, Victor.","November, Foxtrot, Venice.","AIM 4-2-7"],
     ["p08","Traffic at 2 o'clock. Where is it?","Ahead and to the right, about 60° off the nose.","12 o'clock is straight ahead. Each hour is 30°.","Behind and to the right, about 120° off the nose.","Ahead and to the left, about 60° off the nose.","AIM 4-1-15"],
@@ -807,7 +823,7 @@ const DECK107 = {
     ["p19","White arrows on the pavement before the runway numbers mark a displaced threshold. That pavement may be used for?","Taxi, takeoff, and rollout from the other end, but not touchdown.","The arrows lead to the threshold bar, where touchdown may begin. Pavement behind it is open for takeoffs either way and rollout from the other end.","Taxi and touchdown, but not the takeoff roll either way.","Taxi only; it's closed to all takeoffs and to landing rollout.","AIM 2-3-3"],
     ["p20","Yellow chevrons painted on pavement before a runway mean?","A blast pad or stopway, not for normal taxi, takeoff, or landing.","Chevron pavement isn't built to bear normal operations. It's there for emergencies and jet blast.","A helicopter landing zone, closed to airplane taxi and takeoff.","A displaced threshold, usable for taxi and takeoff.","AIM 2-3-3"],
     ["p21","A runway holding position sign looks like?","White numbers on a red background.","Red means a mandatory instruction: stop there unless ATC clears you. It shows the runway ahead.","Black numbers on a yellow background.","White letters on a green background.","AIM 2-3-8"],
-    ["p22","A sign with a yellow background, black letters, and an arrow is?","A direction sign, pointing the way to a taxiway or runway.","Don't mix them up: location signs are the reverse, yellow letters on a black background.","A location sign, showing which taxiway you're on.","A mandatory sign marking an area you may not enter.","AIM 2-3-10"],
+    ["p22","A sign with a yellow background, black letters, and an arrow is?","A direction sign, pointing the way to a taxiway or runway.","Don't mix them up: location signs are the reverse, yellow letters on a black background.","A location sign, showing the taxiway you're currently on.","A mandatory sign marking an area you may not enter at all.","AIM 2-3-10"],
     ["p23","Good practice for self-announce calls on CTAF is to?","Say the airport name first and last, plus position and intentions.","Many airports share one frequency. Leading and closing with the field name keeps calls sorted.","Give position and intentions; the airport name isn't needed.","Say the airport name once, at the end of the call.","AIM 4-1-9"],
     ["p24","What altitude do propeller airplanes normally fly the traffic pattern at?","About 1,000 ft AGL.","Turbine traffic flies it higher, around 1,500 ft AGL. Drones yield and stay clear of both.","About 500 ft AGL.","About 2,500 ft AGL.","AIM 4-3-3"],
     ["p25","The Chart Supplement is reissued how often?","Every 56 days.","Seven regional volumes cover the lower 48, Puerto Rico and the Virgin Islands; Alaska and the Pacific have their own supplements.","Every 28 days.","Once a year.","FAA Chart Supplement page"],
@@ -830,7 +846,7 @@ const DECK107 = {
     ["h14","What is hyperventilation?","Breathing too fast, often from stress, lowering blood CO2.","Fix it by slowing your breathing or talking out loud.","Too little oxygen reaching the brain, from thin air.","Breathing too fast, which raises CO2 in the blood.","AIM 8-1-3"],
     ["h15","What is a risk matrix?","A chart of likelihood against severity.","High likelihood plus high severity means don't fly as planned.","A checklist of pilot, aircraft, environment, and external pressures.","A scale that rates a flight only by how severe the outcome could be.","Risk Mgmt Handbook"],
     ["h16","What are the effects of dehydration?","Headache, fatigue, and slower thinking.","Long, hot field days need water breaks.","Mostly muscle cramps; thinking isn't affected.","Mainly thirst; symptoms start only after a full day.","PHAK ch. 17"],
-    ["h17","What is situational awareness?","Knowing what's going on around you and the drone, now and next.","Fatigue, stress, and complacency wear it down first.","Watching the camera feed closely for the whole flight.","Knowing your drone's position and battery level throughout.","PHAK ch. 2"],
+    ["h17","What is situational awareness?","Knowing what's going on around you and the drone, now and next.","Fatigue, stress, and complacency wear it down first.","Watching the camera feed closely for the whole flight.","Keeping your eyes on the controller screen the whole flight.","PHAK ch. 2"],
     ["h18","In the PAVE checklist, 'External pressures' includes things like?","A waiting client, a tight schedule, fear of letting people down.","Pressure to fly is a hazard in itself. Name it during the preflight, before it decides for you.","Weather, terrain, and obstacles at the site you're flying.","Your own fatigue, stress, illness, or medication that day.","PHAK ch. 2"],
     ["h19","Which hazardous attitude says, 'It won't happen to me'?","Invulnerability.","Pilots with this attitude assume accidents only happen to other people.","Impulsivity.","Anti-authority.","PHAK ch. 2"],
     ["h20","Stress and fatigue most directly wear down what?","Your situational awareness and decision-making.","That's why both sit inside the IMSAFE self-check you run before every flight.","Only your reaction time; your judgment stays sharp.","Mainly your eyesight, not your decisions.","PHAK ch. 17"],
@@ -842,7 +858,7 @@ const DECK107 = {
     ["o02","Lost link. What should happen?","The drone runs its lost-link setting, usually return-to-home.","Set return altitude above the tallest obstacle on the route.","The drone lands straight down wherever it happens to be.","The drone keeps flying its last heading until the battery dies.","AC 107-2A ch. 5"],
     ["o03","What must the RPIC check before every flight?","Site and airspace hazards, crew brief, link, power, payload.","Part 107.49 lists these preflight checks.","Battery, props, GPS count, and the maker's app checklist.","Site and weather once a day, plus the battery each flight.","14 CFR 107.49"],
     ["o04","What is a visual observer?","A person who helps keep the drone in sight.","Optional. If you use one, you must be able to talk to each other the whole flight.","A second certificated RPIC who shares the controls.","The person who flies while the RPIC watches the camera screen.","14 CFR 107.33"],
-    ["o05","Military GPS interference testing is planned near your job site. How is it announced?","By NOTAM, published at least 24 hours before testing.","Testing can make GPS unreliable or unavailable. Report anomalies per AIM 1-1-13.","In the Chart Supplement remarks for the nearest airport.","On the sectional chart, as a dashed GPS outage ring.","AIM 1-1-13; FAA GPS advisory"],
+    ["o05","Military GPS interference testing is planned near your job site. How is it announced?","By NOTAM, published at least 24 hours before testing.","Testing can make GPS unreliable or unavailable over a wide area. Report any GPS problems to ATC.","In the Chart Supplement remarks for the nearest airport.","On the sectional chart, as a dashed GPS outage ring.","FAA GPS interference flight advisories"],
     ["o06","What should you do if you get a compass error at launch?","Move away from metal, vehicles, and rebar, then recalibrate.","Bad compass data can cause circling drift or a flyaway.","Take off quickly and let GPS fix the heading in flight.","Recalibrate next to the vehicle, then launch from there.","AC 107-2A ch. 7"],
     ["o07","What should you do if a LiPo battery catches fire?","Keep people clear and use sand or a dry-powder extinguisher.","LiPo smoke is toxic. Prevent fires: charge on a nonflammable surface and stay with it.","Unplug it and carry it outside to a safe spot by hand.","Smother it with your jacket and hold it down.","DJI battery safety guide"],
     ["o08","Does Part 107 require maintenance logs?","No, but the FAA says they can be beneficial.","Logs help you spot repeat problems before they bite.","Part 107 requires them for every flight.","Part 107 requires them, and the FAA must approve them each year.","AC 107-2A 7.3.5"],
@@ -858,7 +874,7 @@ const DECK107 = {
     ["o18","A LiPo battery that was dropped hard or punctured should be?","Taken out of service and disposed of safely.","Internal damage can short a cell and start a fire hours after the impact.","Charged slowly once, to test whether it still works.","Used again if it still holds a full charge.","DJI battery safety guide"],
     ["o19","Safe LiPo charging means charging?","Attended, on a nonflammable surface, away from combustibles.","DJI's battery guide says never leave a charging battery unattended, and never charge on or near carpet, wood, or other flammables.","Overnight on a nonflammable surface, so packs are ready.","Unattended in the car, so packs are warm for the flight.","DJI battery safety guide"],
     ["o20","Your drone starts behaving strangely mid-flight. First move?","Hold position, assess, and land as soon as it's safe.","Get control of the situation first. Pushing on with a sick aircraft invites a flyaway or a crash.","Recalibrate the compass in flight, then continue.","Climb for more margin, then finish the shot.","14 CFR 107.15"],
-    ["o21","Your drone clips a bird and lands safely. Before the next flight you should?","Inspect it for damage, especially props, arms, and motors.","Hidden damage from a strike can fail at the next takeoff. Looking costs a minute.","Hover-test it; if it's stable, it's fine.","Report it to the FAA as an accident no matter what.","14 CFR 107.15"],
+    ["o21","Your drone clips a bird and lands safely. Before the next flight you should?","Inspect it for damage, especially props, arms, and motors.","Hidden damage from a strike can fail at the next takeoff. Looking costs a minute.","Hover-test it; if it's stable, it's ready for the next flight.","Report it to the FAA as an accident, whatever the damage.","14 CFR 107.15"],
     ["o22","Why keep bystanders well back from the launch and landing spot?","A loss of control near the ground could hit them.","Brief spectators to stay back, and never let anyone walk under the drone.","So rotor wash doesn't throw dust into the camera.","It's only required when flying over a crowd.","14 CFR 107.19(c)"],
     ["o23","A proper preflight check of the control link includes?","Confirming the controls respond correctly and the failsafe is set.","Verify the link and your failsafe behavior on the ground, before you need them in the air.","Confirming GPS lock and home point; the link checks itself.","Checking link signal strength once airborne, after takeoff.","14 CFR 107.49(c)"],
     ["o24","On site, the wind is stronger than forecast and near your drone's limit. The RPIC should?","Delay or cancel. The RPIC has the final say.","107.49 makes the RPIC check actual conditions at the site, not just the morning's forecast.","Fly, since the morning forecast was within limits.","Fly, but stay below 100 ft AGL where wind is weaker.","14 CFR 107.49(a)"]
@@ -868,8 +884,9 @@ const DECK107 = {
 <script>
 /* Combined build: the spinner's deck is generated from the Part 107 deck above,
    so the study material lives in exactly one place. Spinner rows are
-   [id, question, correct answer, why + source]. The practice test further down
-   reads DECK107 directly, so it keeps each card's two wrong answers too. */
+   [id, question, correct answer, why, wrong1, wrong2, source] — the card flow
+   is multiple choice now, so the spinner keeps each card's two wrong answers
+   too, same as the practice test further down. */
 const TOPICS107 = [
   { key: 'rules', label: 'Rules', full: 'Regulations', color: 0 },
   { key: 'airspace', label: 'Airspace', full: 'Airspace and charts', color: 1 },
@@ -881,7 +898,7 @@ const TOPICS107 = [
 ];
 const DECK = {};
 TOPICS107.forEach((t) => {
-  DECK[t.key] = (DECK107[t.key] || []).map((r) => [r[0], r[1], r[2], r[3] + ' (' + r[6] + ')']);
+  DECK[t.key] = (DECK107[t.key] || []).map((r) => [r[0], r[1], r[2], r[3], r[4], r[5], r[6]]);
 });
 </script>
 <script>
@@ -937,7 +954,7 @@ TOPICS107.forEach((t) => {
     BY_ID = {};
     ALL.forEach((c) => {
       CAT[c.key] = c;
-      c.cards.forEach((r) => { BY_ID[r[0]] = { id: r[0], cat: c.key, title: r[1], meaning: r[2], extra: r[3] || '' }; });
+      c.cards.forEach((r) => { BY_ID[r[0]] = { id: r[0], cat: c.key, title: r[1], meaning: r[2], why: r[3] || '', extra: (r[3] || '') + (r[6] ? ' (' + r[6] + ')' : ''), d: [r[4], r[5]].filter((x) => typeof x === 'string' && x), src: r[6] || '' }; });
     });
     S.off = S.off.filter((k) => CAT[k]);
     const onWheel = () => ALL.filter((c) => c.cards.length > 0 && S.off.indexOf(c.key) < 0);
@@ -1601,13 +1618,13 @@ TOPICS107.forEach((t) => {
   /* ---------- Tray ---------- */
   const rest = $('rest'), nugget = $('nugget');
   let current = null;
-  let revealed = false;
+  let answered = false;
+  let cardOpts = [];
   let spunThisVisit = false;
-  let learnTimer = 0;
 
   function showRest() {
     current = null;
-    revealed = false;
+    answered = false;
     nugget.hidden = true;
     rest.hidden = false;
     $('restTitle').textContent = spunThisVisit ? 'Flick again.' : 'Flick the spinner.';
@@ -1619,7 +1636,7 @@ TOPICS107.forEach((t) => {
   }
   function showAllLearned() {
     current = null;
-    revealed = false;
+    answered = false;
     nugget.hidden = true;
     rest.hidden = false;
     $('restTitle').textContent = S.lock ? 'All of ' + CAT[S.lock].label + ' is learned.' : 'All learned.';
@@ -1628,7 +1645,7 @@ TOPICS107.forEach((t) => {
   }
   function showNugget(card) {
     current = card;
-    revealed = false;
+    answered = false;
     spunThisVisit = true;
     const chip = $('nuggetCat');
     chip.textContent = CAT[card.cat].label;
@@ -1636,15 +1653,18 @@ TOPICS107.forEach((t) => {
     const title = $('nuggetTitle');
     title.textContent = card.title;
     title.classList.toggle('long', card.title.length > 20);
-    /* The answer stays hidden until "Show Answer" is pressed — the meaning
-       and why/source text are not written into the tray at all yet, and the
-       mark buttons (Learned it / Got it / Again later) stay hidden too, so
-       a student can only mark after checking themselves. */
+    /* Multiple choice on the card itself: the three options are dealt with
+       the question, shuffled fresh each time, so they give the learner
+       context for what the question is asking. Nothing is graded until a
+       pick is made — the explanation, the source, the Next button and the
+       "Learned it" button all stay hidden until then. Learned is the
+       learner's own tap, never automatic. */
+    cardOpts = shuffleOpts([card.meaning].concat(card.d || []));
+    paintCardOpts();
     $('nuggetMeaning').textContent = '';
     $('nuggetExtra').textContent = '';
     $('nuggetMeaning').hidden = true;
     $('nuggetExtra').hidden = true;
-    $('revealBtn').hidden = false;
     $('nuggetActions').hidden = true;
     $('learnedBtn').hidden = true;
     paintLearnedButton();
@@ -1654,30 +1674,66 @@ TOPICS107.forEach((t) => {
     nugget.hidden = false;
     $('tray').scrollTop = 0;
   }
-  function revealAnswer() {
-    if (!current || revealed) return;
-    revealed = true;
-    $('nuggetMeaning').textContent = current.meaning;
-    $('nuggetExtra').textContent = current.extra;
-    $('nuggetExtra').hidden = !current.extra;
+  function shuffleOpts(a) {
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+  function paintCardOpts() {
+    const list = $('nuggetOpts');
+    list.textContent = '';
+    cardOpts.forEach((text, i) => {
+      const li = el('li');
+      const b = button('opt', '', () => answerCard(i));
+      b.append(el('b', '', 'ABC'[i]), el('span', '', text));
+      li.appendChild(b);
+      list.appendChild(li);
+    });
+  }
+  function answerCard(i) {
+    if (!current || answered) return;
+    answered = true;
+    const card = current;
+    const right = cardOpts.indexOf(card.meaning);
+    const correct = i === right;
+    $('nuggetOpts').querySelectorAll('button').forEach((b, k) => {
+      b.disabled = true;
+      if (k === right) b.classList.add('right'); else if (k === i) b.classList.add('wrong');
+    });
+    if (correct) {
+      /* A right pick records the same "Got it" mark a practice-test hit
+         feeds, so the card comes up less often. Leaving the rotation
+         entirely is the learner's call, via "Learned it". */
+      S.cards[card.id] = { s: 'g', t: S.n };
+      if (S.sound) Sound.correct();
+    } else {
+      /* A miss records the same "Again later" mark a practice-test miss
+         feeds, so the card is weighted to come back soon. */
+      S.cards[card.id] = { s: 'a', t: S.n };
+    }
+    save();
+    $('nuggetMeaning').textContent = (correct ? 'Correct. ' : 'Not quite. ') + card.why;
+    $('nuggetExtra').textContent = card.src ? 'Source: ' + card.src : '';
+    $('nuggetExtra').hidden = !card.src;
     $('nuggetMeaning').hidden = false;
-    $('revealBtn').hidden = true;
     $('nuggetActions').hidden = false;
     $('learnedBtn').hidden = false;
-    $('tray').scrollTop = 0;
+    paintLearnedButton();
+    sr(correct ? 'Correct.' : 'Not quite. Answer: ' + card.meaning);
+    $('nextBtn').focus({ preventScroll: true });
+    /* Bring the explanation and Next into view; on short screens they sat below the fold. */
+    const tray = $('tray');
+    tray.scrollTop = tray.scrollHeight;
   }
-  $('revealBtn').addEventListener('click', revealAnswer);
-  function mark(status) {
-    if (!current || !revealed) return;
-    clearTimeout(learnTimer);
-    S.cards[current.id] = { s: status, t: S.n };
-    save();
+  function advanceCard() {
+    if (!current || !answered) return;
     wheel.classList.remove('landed');
     showRest();
     $('hub').focus({ preventScroll: true });
   }
-  $('gotBtn').addEventListener('click', () => mark('g'));
-  $('againBtn').addEventListener('click', () => mark('a'));
+  $('nextBtn').addEventListener('click', advanceCard);
 
   function paintStats() {
     const today = S.days[dayKey(0)] || 0;
@@ -1732,30 +1788,21 @@ TOPICS107.forEach((t) => {
   }
   function paintLearnedButton() {
     const b = $('learnedBtn');
+    const on = !!current && S.learned.indexOf(current.id) >= 0;
     b.disabled = false;
-    b.classList.remove('done');
-    b.setAttribute('aria-pressed', 'false');
-    $('learnedLabel').textContent = 'Learned it';
+    b.classList.toggle('done', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    $('learnedLabel').textContent = on ? 'Learned \u2713' : 'Learned it';
   }
+  /* The learner decides: tap to take a card out of the rotation, tap again to put it back. */
   $('learnedBtn').addEventListener('click', () => {
-    if (!current || !revealed) return;
-    const card = current;
-    if (S.learned.indexOf(card.id) < 0) S.learned.push(card.id);
+    if (!current || !answered) return;
+    const i = S.learned.indexOf(current.id);
+    if (i < 0) S.learned.push(current.id); else S.learned.splice(i, 1);
     save();
+    paintLearnedButton();
     paintLearnedCount();
-    const b = $('learnedBtn');
-    b.disabled = true;
-    b.classList.add('done');
-    b.setAttribute('aria-pressed', 'true');
-    $('learnedLabel').textContent = 'Learned ✓';
-    sr('Learned. ' + learnedCount() + ' of ' + totalCards() + ' learned.');
-    clearTimeout(learnTimer);
-    learnTimer = setTimeout(() => {
-      if (current !== card) return;   /* another mark or a new card got there first */
-      wheel.classList.remove('landed');
-      showRest();
-      $('hub').focus({ preventScroll: true });
-    }, 700);
+    sr(i < 0 ? 'Marked learned. It leaves the spinner.' : 'Back on the spinner.');
   });
   $('resetLearnedBtn').addEventListener('click', () => {
     if (!S.learned.length) { say($('catsMsg'), 'No learned marks to clear yet.'); return; }
@@ -1831,7 +1878,7 @@ TOPICS107.forEach((t) => {
   }
   $('catsBtn').addEventListener('click', openCats);
   $('catsClose').addEventListener('click', closeCats);
-  /* ---------- Practice test (carried over from Spin 107) ----------
+  /* ---------- Practice test (carried over from the original build) ----------
      Same pool, same rules: the card's own 3 options, shuffled. Quick 20 has
      no clock; Full 60 gives you 2 hours and needs 70% to pass. Answers feed
      the spinner through its own marks: a miss is "Again later" (weighted to
@@ -1880,8 +1927,27 @@ TOPICS107.forEach((t) => {
     const s = Math.max(0, Math.round(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
     return h + ':' + String(m).padStart(2, '0') + ':' + String(x).padStart(2, '0');
   }
+  /* The Full 60 clock pauses while the app is closed or in the background,
+     so a phone call doesn't burn the test (Ryan, Nov 25). While paused,
+     T.ends is -1 and T.left holds the time remaining. */
+  function pauseClock() {
+    if (!T || !(T.ends > 0)) return;
+    T.left = Math.max(0, T.ends - Date.now());
+    T.ends = -1;
+    clearInterval(clockTimer);
+    saveTest();
+  }
+  function resumeClock() {
+    if (!T || T.ends !== -1) return;
+    T.ends = Date.now() + (T.left || 0);
+    delete T.left;
+    clearInterval(clockTimer);
+    clockTimer = setInterval(paintClock, 1000);
+    saveTest();
+    paintClock();
+  }
   function paintClock() {
-    if (!T || !T.ends) { $('tClock').textContent = ''; return; }
+    if (!T || !(T.ends > 0)) { $('tClock').textContent = T && T.ends === -1 ? fmtClock(T.left || 0) + ' left (paused)' : ''; return; }
     const left = T.ends - Date.now();
     $('tClock').textContent = fmtClock(left) + ' left';
     if (left <= 0) {
@@ -1910,6 +1976,7 @@ TOPICS107.forEach((t) => {
   }
   function beginTest(t) {
     T = t;
+    if (T.ends === -1) { T.ends = Date.now() + (T.left || 0); delete T.left; }
     clearInterval(clockTimer);
     if (T.ends) clockTimer = setInterval(paintClock, 1000);
     saveTest();
@@ -1946,7 +2013,7 @@ TOPICS107.forEach((t) => {
       b.disabled = true;
       if (k === right) b.classList.add('right'); else if (k === i) b.classList.add('wrong');
     });
-    $('tWhy').textContent = (i === right ? 'Correct. ' : 'Answer: ' + card.a + ' ') + card.why;
+    $('tWhy').textContent = (i === right ? 'Correct. ' : 'Not quite. ') + card.why;
     $('tSrc').textContent = 'Source: ' + card.src;
     $('tWhyBox').hidden = false;
     $('tNext').textContent = T.i + 1 < T.ids.length ? 'Next' : 'See my score';
@@ -2021,8 +2088,8 @@ TOPICS107.forEach((t) => {
   });
 
   /* ---------- Going to the background: no sound left running ---------- */
-  document.addEventListener('visibilitychange', () => { if (document.hidden) Sound.kill(); });
-  addEventListener('pagehide', () => Sound.kill());
+  document.addEventListener('visibilitychange', () => { if (document.hidden) { Sound.kill(); pauseClock(); } else resumeClock(); });
+  addEventListener('pagehide', () => { Sound.kill(); pauseClock(); });
 
   /* ---------- Start ---------- */
   refreshCats();
