@@ -1,6 +1,6 @@
-// Didja Spin 107 service worker. Bump VERSION on every release so phones pick up the update.
+// Spin 107 service worker. Bump VERSION on every release so phones pick up the update.
 // Page: network first (fresh when online, cached copy offline). Everything else: cache first.
-const VERSION = 'didja-107-v4';
+const VERSION = 'spin-107-v5';
 const CORE = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-180.png', 'icons/icon-maskable-512.png'];
 
 self.addEventListener('install', (e) => {

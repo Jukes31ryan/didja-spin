@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Didja Spin 107</title>
+<title>Spin 107</title>
 <meta name="description" content="Flick the spinner, study the FAA Part 107 test. 182 questions across seven topics, plus a practice test: Quick 20 or a full timed 60.">
 <meta name="theme-color" content="#E6E9F7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#12162B" media="(prefers-color-scheme: dark)">
@@ -12,7 +12,7 @@
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Didja Spin 107">
+<meta name="apple-mobile-web-app-title" content="Spin 107">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>*,*::before,*::after{box-sizing:border-box}html,body{margin:0;padding:0}[hidden]{display:none!important}</style>
 
@@ -500,7 +500,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .nugget { animation: none; }
   .topic-chip-bg, .topic-label, .press-wrap, .shadow-wrap, .hub, .switch, .switch::after { transition: none; }
 }
-/* Practice test (carried over from Didja Spin 107) + test helpers */
+/* Practice test (carried over from Spin 107) + test helpers */
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .test-btn { font-family: var(--font-display); font-weight: 800; font-size: var(--t-note); padding: 0 14px; }
 .fine { margin: 0; color: var(--ink-soft); font-size: var(--t-small); }
@@ -550,7 +550,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 <body>
 <div class="app">
   <header class="top">
-    <h1 class="name">Didja Spin 107</h1>
+    <h1 class="name">Spin 107</h1>
     <div class="top-actions">
       <button id="testBtn" class="icon-btn test-btn" type="button">Test</button>
       <button id="soundBtn" class="icon-btn" type="button" aria-pressed="true" aria-label="Sound">
@@ -1831,7 +1831,7 @@ TOPICS107.forEach((t) => {
   }
   $('catsBtn').addEventListener('click', openCats);
   $('catsClose').addEventListener('click', closeCats);
-  /* ---------- Practice test (carried over from Didja Spin 107) ----------
+  /* ---------- Practice test (carried over from Spin 107) ----------
      Same pool, same rules: the card's own 3 options, shuffled. Quick 20 has
      no clock; Full 60 gives you 2 hours and needs 70% to pass. Answers feed
      the spinner through its own marks: a miss is "Again later" (weighted to
