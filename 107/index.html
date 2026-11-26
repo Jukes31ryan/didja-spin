@@ -405,7 +405,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .nugget-title.long { font-size: 1.5rem; }
 .nugget-meaning { margin: 0; overflow-wrap: anywhere; }
 .nugget-extra { margin: 0; color: var(--ink-soft); font-size: var(--t-note); overflow-wrap: anywhere; }
-.nugget-actions { margin-top: auto; padding-top: 6px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.nugget-actions { margin-top: auto; padding-top: 10px; padding-bottom: 2px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; position: sticky; bottom: 0; background: var(--card); z-index: 5; box-shadow: 0 -10px 14px -12px rgba(0, 0, 0, 0.55); }
 .act.learned-act.done { background: var(--good); border-color: var(--good); color: var(--card); }
 .act {
   min-height: 46px;
